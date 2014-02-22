@@ -11,7 +11,6 @@ def get_geom( lines, type='xyz' ):
 			geom_end = i - 2
 			break
 	if geom_end == 0:
-		print "No coordinates found"
 		return ''
 
 	geom_start = 0
@@ -21,8 +20,7 @@ def get_geom( lines, type='xyz' ):
 			geom_start = i + 2
 			break
 	if geom_start == 0:
-		print "No coordinates found"
-		sys_exit( 1 )
+		return ''
 
 	geom = lines[ geom_start: geom_end ]
 
@@ -44,7 +42,6 @@ def plot( lines, type='xyz' ):
 		start = geoms_start[i]
 		end = geoms_end[i]
 		if end - start != length:
-			print "Starting work on new molecule"
 			length = end - start
 
 		geom = str(length) + '\n\n'
