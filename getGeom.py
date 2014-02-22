@@ -19,6 +19,9 @@ with open( args.input, 'r' ) as f:
 if args.program == 'orca':
 	import orca
 	geom = orca.get_geom( lines, args.type )
+elif args.program == 'qchem':
+	import qchem
+	geom = qchem.get_geom( lines )
 else:
 	print "Not yet supported"
 
