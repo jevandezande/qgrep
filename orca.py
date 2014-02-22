@@ -1,13 +1,11 @@
 '''Source for all orca related functions'''
 
-def get_geom( input, output, type='xyz' ):
-	'''Takes an orca output file and returns its last geometry'''
-	with open( input ) as f:
-		lines = f.readlines()
-
+def get_geom( lines, type='xyz' ):
+	'''Takes the lines of an orca output file and returns its last geometry'''
 	start = 'CARTESIAN COORDINATES (ANGSTROEM)'
 	end = 'CARTESIAN COORDINATES (A.U.)'
 	
+	geom_end = 0
 	for i in reversed( range( len(lines) ) ):
 		if end in lines[i]:
 			geom_end = i - 2
@@ -28,21 +26,10 @@ def get_geom( input, output, type='xyz' ):
 
 	geom = lines[ geom_start: geom_end ]
 
-	if not output == '':
-		out = ''
-		for line in geom:
-			out += '\t'.join( line.split() ) + '\n'
-
-		with open( output, 'w' ) as f:
-			f.write( out )
-
 	return geom
 
-def plot( input='output.xyz', output='geom.xyz', type='xyz' ):
+def plot( lines, type='xyz' ):
 	'''Plots the the geometries from the optimization steps'''
-	with open( input ) as f:
-		lines = f.readlines()
-
 	geoms_start = []
 	geoms_end = []
 	for i in range( len(lines) ):
@@ -50,7 +37,6 @@ def plot( input='output.xyz', output='geom.xyz', type='xyz' ):
 			geoms_start.append( i + 2 )
 		if 'CARTESIAN COORDINATES (A.U.)\n' == lines[i]:
 			geoms_end.append( i - 2 )
-
 
 	geoms = []
 	length = geoms_end[0] - geoms_start[0]
@@ -66,20 +52,11 @@ def plot( input='output.xyz', output='geom.xyz', type='xyz' ):
 			geom += '\t'.join( line.split() ) + '\n'
 		
 		geoms.append(geom)
-
-	if not output == '':
-		out = '\n'.join(geoms)
-
-		with open( output, 'w' ) as f:
-			f.write( out )
 		
 	return geoms
 
-def check_convergence( input ):
-	'''Returns the last geometry convergence results'''	
-	with open( input ) as f:
-		lines = f.readlines()
-	
+def check_convergence( lines ):
+	'''Returns the last geometry convergence result'''
 	convergence = ''
 	for i in reversed( range( len( lines ) ) ):
 		if 'Geometry convergence' in lines[i]:
@@ -88,11 +65,8 @@ def check_convergence( input ):
 	
 	return convergence
 	
-def checklist_convergence( input ):
-	'''Returns all the geometry convergence results'''	
-	with open( input ) as f:
-		lines = f.readlines()
-	
+def checklist_convergence( lines ):
+	'''Returns all the geometry convergence results'''
 	convergence_list = []
 	for i in range( len( lines ) ):
 		if 'Geometry convergence' in lines[i]:

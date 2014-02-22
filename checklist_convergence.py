@@ -11,8 +11,11 @@ parser.add_argument( '-p', '--program', help='The program that produced the outp
 
 args = parser.parse_args()
 
+with open( args.input, 'r' ) as f:
+	lines = f.readlines()
+
 if args.program == 'orca':
-	convergence_list = orca.checklist_convergence( args.input )
+	convergence_list = orca.checklist_convergence( lines )
 	for i in convergence_list:
 		print i
 else:

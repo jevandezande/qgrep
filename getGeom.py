@@ -13,7 +13,19 @@ parser.add_argument( '-t', '--type', help='The geometry style', type=str, defaul
 
 args = parser.parse_args()
 
+# Read in the file
+with open( args.input, 'r' ) as f:
+	lines = f.readlines()
+
 if args.program == 'orca':
-	orca.get_geom( args.input, args.output, args.type )
+	geom = orca.get_geom( lines, args.type )
 else:
 	print "Not yet supported"
+
+if not args.output == '':
+	out = ''
+	for line in geom:
+		out += '\t'.join( line.split() ) + '\n'
+
+	with open( args.output, 'w' ) as f:
+		f.write( out )

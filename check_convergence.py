@@ -11,8 +11,11 @@ parser.add_argument( '-p', '--program', help='The program that produced the outp
 
 args = parser.parse_args()
 
+with open( args.input ) as f:
+	lines = f.readlines()
+
 if args.program == 'orca':
-	print orca.check_convergence( args.input )
+	print orca.check_convergence( lines )
 else:
 	print "Not yet supported"
 

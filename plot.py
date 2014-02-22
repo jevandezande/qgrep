@@ -3,7 +3,6 @@
 # Script that takes an orca output file and outputs the geometries of the individual optimization steps
 
 import argparse
-import orca
 
 parser = argparse.ArgumentParser( description='Get the geometry of an output file.' )
 parser.add_argument( '-i', '--input', help='The file to be read.', type=str, default='output.dat' )
@@ -14,7 +13,16 @@ parser.add_argument( '-t', '--type', help='The geometry style', type=str, defaul
 
 args = parser.parse_args()
 
+with open( args.input ) as f:
+	lines = f.readlines()
+
+
 if args.program == 'orca':
-	orca.plot( args.input, args.output, args.type )
+	import orca
+	geoms = orca.plot( lines, args.type )
 else:
 	print "Not yet supported"
+
+if not args.output == '':
+	with open( args.output, 'w' ) as f:
+		f.write( '\n'.join(geoms) )
