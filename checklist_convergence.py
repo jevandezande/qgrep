@@ -13,11 +13,16 @@ args = parser.parse_args()
 with open( args.input, 'r' ) as f:
 	lines = f.readlines()
 
+convergence_list = []
 if args.program == 'orca':
 	import orca
 	convergence_list = orca.checklist_convergence( lines )
-	for i in convergence_list:
-		print i
+elif args.program == 'qchem':
+	import qchem
+	convergence_list = qchem.checklist_convergence( lines )
 else:
 	print "Not yet supported"
+
+for i in convergence_list:
+	print i
 

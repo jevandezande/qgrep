@@ -14,12 +14,11 @@ with open( args.input ) as f:
 	lines = f.readlines()
 
 if args.program == 'orca':
-<<<<<<< HEAD
-	print orca.check_convergence( lines )
-=======
 	import orca
-	print orca.check_convergence( args.input )
->>>>>>> a329a6aa5284d7dc7440aef07f099d24ee7b8d1b
+	print orca.check_convergence( lines )
+elif args.program == 'qchem':
+	import qchem
+	print qchem.check_convergence( lines )
 else:
 	print "Not yet supported"
 
