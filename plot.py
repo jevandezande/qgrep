@@ -22,6 +22,9 @@ geoms = []
 if program == 'orca':
 	import orca
 	geoms = orca.plot( lines, args.type )
+elif program == 'qchem':
+	import qchem
+	geoms = qchem.plot( lines )
 else:
 	print "Not yet supported"
 
