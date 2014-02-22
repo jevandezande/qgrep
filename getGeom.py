@@ -3,7 +3,6 @@
 # Script that takes an output file and gets the last geometry
 
 import argparse
-import orca
 
 parser = argparse.ArgumentParser( description='Get the geometry of an output file.' )
 parser.add_argument( '-i', '--input', help='The file to be read.', type=str, default='output.dat' )
@@ -14,6 +13,7 @@ parser.add_argument( '-t', '--type', help='The geometry style', type=str, defaul
 args = parser.parse_args()
 
 if args.program == 'orca':
+	import orca
 	orca.get_geom( args.input, args.output, args.type )
 else:
 	print "Not yet supported"
