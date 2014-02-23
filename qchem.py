@@ -59,9 +59,10 @@ def plot( lines ):
 
 def check_convergence( lines ):
 	'''Returns the last geometry convergence result'''
+	convergence_result = 'Maximum     Tolerance    Cnvgd?'
 	convergence = ''
 	for i in reversed( range( len(lines) ) ):
-		if 'Maximum     Tolerance    Cnvgd?' in lines[i]:
+		if convergence_result in lines[i]:
 			convergence = ''.join( lines[i:i+4] )
 			break
 	
@@ -69,9 +70,10 @@ def check_convergence( lines ):
 		
 def checklist_convergence( lines ):
 	'''Returns all the geometry convergence results'''
+	convergence_result = 'Maximum     Tolerance    Cnvgd?'
 	convergence_list = []
 	for i in range( len(lines) ):
-		if 'Maximum     Tolerance    Cnvgd?' in lines[i]:
+		if convergence_result in lines[i]:
 			convergence_list.append( ''.join( lines[i:i+4] ) )
 	
 	return convergence_list
