@@ -24,6 +24,9 @@ if program == 'orca':
 elif program == 'qchem':
 	import qchem
 	geom = qchem.get_geom( lines )
+elif program == 'psi4':
+	import psi4
+	geom = psi4.get_geom( lines )
 else:
 	print "Not yet supported"
 

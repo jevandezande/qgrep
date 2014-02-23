@@ -21,6 +21,9 @@ if program == 'orca':
 elif program == 'qchem':
 	import qchem
 	print qchem.check_convergence( lines )
+elif program == 'psi4':
+	import psi4
+	print psi4.check_convergence( lines )
 else:
 	print "Not yet supported"
 
