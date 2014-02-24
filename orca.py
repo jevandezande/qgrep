@@ -76,3 +76,16 @@ def checklist_convergence( lines ):
 	
 	return convergence_list
 	
+def template( geom='', nprocs=8, jobtype='Opt', functional='B3LYP', basis='sto-3g', scf_iter=300 ):
+	'''Returns a template with the specified geometry and other variables'''
+	template_style = '''% pal nprocs {0} end
+
+! {1} {2} {3}
+
+% SCF maxiter {4} end
+
+* xyz 0 1
+{5}
+*
+'''
+	return template_style.format( nprocs, jobtype, functional, basis, scf_iter, geom )
