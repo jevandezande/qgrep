@@ -49,7 +49,7 @@ def plot( lines, type='xyz' ):
 		if end - start != length:
 			length = end - start
 
-		geom = str(length) + '\n\n'
+		geom = str(length) + '\nStep {0}\n'.format(i)
 		for line in lines[start:end]:
 			geom += '\t'.join( line.split() ) + '\n'
 		
