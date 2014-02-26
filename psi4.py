@@ -38,8 +38,6 @@ def plot( lines, type='xyz' ):
 			geoms_start.append( i + 1 )
 		if end == lines[i]:
 			geoms_end.append( i - 1 )
-	print geoms_start
-	print geoms_end
 
 	geoms = []
 	length = geoms_end[0] - geoms_start[0]
