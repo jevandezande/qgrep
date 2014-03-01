@@ -19,7 +19,7 @@ args = parser.parse_args()
 geom = ''
 try:
 	with open( 'geom.xyz', 'r' ) as f:
-		geom = f.read()
+		geom = f.read().strip()
 except IOError:
 	print "No geometry specified"
 
@@ -27,12 +27,12 @@ program = args.program
 if program == 'orca':
 	from orca import template
 	temp = template( geom, args.nprocs, args.jobtype, args.functional, args.basis, args.iterations )
-#elif program == 'qchem':
-#	from qchem import template
-#	temp = qchem.template( lines )
+elif program == 'qchem':
+	from qchem import template
+	temp = template( geom, args.jobtype, args.functional, args.basis )
 #elif program == 'psi4':
 #	from psi4 import template
-#	temp = psi4.template( lines )
+#	temp = template( geom )
 else:
 	print "Not yet supported"
 

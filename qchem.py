@@ -77,3 +77,18 @@ def checklist_convergence( lines ):
 			convergence_list.append( ''.join( lines[i:i+4] ) )
 	
 	return convergence_list
+
+def template( geom='', jobtype='Opt', functional='B3LYP', basis='sto-3g' ):
+	'''Returns a template with the specified geometry and other variables'''
+	template_style = '''$molecule
+{0}
+$end
+
+$rem
+	jobtype			{1}
+	exchange		{2}
+	basis			{3}
+$end
+'''
+
+	return template_style.format( geom, jobtype, functional, basis )
