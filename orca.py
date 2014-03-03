@@ -212,3 +212,14 @@ def get_freqs( lines ):
 		output += '\n'.join(freq) + '\n\n'
 		
 	return output
+
+def get_energy( lines ):
+	'''Returns the last calculated single point energy
+	WARNING: It returns as a string in order to prevent python from rounding'''
+	energy_line = 'FINAL SINGLE POINT ENERGY'
+	energy = 0
+	for line in reversed( lines ):
+		if energy_line == line[:25]:
+			energy = line.split()[-1]
+			break
+	return energy
