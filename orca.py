@@ -145,24 +145,29 @@ def get_freqs( lines ):
 	vibrations_start = 0
 	vib_modes_start = 0
 	vib_modes_end = 0
+	vib_freqs_start = 0
+	vib_freqs_end = 0
 	for i in reversed( range(len(lines) ) ):
-		if 'The first frequency considered to be a vibration is ' == lines[i][0:52]:
-			vibrations_start = int(lines[i][52:].strip())
+		line = lines[i]
+		if 'The first frequency considered to be a vibration is ' == line[0:52]:
+			vibrations_start = int(line[52:].strip())
 		
-		if 'IR SPECTRUM\n' == lines[i]:
+		if 'IR SPECTRUM\n' == line:
 			vib_modes_end = i - 3
-		if 'NORMAL MODES\n' == lines[i]:
+		if 'NORMAL MODES\n' == line:
 			vib_modes_start = i + 7
+		if 'VIBRATIONAL FREQUENCIES\n' == line:
+			vib_freqs_start = i + 3
 			break
 
+	# Plot all vibrations (don't remove non-frequencies)
 	vibrations_start = 0
-#	if vibrations_start == 0:
-#		print "Could not find the first vibrational mode"
-#	if args.all == True:
-#		vibrations_start = 0
-#	if vibrations_start > 6:
-#		print "Warning: not all frequencies are considered vibrations. Use -a(--all) to plot all modes"
-#		print "Starting with mode " + str( vibrations_start)
+
+	vib_freqs_end = vib_modes_start - 10
+	vib_freqs = []
+	# Read in the vibrational frequencies
+	for i in range( vib_freqs_start, vib_freqs_end ):
+		 vib_freqs.append( lines[i].split()[1] )
 
 	vibrations = lines[vib_modes_start:vib_modes_end]
 	modes = []
@@ -203,7 +208,7 @@ def get_freqs( lines ):
 	vibrations = []
 	for i in range(len(modes)):
 		mode = modes[i]
-		vibrations.append( [ str(num_atoms) , 'Mode: {0}'.format(i) ] )
+		vibrations.append( [ str(num_atoms) , '{0} cm^-1'.format( vib_freqs[i] ) ] )
 		for j in range(len(modes[i])):
 			vibrations[i].append( geom[j+2] + '\t' + '\t'.join( mode[j] ) )
 
