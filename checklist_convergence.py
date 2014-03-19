@@ -31,7 +31,7 @@ elif program == 'psi4':
 else:
 	print "Not yet supported"
 
-if args.number > 0:
+if args.number > 0 and args.number < len(convergence_list):
 	for i in range(len(convergence_list)-args.number,len(convergence_list) ):
 		print convergence_list[i]
 else:
