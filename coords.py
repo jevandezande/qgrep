@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Script that takes an file of coordinates and converts it
+# Script that takes a geometry in zmatrix or cartesian coordinates and converts it to the other
 
 import argparse
 from check_type import check_type
@@ -36,3 +36,4 @@ elif args.type == 'zmat':
 	conv.convert_zmatrix( args.input, args.output )
 else:
 	print "Invalid type. Please specify either a zmatrix (zmat) or cartesian (xyz) geoetry"
+	exit( 1 )
