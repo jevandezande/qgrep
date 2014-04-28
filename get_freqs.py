@@ -21,10 +21,10 @@ if program == 'orca':
 	output = get_freqs( lines )
 #elif program == 'qchem':
 #	from qchem import get_freqs
-#	geom = get_freqs( lines )
-#elif program == 'psi4':
-#	from psi4 import get_freqs
-#	geom = get_freqs( lines )
+#	output = get_freqs( lines )
+elif program == 'psi4':
+	from psi4 import get_freqs
+	output = get_freqs( lines )
 else:
 	print "Not yet supported"
 

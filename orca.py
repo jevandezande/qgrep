@@ -218,13 +218,20 @@ def get_freqs( lines ):
 		
 	return output
 
-def get_energy( lines ):
-	'''Returns the last calculated single point energy
+def get_energy( lines, energy_type='sp' ):
+	'''Returns the last calculated energy
 	WARNING: It returns as a string in order to prevent python from rounding'''
-	energy_line = 'FINAL SINGLE POINT ENERGY'
 	energy = 0
-	for line in reversed( lines ):
-		if energy_line == line[:25]:
-			energy = line.split()[-1]
-			break
+	if energy_type == 'sp':
+		energy_line = 'FINAL SINGLE POINT ENERGY'
+		for line in reversed( lines ):
+			if energy_line == line[:25]:
+				energy = line.split()[-1]
+				break
+	elif energy_type == 'gibbs':
+		energy_line = 'Final Gibbs free enthalpy'
+		for line in reversed( lines ):
+			if energy_line == line[:25]:
+				energy = line.split()[-2]
+				break
 	return energy
