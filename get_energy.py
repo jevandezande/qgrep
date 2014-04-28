@@ -17,6 +17,8 @@ with open( args.input, 'r' ) as f:
 
 program = check_type( lines )
 
+energy = 0
+
 if program == 'orca':
 	from orca import get_energy
 	energy = get_energy( lines, args.energy_type )
@@ -29,4 +31,7 @@ if program == 'orca':
 else:
 	print "Not yet supported"
 
-print energy
+if not energy == 0:
+	print energy
+else:
+	print "No energy found"
