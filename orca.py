@@ -1,9 +1,18 @@
 '''Source for all orca related functions'''
 
 def get_geom( lines, type='xyz' ):
-	'''Takes the lines of an orca output file and returns its last geometry'''
-	start = 'CARTESIAN COORDINATES (ANGSTROEM)\n'
-	end = 'CARTESIAN COORDINATES (A.U.)\n'
+	'''Takes the lines of an orca output file and returns its last geometry in the specified format'''
+	start = ''
+	end = ''
+	if type == 'xyz':
+		start = 'CARTESIAN COORDINATES (ANGSTROEM)\n'
+		end = 'CARTESIAN COORDINATES (A.U.)\n'
+	elif type=='zmat':
+		start = 'INTERNAL COORDINATES (ANGSTROEM)\n'
+		end = 'INTERNAL COORDINATES (A.U.)\n'
+	else:
+		print "Invalid format"
+		return
 	
 	geom_end = 0
 	for i in reversed( range( len(lines) ) ):
@@ -235,3 +244,19 @@ def get_energy( lines, energy_type='sp' ):
 				energy = line.split()[-2]
 				break
 	return energy
+
+def convert_zmatrix( lines ):
+	'''Convert the oddly formatted orca zmzatrix into the normal type of zmatrix'''
+	zmat = get_geom( lines, 'zmat' )
+	line = zmat[0].split()
+	normal_zmatrix = [ [ line[0] ] ]
+	line = zmat[1].split()
+	normal_zmatrix.append( [ line[0], line[1], line[4], ] )
+	line = zmat[2].split()
+	normal_zmatrix.append( [ line[0], line[1], line[4], line[2], line[5] ] )
+	for line in zmat[3:]:
+		# break line into parts
+		element, atom1, atom2, atom3, distance, angle, dihedral = line.split()
+		normal_zmatrix.append( [element, atom1, distance, atom2, angle, atom3, dihedral] )
+
+	return normal_zmatrix
