@@ -9,6 +9,7 @@ parser = argparse.ArgumentParser( description='Get the geometry of an output fil
 parser.add_argument( '-i', '--input', help='The file to be read.', type=str, default='output.dat' )
 parser.add_argument( '-o', '--output', help='Where to output the geometry.', type=str, default='geom.xyz' )
 parser.add_argument( '-t', '--type', help='The geometry style', type=str, default='xyz' )
+parser.add_argument( '-u', '--units', help='What units to output the geometry in.', type=str, default='angstrom' )
 
 args = parser.parse_args()
 
@@ -20,7 +21,7 @@ program = check_type( lines )
 
 if program == 'orca':
 	import orca
-	geom = orca.get_geom( lines, args.type )
+	geom = orca.get_geom( lines, args.type, args.units )
 elif program == 'qchem':
 	import qchem
 	geom = qchem.get_geom( lines )
