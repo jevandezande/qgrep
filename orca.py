@@ -33,14 +33,13 @@ def get_geom( lines, type='xyz', units='angstroms' ):
 	geom_end = 0
 	for i in range( geom_start, len(lines) ):
 		if end == lines[i]:
-			geom_end = i - 1
+			geom_end = i
 			break
 	if geom_end == 0:
 		return ''
 
 	if type == 'xyz' and units == 'bohr':
 		geom_start += 1
-		geom_end += 1
 	geom = lines[ geom_start: geom_end ]
 
 	return geom
@@ -262,8 +261,9 @@ def convert_zmatrix( lines, units ):
 	normal_zmatrix = [ [ line[0] ] ]
 	line = zmat[1].split()
 	normal_zmatrix.append( [ line[0], line[1], line[4], ] )
-	line = zmat[2].split()
-	normal_zmatrix.append( [ line[0], line[1], line[4], line[2], line[5] ] )
+	if len(zmat) > 2:
+		line = zmat[2].split()
+		normal_zmatrix.append( [ line[0], line[1], line[4], line[2], line[5] ] )
 	for line in zmat[3:]:
 		# break line into parts
 		element, atom1, atom2, atom3, distance, angle, dihedral = line.split()
