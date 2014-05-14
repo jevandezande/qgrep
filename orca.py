@@ -270,3 +270,45 @@ def convert_zmatrix( lines, units ):
 		normal_zmatrix.append( [element, atom1, distance, atom2, angle, atom3, dihedral] )
 
 	return normal_zmatrix
+
+def energy_levels( lines ):
+	'''Returns the orbital occupations and energies of the last geometry as well as useful information'''
+	start = 'ORBITAL ENERGIES\n'
+	end = '\n'
+	
+	levels_start = 0
+	# Iterate backwards until the start of the last set of coordinates is found
+	for i in reversed( range( len(lines) ) ):
+		if start == lines[i]:
+			levels_start = i + 5
+			break
+	if levels_start == 0:
+		print "Could not find start of orbitals"
+		return ''
+
+	levels_end = 0
+	for i in range( levels_start, len(lines) ):
+		if end == lines[i]:
+			levels_end = i
+			break
+	if levels_end == 0:
+		print "Could not find the end of the orbitals"
+		return ''
+
+	levels = lines[ levels_start: levels_end ]
+
+	clean = []
+	for level in levels:
+		num, occ, hartree, eV = level.split()
+		clean.append( (int(num), float(occ), float(hartree)) )
+
+	
+	info = {}
+	for i in range(len(clean)):
+		if clean[i][1] == 0:
+			info['homo'] = clean[i-1][2]
+			info['lumo'] = clean[i][2]
+			info['homo-lumo-gap'] = info['lumo'] - info['homo']
+			break
+
+	return ( levels, info )
