@@ -179,3 +179,12 @@ def get_freqs( lines ):
 		output += '\n'.join(freq) + '\n\n'
 		
 	return output
+
+def get_energy( lines, energy_type='sp' ):
+	'''WARNING: It returns as a string in order to prevent python from rounding'''
+	if energy_type == 'sp':
+		for line in reversed( lines ):
+			if line[:18] == '    Total Energy =':
+				return line.split()[-1]
+	else:
+		print 'Energy type not yet supported'

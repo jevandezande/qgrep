@@ -24,10 +24,10 @@ if program == 'orca':
 	energy = get_energy( lines, args.energy_type )
 #elif program == 'qchem':
 #	from qchem import get_energy
-#	geom = get_energy( lines )
-#elif program == 'psi4':
-#	from psi4 import get_energy
-#	geom = get_energy( lines )
+#	energy = get_energy( lines )
+elif program == 'psi4':
+	from psi4 import get_energy
+	energy = get_energy( lines, args.energy_type )
 else:
 	print "Not yet supported"
 
