@@ -255,7 +255,7 @@ def get_energy( lines, energy_type='sp' ):
 	return energy
 
 def convert_zmatrix( lines, units ):
-	'''Convert the oddly formatted orca zmzatrix into the normal type of zmatrix'''
+	'''Convert the orca zmatrix to a proper zmatrix'''
 	zmat = get_geom( lines, 'zmat', units )
 	line = zmat[0].split()
 	normal_zmatrix = [ [ line[0] ] ]
@@ -270,6 +270,25 @@ def convert_zmatrix( lines, units ):
 		normal_zmatrix.append( [element, atom1, distance, atom2, angle, atom3, dihedral] )
 
 	return normal_zmatrix
+
+def convert_to_orca_zmatrix( zmat ):
+	'''Convert a proper zmatrix into an orca zmatrix'''
+	# First line
+	element = zmat[0].split()[0]
+	orca_zmatrix = [ [ element, '0', '0', '0', '0', '0', '0'  ] ]
+	# Second lines
+	element, atom1, distance = zmat[2].split()[:3]
+	orca_zmatrix.append( [ element, atom1, '0', '0', distance, '0', '0' ] )
+	# Third line
+	if len(zmat) > 2:
+		element, atom1, distance, atom2, angle = zmat[2].split()[:5]
+		orca_zmatrix.append( [ element, atom1, atom2, '0', distance, angle, '0' ] )
+	# All other lines
+	for line in zmat[3:]:
+		element, atom1, distance, atom2, angle, atom3, dihedral = line.split()[:7]
+		orca_zmatrix.append( [element, atom1, atom2, atom3, distance, angle, dihedral] )
+
+	return orca_zmatrix
 
 def energy_levels( lines ):
 	'''Returns the orbital occupations and energies of the last geometry as well as useful information'''
