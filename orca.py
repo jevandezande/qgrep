@@ -73,17 +73,6 @@ def plot( lines, type='xyz' ):
 		
 	return geoms
 
-def check_convergence( lines ):
-	'''Returns the last geometry convergence result'''
-	convergence_result = 'Geometry convergence'
-	convergence = ''
-	for i in reversed( range( len( lines ) ) ):
-		if convergence_result in lines[i]:
-			convergence = ''.join( lines[i-1:i+11] )
-			break
-	
-	return convergence
-	
 def checklist_convergence( lines ):
 	'''Returns all the geometry convergence results'''
 	convergence_result = 'Geometry convergence'
