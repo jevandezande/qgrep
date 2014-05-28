@@ -1,6 +1,6 @@
 '''Source for all orca related functions'''
 
-def get_geom( lines, type='xyz', units='angstroms' ):
+def get_geom( lines, type='xyz', units='angstrom' ):
 	'''Takes the lines of an orca output file and returns its last geometry in the specified format'''
 	start = ''
 	end = '\n'
