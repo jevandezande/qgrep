@@ -26,12 +26,9 @@ elif program == 'psi4':
 else:
 	print "Not yet supported"
 
-if args.number > 0 and args.number < len(convergence_list):
-	for i in range(len(convergence_list)-args.number,len(convergence_list) ):
-		print convergence_list[i]
-else:
-	for i in convergence_list:
-		print i
+# Print the last number of convergence results (even works for too big numbers)
+for i in convergence_list[-args.number:]:
+	print i
 
 print 'Optimization Steps: {0}'.format(len(convergence_list))
 
