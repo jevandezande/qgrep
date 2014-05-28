@@ -3,17 +3,14 @@
 # Script that takes an output file and prints its last geometry convergence results
 
 import argparse
-from check_type import check_type
+from helper import read
 
 parser = argparse.ArgumentParser( description='Get the geometry of an output file.' )
 parser.add_argument( '-i', '--input', help='The file to be read.', type=str, default='output.dat' )
 
 args = parser.parse_args()
 
-with open( args.input ) as f:
-	lines = f.readlines()
-
-program = check_type( lines )
+lines, program = read( args.input )
 
 if program == 'orca':
 	import orca

@@ -3,7 +3,6 @@
 # Script that takes a geometry in zmatrix or cartesian coordinates and converts it to the other
 
 import argparse
-from check_type import check_type
 from coordinate_converter import CoordinateConverter
 from sys import exit
 

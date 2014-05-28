@@ -3,7 +3,6 @@
 # Script that makes an input file with the specified parameters
 
 import argparse
-from check_type import check_type
 
 parser = argparse.ArgumentParser( description='Get the geometry of an output file.' )
 parser.add_argument( '-p', '--program', help='The program', type=str, default='orca' )

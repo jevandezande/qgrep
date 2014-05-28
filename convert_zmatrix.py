@@ -3,7 +3,7 @@
 # Script that takes an output file and writes a proper zmatrix or the reverse if already proper
 
 import argparse
-from check_type import check_type
+from helper import read
 
 parser = argparse.ArgumentParser( description='Converts the last zmatrix to a proper zmatrix or the reverse if already proper.' )
 parser.add_argument( '-i', '--input', help='The file to be read.', type=str, default='output.dat' )
@@ -13,19 +13,13 @@ parser.add_argument( '-u', '--units', help='What units to output the geometry in
 args = parser.parse_args()
 
 # Read in the file
-with open( args.input, 'r' ) as f:
-	lines = f.readlines()
-
-
-program = 'none'
-if not args.input == 'ZMAT':
-	program = check_type( lines )
+lines, program = read( args.input )
 
 zmat = ''
 if program == 'orca':
 	import orca
 	zmat = orca.convert_zmatrix( lines, args.units )
-elif program == 'none':
+elif program == None:
 	# If already a proper zmatrix, convert to orca style
 	import orca
 	# Skip the first two line if they are a header
