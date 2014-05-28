@@ -15,14 +15,14 @@ lines, program = read( args.input )
 
 convergence_list = []
 if program == 'orca':
-	from orca import checklist_convergence
-	convergence_list = checklist_convergence( lines )
+	from orca import check_convergence
+	convergence_list = check_convergence( lines )
 elif program == 'qchem':
-	from qchem import checklist_convergence
-	convergence_list = checklist_convergence( lines )
+	from qchem import check_convergence
+	convergence_list = check_convergence( lines )
 elif program == 'psi4':
-	from psi4 import checklist_convergence
-	convergence_list = checklist_convergence( lines )
+	from psi4 import check_convergence
+	convergence_list = check_convergence( lines )
 else:
 	print "Not yet supported"
 

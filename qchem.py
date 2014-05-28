@@ -57,7 +57,7 @@ def plot( lines ):
 	return geoms
 
 
-def checklist_convergence( lines ):
+def check_convergence( lines ):
 	'''Returns all the geometry convergence results'''
 	convergence_result = 'Maximum     Tolerance    Cnvgd?'
 	convergence_list = []

@@ -73,7 +73,7 @@ def plot( lines, type='xyz' ):
 		
 	return geoms
 
-def checklist_convergence( lines ):
+def check_convergence( lines ):
 	'''Returns all the geometry convergence results'''
 	convergence_result = 'Geometry convergence'
 	convergence_list = []
