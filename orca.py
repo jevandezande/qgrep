@@ -6,36 +6,32 @@ def get_geom( lines, type='xyz', units='angstrom' ):
 	end = '\n'
 	if type == 'xyz' and units == 'angstrom':
 		start = 'CARTESIAN COORDINATES (ANGSTROEM)\n'
-		#end = 'CARTESIAN COORDINATES (A.U.)\n'
 	elif type == 'zmat' and units == 'angstrom':
 		start = 'INTERNAL COORDINATES (ANGSTROEM)\n'
-		#end = 'INTERNAL COORDINATES (A.U.)\n'
 	elif type == 'xyz' and units == 'bohr':
 		start ='CARTESIAN COORDINATES (A.U.)\n'
-		#end = 'INTERNAL COORDINATES (ANGSTROEM)\n'
 	elif type == 'zmat' and units == 'bohr':
 		start = 'INTERNAL COORDINATES (A.U.)\n'
-		#end = 'BASIS SET INFORMATION\n'
 	else:
 		print "Invalid format or units"
-		return
+		return ''
 	
-	geom_start = 0
+	geom_start = -1
 	# Iterate backwards until the start of the last set of coordinates is found
 	for i in reversed( range( len(lines) ) ):
 		if start == lines[i]:
 			geom_start = i + 2
 			break
-	if geom_start == 0:
+	if geom_start == -1:
 		print "Could not find start of geometry"
 		return ''
 
-	geom_end = 0
+	geom_end = -1
 	for i in range( geom_start, len(lines) ):
 		if end == lines[i]:
 			geom_end = i
 			break
-	if geom_end == 0:
+	if geom_end == -1:
 		return ''
 
 	if type == 'xyz' and units == 'bohr':

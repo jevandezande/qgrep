@@ -15,7 +15,9 @@ def check_program( lines ):
 		'Welcome to Q-Chem':	'qchem',
 		'PSI4: An Open-Source Ab Initio Electronic Structure Package':	'psi4',
 		'Northwest Computational Chemistry Package (NWChem)':	'nwchem',
-		'#ZMATRIX':				'zmatrix'
+		'#ZMATRIX':				'zmatrix',
+		'* CFOUR Coupled-Cluster techniques for Computational Chemistry *': 'cfour',
+		'***  PROGRAM SYSTEM MOLPRO  ***':		'molpro'
 	}
 
 	program = None
@@ -23,5 +25,6 @@ def check_program( lines ):
 		line = line.strip()
 		if line in programs:
 			program = programs[line]
+			break
 	
 	return program

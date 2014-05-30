@@ -23,6 +23,9 @@ if program == 'orca':
 elif program == 'psi4':
 	from psi4 import get_energy
 	energy = get_energy( lines, args.energy_type )
+elif program == 'molpro':
+	from molpro import get_energy
+	energy = get_energy( lines )
 else:
 	print "Not yet supported"
 
