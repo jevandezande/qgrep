@@ -10,6 +10,7 @@ parser.add_argument( '-i', '--input', help='The file to be read.', type=str, def
 parser.add_argument( '-o', '--output', help='Where to output the geometry.', type=str, default='geom.xyz' )
 parser.add_argument( '-t', '--type', help='The geometry style', type=str, default='xyz' )
 parser.add_argument( '-u', '--units', help='What units to output the geometry in.', type=str, default='angstrom' )
+parser.add_argument( '-l', '--length', help='Output the geometry at the beginning (making it a true .xyz file)', action='store_true', default=False )
 
 args = parser.parse_args()
 
@@ -30,6 +31,8 @@ else:
 
 if not args.output == '':
 	out = ''
+	if args.length:
+		out = '{0}\n\n'.format( len(geom) )
 	for line in geom:
 		out += '\t'.join( line.split() ) + '\n'
 
