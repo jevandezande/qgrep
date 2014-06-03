@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # Script that takes an orca output file and outputs the geometries of the individual optimization steps
 
