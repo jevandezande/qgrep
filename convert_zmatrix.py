@@ -19,7 +19,7 @@ zmat = ''
 if program == 'orca':
 	import orca
 	zmat = orca.convert_zmatrix( lines, args.units )
-elif program == None:
+elif program == 'zmatrix':
 	# If already a proper zmatrix, convert to orca style
 	import orca
 	# Skip the first two line if they are a header
