@@ -190,11 +190,11 @@ def get_freqs( lines ):
 
 	# Apply vibrations to the last geometry
 	vibrations = []
-	for i in range(len(modes)):
-		mode = modes[i]
-		# xyz header including the vibrational frequency
-		vibrations.append( [ str(num_atoms) , '{0} cm^-1'.format( vib_freqs[i] ) ] )
-		# TODO: remove excess nodes
+	# Don't print the first six modes, as they are not vibrations
+	for i in range(len(modes) - 6):
+		mode = modes[i + 6]
+		# xyz header including the vibrational frequency (offset by 6 to avoid non-vibrational modes)
+		vibrations.append( [ str(num_atoms) , '{0} cm^-1'.format( vib_freqs[i + 6] ) ] )
 		for j in range(len(modes[i])):
 			# Geometry goes first, then x, y, and z displacements for modes
 			vibrations[i].append( geom[j+2] + '\t' + '\t'.join( mode[j] ) )
