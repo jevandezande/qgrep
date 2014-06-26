@@ -9,7 +9,7 @@ class TestOrca( unittest.TestCase ):
 	'''Tests the orca class'''
 	def setUp( self ):
 		'''Read in the necessary files'''
-		files = [ 'CH3F_Cl_scan.out', 'CH3F_Cl_scan.xyz', 'CH3F_Cl_scan.zmat', 'CH3F_Cl_scan.bohr.xyz', 'CH3F_Cl_scan.bohr.zmat', 'CH3F_Cl_scan.check', 'Benzene_freqs.out', 'Benzene_freqs.freqs' ]
+		files = [ 'CH3F_Cl_scan.out', 'CH3F_Cl_scan.xyz', 'CH3F_Cl_scan.zmat', 'CH3F_Cl_scan.bohr.xyz', 'CH3F_Cl_scan.bohr.zmat', 'CH3F_Cl_scan.check', 'Benzene_freqs.out', 'Benzene_freqs.freqs', 'H2O_hybrid_hess.out', 'H2O_hybrid_hess.freqs' ]
 		self.files = {}
 		for file in files:
 			with open( file, 'r' ) as f:
@@ -35,8 +35,10 @@ class TestOrca( unittest.TestCase ):
 	
 	def test_get_freqs( self ):
 		'''Testing get_freqs'''
-		freqs = orca.get_freqs( self.files['Benzene_freqs.out'] )
-		self.assertEqual( freqs, ''.join( self.files['Benzene_freqs.freqs'] ) )
+		benzene_freqs = orca.get_freqs( self.files['Benzene_freqs.out'] )
+		H2O_freqs = orca.get_freqs( self.files['H2O_hybrid_hess.out'] )
+		self.assertEqual( benzene_freqs, ''.join( self.files['Benzene_freqs.freqs'] ) )
+		self.assertEqual( H2O_freqs, ''.join( self.files['H2O_hybrid_hess.freqs'] ) )
 		
 
 if __name__ == '__main__':

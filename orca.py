@@ -95,35 +95,11 @@ def template( geom='', nprocs=8, jobtype='Opt', functional='B3LYP', basis='sto-3
 
 def get_freqs( lines ):
 	'''Returns all the frequencies and geometries in xyz format'''
-	# Find the coordinates of the geometries
-	geometries_start = []
-	geometries_end = []
-	for i in range( len(lines) ):
-		if 'CARTESIAN COORDINATES (ANGSTROEM)\n' == lines[i]:
-			geometries_start.append( i + 2 )
-		if 'CARTESIAN COORDINATES (A.U.)\n' == lines[i]:
-			geometries_end.append( i - 2 )
+	# Find the coordinates of the vibrational modes (assumes the last coordinates given)
+	geom = get_geom(lines)
+	num_atoms = len(geom)
+	geom = [ str(num_atoms), '' ]   + [ '\t'.join(line.split() ) for line in geom ]
 
-	# Extract the geometries
-	geometries = []
-	num_atoms = geometries_end[0] - geometries_start[0]
-	for i in range( len(geometries_start) ):
-		start = geometries_start[i]
-		end = geometries_end[i]
-		# Add in error checking here
-		if end - start != num_atoms:
-			num_atoms = end - start
-
-		geom = [ str(num_atoms), '' ]
-		for line in lines[start:end]:
-			geom.append( '\t'.join( line.split() ) )
-		
-		geometries.append(geom)
-
-	# Save the geometries to the output file
-	output = '\n\n'.join( [ '\n'.join(geom)  for geom in geometries ] )
-
-	# Find the coordinates of the vibrational modes
 	'''Model of vibrational output for an N atom molecule
 			0	1	...		5
 	atom1x	#	#	...		#
@@ -150,18 +126,24 @@ def get_freqs( lines ):
 	vib_modes_end = 0
 	vib_freqs_start = 0
 	vib_freqs_end = 0
+	hybrid_hessian_vib_modes_end = 0
 	for i in reversed( range(len(lines) ) ):
 		line = lines[i]
 		if 'The first frequency considered to be a vibration is ' == line[0:52]:
 			vibrations_start = int(line[52:].strip())
+			hybrid_hessian_vib_modes_end = i - 2
 		
 		if 'IR SPECTRUM\n' == line:
 			vib_modes_end = i - 3
-		if 'NORMAL MODES\n' == line:
+		elif 'NORMAL MODES\n' == line:
 			vib_modes_start = i + 7
-		if 'VIBRATIONAL FREQUENCIES\n' == line:
+		elif 'VIBRATIONAL FREQUENCIES\n' == line:
 			vib_freqs_start = i + 3
 			break
+	
+	# Partial hessian calculation output looks a little different
+	if ( vib_modes_end == 0 and hybrid_hessian_vib_modes_end != 0 ):
+		vib_modes_end = hybrid_hessian_vib_modes_end
 
 	# Plot all vibrations (don't remove non-frequencies)
 	vibrations_start = 0
@@ -207,12 +189,14 @@ def get_freqs( lines ):
 			modes.append(mode)
 
 	# Apply vibrations to the last geometry
-	geom = geometries[-1]
 	vibrations = []
 	for i in range(len(modes)):
 		mode = modes[i]
+		# xyz header including the vibrational frequency
 		vibrations.append( [ str(num_atoms) , '{0} cm^-1'.format( vib_freqs[i] ) ] )
+		# TODO: remove excess nodes
 		for j in range(len(modes[i])):
+			# Geometry goes first, then x, y, and z displacements for modes
 			vibrations[i].append( geom[j+2] + '\t' + '\t'.join( mode[j] ) )
 
 	output = ''

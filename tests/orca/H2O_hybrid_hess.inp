@@ -1,0 +1,9 @@
+%pal nprocs 6 end
+! UKS B3LYP SV(P) TightSCF SlowConv NumFreq
+! TightOpt		# performs a TS optimization with the EF-algorithm
+
+* int 0 1
+	O	0	0	0	0	0	0
+	H	1	0	0	1	0	0
+	H	1	2	0	1	105	0
+*
