@@ -9,7 +9,7 @@ class TestOrca( unittest.TestCase ):
 	'''Tests the orca class'''
 	def setUp( self ):
 		'''Read in the necessary files'''
-		files = [ 'CH3F_Cl_scan.out', 'CH3F_Cl_scan.xyz', 'CH3F_Cl_scan.zmat', 'CH3F_Cl_scan.bohr.xyz', 'CH3F_Cl_scan.bohr.zmat', 'CH3F_Cl_scan.check' ]
+		files = [ 'CH3F_Cl_scan.out', 'CH3F_Cl_scan.xyz', 'CH3F_Cl_scan.zmat', 'CH3F_Cl_scan.bohr.xyz', 'CH3F_Cl_scan.bohr.zmat', 'CH3F_Cl_scan.check', 'Benzene_freqs.out', 'Benzene_freqs.freqs' ]
 		self.files = {}
 		for file in files:
 			with open( file, 'r' ) as f:
@@ -32,6 +32,11 @@ class TestOrca( unittest.TestCase ):
 		'''Testing get_energy'''
 		energy = orca.get_energy( self.files['CH3F_Cl_scan.out'] )
 		self.assertEqual( '-33.930452726594', energy )
+	
+	def test_get_freqs( self ):
+		'''Testing get_freqs'''
+		freqs = orca.get_freqs( self.files['Benzene_freqs.out'] )
+		self.assertEqual( freqs, ''.join( self.files['Benzene_freqs.freqs'] ) )
 		
 
 if __name__ == '__main__':
