@@ -1,1 +1,5 @@
+# swap files
+*.swp
+
+# Compiled python
 *.pyc
