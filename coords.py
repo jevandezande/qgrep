@@ -1,4 +1,4 @@
-# !/usr/bin/env python
+#!/usr/bin/env python
 
 # Script that takes a geometry in zmatrix or cartesian coordinates and converts it to the other
 

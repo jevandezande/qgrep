@@ -1,4 +1,4 @@
-# !/usr/bin/env python
+#!/usr/bin/env python
 
 # Script that takes an output file and writes a proper zmatrix or the reverse if already proper
 
