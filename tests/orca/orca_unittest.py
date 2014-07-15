@@ -12,7 +12,7 @@ class TestOrca(unittest.TestCase):
     def setUp(self):
         """Read in the necessary files"""
         files = ['CH3F_Cl_scan.out', 'CH3F_Cl_scan.xyz', 'CH3F_Cl_scan.zmat', 'CH3F_Cl_scan.bohr.xyz',
-                 'CH3F_Cl_scan.bohr.zmat', 'CH3F_Cl_scan.check', 'Benzene_freqs.out', 'Benzene_freqs.freqs',
+                 'CH3F_Cl_scan.bohr.zmat', 'CH3F_Cl_scan.check', 'CH3F_Cl_scan.plot', 'Benzene_freqs.out', 'Benzene_freqs.freqs',
                  'H2O_hybrid_hess.out', 'H2O_hybrid_hess.freqs']
         self.files = {}
         for file in files:
@@ -47,6 +47,11 @@ class TestOrca(unittest.TestCase):
         H2O_freqs = orca.get_freqs(self.files['H2O_hybrid_hess.out'])
         self.assertEqual(benzene_freqs, ''.join(self.files['Benzene_freqs.freqs']))
         self.assertEqual(H2O_freqs, ''.join(self.files['H2O_hybrid_hess.freqs']))
+
+    def test_plot(self):
+        """Testing plot"""
+        geoms = orca.plot(self.files['CH3F_Cl_scan.out'])
+        self.assertEqual('\n'.join(geoms), ''.join(self.files['CH3F_Cl_scan.plot']))
 
 
 if __name__ == '__main__':
