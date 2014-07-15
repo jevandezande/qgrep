@@ -11,9 +11,9 @@ class TestOrca(unittest.TestCase):
 
     def setUp(self):
         """Read in the necessary files"""
-        files = ['CH3F_Cl_scan.out', 'CH3F_Cl_scan.xyz', 'CH3F_Cl_scan.zmat', 'CH3F_Cl_scan.bohr.xyz',
-                 'CH3F_Cl_scan.bohr.zmat', 'CH3F_Cl_scan.check', 'CH3F_Cl_scan.plot', 'Benzene_freqs.out', 'Benzene_freqs.freqs',
-                 'H2O_hybrid_hess.out', 'H2O_hybrid_hess.freqs']
+        files = ['CH3F_Cl_scan.out', 'CH3F_Cl_scan.xyz', 'CH3F_Cl_scan.orca_zmat', 'CH3F_Cl_scan.bohr.xyz',
+                 'CH3F_Cl_scan.bohr.orca_zmat', 'CH3F_Cl_scan.check', 'CH3F_Cl_scan.plot', 'CH3F_Cl_scan.zmat',
+                 'Benzene_freqs.out', 'Benzene_freqs.freqs', 'H2O_hybrid_hess.out', 'H2O_hybrid_hess.freqs']
         self.files = {}
         for file in files:
             with open(file, 'r') as f:
@@ -24,11 +24,11 @@ class TestOrca(unittest.TestCase):
         self.assertEqual(orca.get_geom(self.files['CH3F_Cl_scan.out'], type='xyz', units='angstrom'),
                          self.files['CH3F_Cl_scan.xyz'])
         self.assertEqual(orca.get_geom(self.files['CH3F_Cl_scan.out'], type='zmat', units='angstrom'),
-                         self.files['CH3F_Cl_scan.zmat'])
+                         self.files['CH3F_Cl_scan.orca_zmat'])
         self.assertEqual(orca.get_geom(self.files['CH3F_Cl_scan.out'], type='xyz', units='bohr'),
                          self.files['CH3F_Cl_scan.bohr.xyz'])
         self.assertEqual(orca.get_geom(self.files['CH3F_Cl_scan.out'], type='zmat', units='bohr'),
-                         self.files['CH3F_Cl_scan.bohr.zmat'])
+                         self.files['CH3F_Cl_scan.bohr.orca_zmat'])
 
     def test_check_convergence(self):
         """Testing check_convergence"""
@@ -52,6 +52,11 @@ class TestOrca(unittest.TestCase):
         """Testing plot"""
         geoms = orca.plot(self.files['CH3F_Cl_scan.out'])
         self.assertEqual('\n'.join(geoms), ''.join(self.files['CH3F_Cl_scan.plot']))
+
+    def test_convert_to_orca_zmatrix(self):
+        zmat = orca.convert_zmatrix(self.files['CH3F_Cl_scan.out'], 'angstrom')
+        self.assertEqual(['\t'.join(line) + '\n' for line in zmat],
+                         self.files['CH3F_Cl_scan.zmat'])
 
 
 if __name__ == '__main__':
