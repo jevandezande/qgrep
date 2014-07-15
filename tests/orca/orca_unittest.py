@@ -1,5 +1,6 @@
 import unittest
 from sys import path
+import re
 
 path.append('../..')
 
@@ -53,11 +54,21 @@ class TestOrca(unittest.TestCase):
         geoms = orca.plot(self.files['CH3F_Cl_scan.out'])
         self.assertEqual('\n'.join(geoms), ''.join(self.files['CH3F_Cl_scan.plot']))
 
-    def test_convert_to_orca_zmatrix(self):
+    def test_convert_zmatrix(self):
         zmat = orca.convert_zmatrix(self.files['CH3F_Cl_scan.out'], 'angstrom')
         self.assertEqual(['\t'.join(line) + '\n' for line in zmat],
                          self.files['CH3F_Cl_scan.zmat'])
 
+    def test_convert_to_orca_zmatrix(self):
+        zmat = self.files['CH3F_Cl_scan.zmat']
+        orca_zmat = orca.convert_to_orca_zmatrix(zmat)
+        match = [['C', '0', '0', '0', '0', '0', '0'],
+                 ['H', '1', '0', '0', '1.101881', '0', '0'],
+                 ['H', '1', '2', '0', '1.101881', '67.866', '0'],
+                 ['H', '1', '2', '3', '1.101892', '67.921', '239.994'],
+                 ['H', '1', '2', '3', '1.101887', '67.906', '120.019'],
+                 ['F', '1', '2', '3', '1.200000', '179.969', '15.700']]
+        self.assertEqual(orca_zmat, match)
 
 if __name__ == '__main__':
     unittest.main()
