@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Script that takes an output file and gets the last geometry
 
@@ -30,7 +30,7 @@ elif program == 'psi4':
     import psi4
     geom = psi4.get_geom(lines)
 else:
-    print "Not yet supported"
+    print("Not yet supported")
 
 if not args.output == '':
     out = ''

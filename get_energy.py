@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Script that takes an output file and gets the last geometry
 
@@ -29,9 +29,9 @@ elif program == 'molpro':
     from molpro import get_energy
     energy = get_energy(lines)
 else:
-    print "Not yet supported"
+    print("Not yet supported")
 
 if not energy == 0:
-    print energy
+    print(energy)
 else:
-    print "No energy found"
+    print("No energy found")

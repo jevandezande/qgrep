@@ -14,17 +14,17 @@ def get_geom(lines, type='xyz', units='angstrom'):
     elif type == 'zmat' and units == 'bohr':
         start = 'INTERNAL COORDINATES (A.U.)\n'
     else:
-        print "Invalid format or units"
+        print("Invalid format or units")
         return ''
 
     geom_start = -1
     # Iterate backwards until the start of the last set of coordinates is found
-    for i in reversed(range(len(lines))):
+    for i in reversed(list(range(len(lines)))):
         if start == lines[i]:
             geom_start = i + 2
             break
     if geom_start == -1:
-        print "Could not find start of geometry"
+        print("Could not find start of geometry")
         return ''
 
     geom_end = -1
@@ -132,7 +132,7 @@ def get_freqs(lines):
     vib_freqs_start = 0
     vib_freqs_end = 0
     hybrid_hessian_vib_modes_end = 0
-    for i in reversed(range(len(lines))):
+    for i in reversed(list(range(len(lines)))):
         line = lines[i]
         if 'The first frequency considered to be a vibration is ' == line[0:52]:
             vibrations_start = int(line[52:].strip())
@@ -180,7 +180,7 @@ def get_freqs(lines):
             y = vibrations[i + j + 2].split()[1:]
             z = vibrations[i + j + 3].split()[1:]
             # the xyz coordinates for atom1 across the vibrations (up to 6)
-            xyz = zip(x, y, z)
+            xyz = list(zip(x, y, z))
             coords.append(xyz)
             # mode0    mode1    ...    mode5
         # atom1 xyz = [(x,y,z),(x,y,z), ...]
@@ -275,12 +275,12 @@ def energy_levels(lines):
 
     levels_start = 0
     # Iterate backwards until the start of the last set of coordinates is found
-    for i in reversed(range(len(lines))):
+    for i in reversed(list(range(len(lines)))):
         if start == lines[i]:
             levels_start = i + 5
             break
     if levels_start == 0:
-        print "Could not find start of orbitals"
+        print("Could not find start of orbitals")
         return ''
 
     levels_end = 0
@@ -289,7 +289,7 @@ def energy_levels(lines):
             levels_end = i
             break
     if levels_end == 0:
-        print "Could not find the end of the orbitals"
+        print("Could not find the end of the orbitals")
         return ''
 
     levels = lines[levels_start: levels_end]

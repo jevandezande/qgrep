@@ -7,7 +7,7 @@ def get_geom(lines, type='xyz'):
     end = '             OPTKING Finished Execution \n'
 
     geom_end = 0
-    for i in reversed(range(len(lines))):
+    for i in reversed(list(range(len(lines)))):
         if end == lines[i]:
             geom_end = i - 2
             break
@@ -16,7 +16,7 @@ def get_geom(lines, type='xyz'):
 
     geom_start = 0
     # Iterate backwards until the beginning of the last set of coordinates is found
-    for i in reversed(range(geom_end)):
+    for i in reversed(list(range(geom_end))):
         if start == lines[i]:
             geom_start = i + 1
             break
@@ -109,7 +109,7 @@ def get_freqs(lines):
     vibrations_start = 0
     vib_modes_start = 0
     vib_modes_end = 0
-    for i in reversed(range(len(lines))):
+    for i in reversed(list(range(len(lines)))):
         if 'The first frequency considered to be a vibration is ' == lines[i][0:52]:
             vibrations_start = int(lines[i][52:].strip())
 
@@ -136,8 +136,8 @@ def get_freqs(lines):
     """
 
     num_atoms = len(geometries[-1])
-    print geometries
-    print num_atoms
+    print(geometries)
+    print(num_atoms)
     for i in range(0, len(vibrations), 3 * num_atoms + 1):
         coords = []
         for j in range(0, 3 * num_atoms, 3):
@@ -145,7 +145,7 @@ def get_freqs(lines):
             y = vibrations[i + j + 2].split()[1:]
             z = vibrations[i + j + 3].split()[1:]
             # the xyz coordinates for atom1 across the vibrations (up to 6)
-            xyz = zip(x, y, z)
+            xyz = list(zip(x, y, z))
             coords.append(xyz)
             # mode0    mode1    ...    mode5
             # atom1 xyz = [(x,y,z),(x,y,z), ...]
@@ -181,4 +181,4 @@ def get_energy(lines, energy_type='sp'):
             if line[:18] == '    Total Energy =':
                 return line.split()[-1]
     else:
-        print 'Energy type not yet supported'
+        print('Energy type not yet supported')

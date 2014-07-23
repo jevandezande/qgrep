@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Script that takes a geometry in zmatrix or cartesian coordinates and converts it to the other
 
@@ -21,7 +21,7 @@ if not (args.type == 'xyz' or args.type == 'zmat'):
     elif args.input[-4:] == 'zmat':
         args.type = 'zmat'
     else:
-        print "Please specify a type"
+        print("Please specify a type")
         exit(1)
 
 if not args.output:
@@ -36,5 +36,5 @@ if args.type == 'xyz':
 elif args.type == 'zmat':
     conv.convert_zmatrix(args.input, args.output)
 else:
-    print "Invalid type. Please specify either a zmatrix (zmat) or cartesian (xyz) geoetry"
+    print("Invalid type. Please specify either a zmatrix (zmat) or cartesian (xyz) geoetry")
     exit(1)

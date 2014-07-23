@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Script that makes an input file with the specified parameters
 
@@ -20,7 +20,7 @@ try:
     with open('geom.xyz', 'r') as f:
         geom = f.read().strip()
 except IOError:
-    print "No geometry specified"
+    print("No geometry specified")
 
 program = args.program
 if program == 'orca':
@@ -33,7 +33,7 @@ elif program == 'qchem':
 #    from psi4 import template
 #    temp = template(geom)
 else:
-    print "Not yet supported"
+    print("Not yet supported")
 
 with open('input.dat', 'w') as f:
     f.write(temp)

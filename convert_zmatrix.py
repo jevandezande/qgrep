@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Script that takes an output file and writes a proper zmatrix or the reverse if already proper
 
@@ -30,7 +30,7 @@ elif program == 'zmatrix':
         lines = lines[2:]
     zmat = orca.convert_to_orca_zmatrix(lines)
 else:
-    print "Not yet supported"
+    print("Not yet supported")
 
 with open(args.output, 'w') as f:
     for line in zmat:

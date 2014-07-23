@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Script that takes an orca output file and outputs the geometries of the individual optimization steps
 
@@ -26,7 +26,7 @@ elif program == 'psi4':
     import psi4
     geoms = psi4.plot(lines)
 else:
-    print "Not yet supported"
+    print("Not yet supported")
 
 if not args.output == '':
     with open(args.output, 'w') as f:

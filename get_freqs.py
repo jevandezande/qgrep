@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
 
@@ -24,7 +24,7 @@ elif program == 'psi4':
     from psi4 import get_freqs
     output = get_freqs(lines)
 else:
-    print "Not yet supported"
+    print("Not yet supported")
 
 if not args.output == '':
     with open(args.output, 'w') as f:

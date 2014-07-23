@@ -7,7 +7,7 @@ def get_geom(lines, type='xyz'):
 
     geom_end = 0
     # Iterate backwards until the end last set of coordinates is found
-    for i in reversed(range(len(lines))):
+    for i in reversed(list(range(len(lines)))):
         if end in lines[i]:
             geom_end = i - 1
             break
@@ -16,7 +16,7 @@ def get_geom(lines, type='xyz'):
 
     geom_start = 0
     # Iterate backwards until the beginning of the last set of coordinates is found
-    for i in reversed(range(geom_end)):
+    for i in reversed(list(range(geom_end))):
         if start in lines[i]:
             geom_start = i + 3
             break

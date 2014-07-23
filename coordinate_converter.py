@@ -287,7 +287,7 @@ class CoordinateConverter:
     def print_cartesian(self):
         """Print the cartesian coordinates"""
         for line in self.cartesian:
-            print line[0] + '\t' + '\t'.join(str(x) for x in line[1])
+            print(line[0] + '\t' + '\t'.join(str(x) for x in line[1]))
 
     def output_zmatrix(self, output_file='geom.zmat'):
         """Output the zmatrix to the file"""
@@ -304,7 +304,7 @@ class CoordinateConverter:
     def print_zmatrix(self):
         """Print the zmatrix"""
         for line in self.zmatrix:
-            print line[0] + '\t' + '\t'.join(str(x) for x in line[1])
+            print(line[0] + '\t' + '\t'.join(str(x) for x in line[1]))
 
     def convert_zmatrix(self, input_file='geom.zmat', output_file='geom.xyz'):
         """Read in the zmatrix, converts it to cartesian, and outputs it to a file"""

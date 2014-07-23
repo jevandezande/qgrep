@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Script that takes an output file and prints all of its geometry convergence results
 
@@ -18,22 +18,19 @@ lines, program = read(args.input)
 convergence_list = []
 if program == 'orca':
     from orca import check_convergence
-
     convergence_list = check_convergence(lines)
 elif program == 'qchem':
     from qchem import check_convergence
-
     convergence_list = check_convergence(lines)
 elif program == 'psi4':
     from psi4 import check_convergence
-
     convergence_list = check_convergence(lines)
 else:
-    print "Not yet supported"
+    print("Not yet supported")
 
 # Print the last number of convergence results (even works for too big numbers)
 for i in convergence_list[-args.number:]:
-    print i
+    print(i)
 
-print 'Optimization Steps: {0}'.format(len(convergence_list))
+print(('Optimization Steps: {0}'.format(len(convergence_list))))
 

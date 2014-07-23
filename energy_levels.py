@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Script that takes an output file and returns the orbital energies
 
@@ -26,11 +26,11 @@ if program == 'orca':
 #    from psi4 import energy_levels
 #    levels = energy_levels(lines)
 else:
-    print "Not yet supported"
+    print("Not yet supported")
 
 with open(args.output, 'w') as f:
     for level in levels:
         f.write(level)
 
 for item in info:
-    print '{0}:\t{1}'.format(item, info[item])
+    print('{0}:\t{1}'.format(item, info[item]))
