@@ -254,7 +254,7 @@ def convert_to_orca_zmatrix(lines):
     element = lines[0].split()[0]
     orca_zmatrix = [[element, '0', '0', '0', '0', '0', '0']]
     # Second lines
-    element, atom1, distance = lines[2].split()[:3]
+    element, atom1, distance = lines[1].split()[:3]
     orca_zmatrix.append([element, atom1, '0', '0', distance, '0', '0'])
     # Third line
     if len(lines) > 2:
