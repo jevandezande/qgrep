@@ -1,5 +1,7 @@
 """Source for all qchem related functions"""
 
+import os.path as path
+
 
 def get_geom(lines, type='xyz'):
     start = 'Standard Nuclear Orientation (Angstroms)'
@@ -84,3 +86,92 @@ $end
 """
 
     return template_style.format(geom, jobtype, functional, basis)
+
+
+def generate_input(geom='', options={}):
+    '''Generate an input file with the given options and the files available in the folder'''
+    # Convert keys and values to lowercase strings for ease of use
+    options = { str(k).lower(): str(v).lower() for k,v in options.items() }
+
+    # Run a frequency before these jobs
+    job2 = None
+    if options['jobtype'] == 'ts' or options['jobtype'] == 'rpath':
+        job2 = options['jobtype']
+        options['jobtype'] = 'freq'
+    # Run a frequency to confirm minimum
+    if options['jobtype'] == 'optfreq':
+        job2 = 'freq'
+        options['jobtype'] = 'opt'
+
+    check = []
+    if not geom == '':
+        if geom == 'read':
+            if path.isfile('geom.xyz'):
+                geom = [ line.split() for line in open('geom.xyz').readlines() ]
+                charge = 0
+                multiplicity = 1
+                if len(geom[0]) == 2 and geom[0][0].isdigit() and geom[0][1].isdigit():
+                    charge = int( geom[0][0] )
+                    multiplicity = int( geom[0][1] )
+                else:
+                    check.append('charge/multiplicity')
+                    
+                if len( geom[0] ) == 1 and geom[0][0].isdigit():
+                    # Remove the useless numatoms and blank line
+                    geom = geom[2:]
+                geom = ''.join( [ '\t' + '\t'.join(line) + '\n' for line in geom] )
+            else:
+                check.append('Missing geometry file')
+    # Prettify the geometry by adding tabs
+    input = "$molecule\n{}\n$end\n".format( geom )
+
+    basis = ''
+    if 'basis' in options:
+        if options['basis'] == 'read':
+            if path.isfile('basis.gbs'):
+                basis = "\n$basis\n" + open('basis.gbs').read() + "$end\n"
+            else:
+                check.append("Can't open basis")
+    else:
+        check.append('Missing basis')
+
+    ecp = ''
+    if 'ecp' in options:
+        if options['ecp'] == 'read':
+            if path.isfile('ecp.gbs'):
+                ecp = "\n$ecp\n" + open('ecp.gbs').read() + "$end\n"
+            else:
+                check.append("Can't open ecp")
+
+    # Extra options
+    if not 'max_scf_cycles' in options:
+        options['max_scf_cycles'] = '300'
+    
+    # Write rem section using keys and values from dictionary
+    input += '\n$rem\n' + '\n'.join( [ "\t" + str.ljust(key, 19) + ' ' + value for key, value in sorted(options.items()) ] ) + '\n$end\n'
+
+    if 'basis' in options:
+        if options['basis'] == 'read':
+            input += basis
+    if 'ecp' in options:
+        if options['ecp'] == 'read':
+            input += ecp
+
+    if job2:
+        input += "\n@@@\n\n$molecule\n\tread\n$end\n"
+        if options['basis'] == 'read':
+            input += basis
+        if options['ecp'] == 'read':
+            input += ecp
+        options['scf_guess'] = 'read'
+        if options['jobtype'] == 'freq':
+            options['geom_opt_hessian'] = 'read'
+        options['jobtype'] = job2
+
+        # Write rem
+        input += '\n$rem\n' + '\n'.join( [ "\t" + str.ljust(key, 19) + ' ' + value for key, value in sorted(options.items()) ] ) + '\n$end\n'
+        
+    print(input)
+    print( 'Check:' + '\n\t'.join(check) )
+
+    open('input.dat', 'w').write(input)
