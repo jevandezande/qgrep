@@ -1,0 +1,23 @@
+ $CONTRL
+    SCFTYP=RHF
+    RUNTYP=OPTIMIZE
+    COORD=ZMT
+    NZVAR=0
+ $END
+
+ $BASIS
+    GBASIS=STO
+    NGAUSS=3
+ $END
+
+ $DATA
+Methylene...1-A-1 state...RHF/STO-3G
+Cnv  2
+
+C
+H  1 rCH
+H  1 rCH  2 aHCH
+
+rCH=1.09
+aHCH=110.0
+ $END
