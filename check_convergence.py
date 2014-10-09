@@ -20,10 +20,10 @@ if program:
     try:
         mod = importlib.import_module(program)
         if hasattr(mod, 'check_convergence'):
-            mod.check_convergence(lines)
+            convergence_list = mod.check_convergence(lines)
             # Print the last number of convergence results (even works for too big numbers)
-            print('\n'.join(convergence_list[-args.number:])))
-            print('Optimization Steps:' + len(convergence_list))
+            print('\n'.join(convergence_list[-args.number:]))
+            print('Optimization Steps: ' + str(len(convergence_list)))
         else:
             print(program + ' does not yet have check_convergence implemented.')
     except ImportError:
