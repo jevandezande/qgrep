@@ -3,6 +3,7 @@
 # Script that takes an output file and prints all of its geometry convergence results
 
 import argparse
+import importlib
 
 from helper import read
 
@@ -15,22 +16,17 @@ args = parser.parse_args()
 
 lines, program = read(args.input)
 
-convergence_list = []
-if program == 'orca':
-    from orca import check_convergence
-    convergence_list = check_convergence(lines)
-elif program == 'qchem':
-    from qchem import check_convergence
-    convergence_list = check_convergence(lines)
-elif program == 'psi4':
-    from psi4 import check_convergence
-    convergence_list = check_convergence(lines)
+if program:
+    try:
+        mod = importlib.import_module(program)
+        if hasattr(mod, 'check_convergence'):
+            mod.check_convergence(lines)
+            # Print the last number of convergence results (even works for too big numbers)
+            print('\n'.join(convergence_list[-args.number:]))
+            print('Optimization Steps:' + len(convergence_list))
+        else:
+            print(program + ' does not yet have check_convergence implemented.')
+    except ImportError:
+        print(program + ' is not yet supported.')
 else:
-    print("Not yet supported")
-
-# Print the last number of convergence results (even works for too big numbers)
-for i in convergence_list[-args.number:]:
-    print(i)
-
-print(('Optimization Steps: {0}'.format(len(convergence_list))))
-
+    print('Cannot determine what program made this output file.')
