@@ -3,6 +3,7 @@
 # Script that takes an output file and gets the last geometry
 
 import argparse
+import importlib
 
 from helper import read
 
@@ -15,23 +16,18 @@ args = parser.parse_args()
 
 lines, program = read(args.input)
 
-energy = 0
-if program == 'orca':
-    from orca import get_energy
-    energy = get_energy(lines, args.energy_type)
-#elif program == 'qchem':
-#    from qchem import get_energy
-#    energy = get_energy(lines)
-elif program == 'psi4':
-    from psi4 import get_energy
-    energy = get_energy(lines, args.energy_type)
-elif program == 'molpro':
-    from molpro import get_energy
-    energy = get_energy(lines)
+if program:
+    try:
+        mod = importlib.import_module(program)
+        if hasattr(mod, 'get_energy'):
+            energy = mod.get_energy(lines)
+            if energy == 0:
+                print('No energy output by {}, (may still be running)', program)
+            else:
+                print(energy)
+        else:
+            print(program + ' does not yet have get_energy implemented.')
+    except ImportError:
+        print(program + ' is not yet supported.')
 else:
-    print("Not yet supported")
-
-if not energy == 0:
-    print(energy)
-else:
-    print("No energy found")
+    print('Cannot determine what program made this output file.')
