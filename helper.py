@@ -19,7 +19,8 @@ def check_program(lines):
         'Northwest Computational Chemistry Package (NWChem)': 'nwchem',
         '#ZMATRIX': 'zmatrix',
         '* CFOUR Coupled-Cluster techniques for Computational Chemistry *': 'cfour',
-        '***  PROGRAM SYSTEM MOLPRO  ***': 'molpro'
+        '***  PROGRAM SYSTEM MOLPRO  ***': 'molpro',
+        "----- GAMESS execution script 'rungms' -----": 'gamess'
     }
 
     program = None
