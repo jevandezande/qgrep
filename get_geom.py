@@ -3,6 +3,7 @@
 # Script that takes an output file and gets the last geometry
 
 import argparse
+import importlib
 
 from helper import read
 
@@ -19,25 +20,20 @@ args = parser.parse_args()
 
 lines, program = read(args.input)
 
-geom = ''
-if program == 'orca':
-    import orca
-    geom = orca.get_geom(lines, args.type, args.units)
-elif program == 'qchem':
-    import qchem
-    geom = qchem.get_geom(lines)
-elif program == 'psi4':
-    import psi4
-    geom = psi4.get_geom(lines)
+if program:
+    try:
+        mod = importlib.import_module(program)
+        if hasattr(mod, 'get_geom'):
+            geom = mod.get_geom(lines)
+            out = ''
+            if args.length:
+                out = '{0}\n\n'.format(len(geom))
+            out += '\n'.join(['\t'.join(line.split()) for line in geom])
+            open(args.output, 'w').write(out)
+        else:
+            print(program + ' does not yet have check_convergence implemented.')
+    except ImportError:
+        print(program + ' is not yet supported.')
 else:
-    print("Not yet supported")
+    print('Cannot determine what program made this output file.')
 
-if not args.output == '':
-    out = ''
-    if args.length:
-        out = '{0}\n\n'.format(len(geom))
-    for line in geom:
-        out += '\t'.join(line.split()) + '\n'
-
-    with open(args.output, 'w') as f:
-        f.write(out)
