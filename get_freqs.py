@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import importlib
 
 from helper import read
 
@@ -13,19 +14,15 @@ args = parser.parse_args()
 
 lines, program = read(args.input)
 
-output = ''
-if program == 'orca':
-    from orca import get_freqs
-    output = get_freqs(lines)
-#elif program == 'qchem':
-#    from qchem import get_freqs
-#    output = get_freqs(lines)
-elif program == 'psi4':
-    from psi4 import get_freqs
-    output = get_freqs(lines)
+if program:
+    try:
+        mod = importlib.import_module(program)
+        if hasattr(mod, 'get_freqs'):
+            with open(args.output, 'w') as f:
+                f.write(mod.get_freqs(lines))
+        else:
+            print(program + ' does not yet have get_freqs implemented.')
+    except ImportError:
+        print(program + ' is not yet supported.')
 else:
-    print("Not yet supported")
-
-if not args.output == '':
-    with open(args.output, 'w') as f:
-        f.write(output)
+    print('Cannot determine what program made this output file.')
