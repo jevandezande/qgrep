@@ -24,7 +24,7 @@ if program:
     try:
         mod = importlib.import_module(program)
         if hasattr(mod, 'get_geom'):
-            geom = mod.get_geom(lines)
+            geom = mod.get_geom(lines, args.type, args.units)
             out = ''
             if args.length:
                 out = '{0}\n\n'.format(len(geom))
