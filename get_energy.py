@@ -22,7 +22,7 @@ if program:
         if hasattr(mod, 'get_energy'):
             energy = mod.get_energy(lines)
             if energy == 0:
-                print('No energy output by {}, (may still be running)', program)
+                print('No energy output by {}, (may still be running)'.format(program))
             else:
                 print(energy)
         else:
