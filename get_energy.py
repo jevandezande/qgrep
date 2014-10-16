@@ -20,7 +20,7 @@ if program:
     try:
         mod = importlib.import_module(program)
         if hasattr(mod, 'get_energy'):
-            energy = mod.get_energy(lines)
+            energy = mod.get_energy(lines, args.energy_type)
             if energy == 0:
                 print('No energy output by {}, (may still be running)'.format(program))
             else:
