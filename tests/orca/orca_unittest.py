@@ -41,6 +41,15 @@ class TestOrca(unittest.TestCase):
         """Testing get_energy"""
         energy = orca.get_energy(self.files['CH3F_Cl_scan.out'])
         self.assertEqual('-33.930452726594', energy)
+        energy = orca.get_energy(self.files['Benzene_freqs.out'], 'sp')
+        self.assertEqual('-232.089449656962', energy)
+        energy = orca.get_energy(self.files['Benzene_freqs.out'], 'gibbs')
+        self.assertEqual('-232.01547613', energy)
+        energy = orca.get_energy(self.files['Benzene_freqs.out'], 'enthalpy')
+        self.assertEqual('-231.98366000', energy)
+        energy = orca.get_energy(self.files['Benzene_freqs.out'], 'entropy')
+        self.assertEqual('-0.03181612', energy)
+
 
     def test_get_freqs(self):
         """Testing get_freqs"""
