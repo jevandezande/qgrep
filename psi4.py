@@ -1,10 +1,10 @@
 """Source for all psi4 related functions"""
 
 
-def get_geom(lines, type='xyz'):
+def get_geom(lines, type='xyz', units='Angstroms'):
     """Takes the lines of an psi4 output file and returns its last geometry"""
-    start = '    Cartesian Geometry (in Angstrom)\n'
-    end = '             OPTKING Finished Execution \n'
+    start = '\tCartesian Geometry (in Angstrom)\n'
+    end = '\t\t\t OPTKING Finished Execution \n'
 
     geom_end = 0
     for i in reversed(list(range(len(lines)))):
@@ -30,8 +30,8 @@ def get_geom(lines, type='xyz'):
 
 def plot(lines, type='xyz'):
     """Plots the the geometries from the optimization steps"""
-    start = '    Cartesian Geometry (in Angstrom)\n'
-    end = '             OPTKING Finished Execution \n'
+    start = '\tCartesian Geometry (in Angstrom)\n'
+    end = '\t\t\t OPTKING Finished Execution \n'
 
     geoms_start = []
     geoms_end = []
