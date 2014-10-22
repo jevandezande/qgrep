@@ -227,6 +227,18 @@ def get_energy(lines, energy_type='sp'):
             if energy_line == line[:25]:
                 energy = line.split()[-2]
                 break
+    elif energy_type == 'enthalpy':
+        energy_line = 'Total enthalpy'
+        for line in reversed(lines):
+            if energy_line == line[:14]:
+                energy = line.split()[-2]
+                break
+    elif energy_type == 'entropy':
+        energy_line = 'Total entropy correction'
+        for line in reversed(lines):
+            if energy_line == line[:24]:
+                energy = line.split()[4]
+                break
     return energy
 
 
