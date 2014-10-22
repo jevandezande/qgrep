@@ -30,8 +30,11 @@ def get_geom(lines, type='xyz'):
     return geom
 
 
-def plot(lines):
+def plot(lines, type='xyz'):
     """Plots all the geometries for the optimization steps"""
+    if type != 'xyz':
+        raise SyntaxError('Only xyz coordinates are currently supported')
+    
     start = 'Standard Nuclear Orientation (Angstroms)'
     end = 'Molecular Point Group'
 
