@@ -10,3 +10,32 @@ def check_convergence(lines):
             convergence_list.append(''.join(lines[i:i+3:2]))
 
     return convergence_list
+
+def get_geom(lines, type='xyz', units='angstrom'):
+    """Takes the lines of an output file and returns its last geometry in the specified format"""
+    start = ' COORDINATES OF ALL ATOMS ARE (ANGS)\n'
+    end = '\n'
+    if type=='zmat' or units=='bohr':
+        raise SyntaxError("Currently only supports Angstroms and xyz coordinates")
+
+    geom_start = -1
+    # Iterate backwards until the start of the last set of coordinates is found
+    for i in reversed(list(range(len(lines)))):
+        if start == lines[i]:
+            geom_start = i + 3
+            break
+    if geom_start == -1:
+        print("Could not find start of geometry")
+        return ''
+
+    geom_end = -1
+    for i in range(geom_start, len(lines)):
+        if end == lines[i]:
+            geom_end = i
+            break
+    if geom_end == -1:
+        return ''
+
+    geom = lines[geom_start: geom_end]
+
+    return geom
