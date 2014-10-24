@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-# Script that takes an orca output file and outputs the geometries of the individual optimization steps
+# Script that takes an output file and outputs the geometries of the individual optimization steps
 
 import argparse
+import importlib
 
 from helper import read
 
@@ -15,19 +16,17 @@ args = parser.parse_args()
 
 lines, program = read(args.input)
 
-geoms = []
-if program == 'orca':
-    import orca
-    geoms = orca.plot(lines, args.type)
-elif program == 'qchem':
-    import qchem
-    geoms = qchem.plot(lines)
-elif program == 'psi4':
-    import psi4
-    geoms = psi4.plot(lines)
+if program:
+    try:
+        mod = importlib.import_module(program)
+        if hasattr(mod, 'plot'):
+            geoms = mod.plot(lines, args.type)
+            with open(args.output, 'w') as f:
+                f.write('\n'.join(geoms))
+        else:
+            print(program + ' does not yet have plot implemented.')
+    except ImportError:
+        print(program + ' is not yet supported.')
 else:
-    print("Not yet supported")
+    print('Cannot determine what program made this output file.')
 
-if not args.output == '':
-    with open(args.output, 'w') as f:
-        f.write('\n'.join(geoms))
