@@ -22,7 +22,7 @@ class TestOrca(unittest.TestCase):
         """Testing check_convergence"""
         checklist = gamess.check_convergence(self.files['CH2_opt.out'])
         self.assertEqual(len(checklist), 6)
-        self.assertEqual(checklist[-1], ''.join(self.files['CH2_opt.check']))
+        self.assertEqual('\n'.join(checklist), ''.join(self.files['CH2_opt.check']).strip())
 
 if __name__ == '__main__':
     unittest.main()
