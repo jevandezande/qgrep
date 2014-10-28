@@ -55,6 +55,21 @@ H             0.00000000     -1.00000000     11.00000000"""
         self.assertRaises(SyntaxError, Molecule.check_geom, [[[0, 1, 2, 3]]])
         self.assertRaises(SyntaxError, Molecule.check_geom, [[['H', 1, 'a', 3]]])
 
+    def test_check_zmatrix(self):
+        """Test check_zmatrix"""
+        self.assertRaises(SyntaxError, Molecule.check_zmatrix, [[]])
+        self.assertRaises(SyntaxError, Molecule.check_zmatrix, [['O'], 'H'])
+        self.assertRaises(SyntaxError, Molecule.check_zmatrix, [['O'], ['H', 'O', 1]])
+        self.assertRaises(SyntaxError, Molecule.check_zmatrix, [['O'], ['H', 1, 1, 2]])
+        bad_h2o2 = [['O'], ['H', 1, 0], ['O', 1, 1.5, 2, 109.5], ['H', 4, 1, 2, 109.5, 1, 120]]
+        self.assertRaises(SyntaxError, Molecule.check_zmatrix, bad_h2o2)
+        # End of errors, begin correct
+        self.assertTrue(Molecule.check_zmatrix([]))
+        water_zmatrix = [['O'], ['H', 1, 0], ['H', 1, 1, 2, 104.5]]
+        self.assertTrue(Molecule.check_zmatrix(water_zmatrix))
+        h2o2_zmatrix = [['O'], ['H', 1, 0], ['O', 1, 1.5, 2, 109.5], ['H', 3, 1, 2, 109.5, 1, 120]]
+        self.assertTrue(Molecule.check_zmatrix(h2o2_zmatrix))
+
     def test_read_write_geometry(self):
         """Testing read and write"""
         test_file = 'geom.xyz.tmp'
