@@ -3,11 +3,11 @@ import importlib
 
 
 class Molecule(object):
-    def __init__(self, geom=None, name=None):
+    def __init__(self, geom=[], name=None):
         # self.geom is a list of lists where the first column corresponds to the element
         # and the others to x, y, and z respectively
-        self.geom = None
-        if geom is not None and Molecule.check_geom(geom):
+        self.geom = []
+        if len(geom) > 0 and Molecule.check_geom(geom):
             self.geom = geom
         self.name = None
 
@@ -34,10 +34,8 @@ class Molecule(object):
 
     def __eq__(self, other):
         if not isinstance(other, Molecule):
-            print('hey')
             return False
         if self.geometry != self.geometry:
-            print('he2y')
             return False
         return True
 
@@ -78,10 +76,11 @@ class Molecule(object):
     @staticmethod
     def check_geom(geom):
         """Checks if the given geometry is valid, raises a syntax error if it is not"""
-        if len(geom) == 0 or len(geom[0]) == 0:
-            raise SyntaxError("No atoms in geometry")
+        if len(geom) == 0:
+            return True
         for atom in geom:
-            Molecule.check_atom(atom)
+            if not Molecule.check_atom(atom):
+                return False
 
         return True
 

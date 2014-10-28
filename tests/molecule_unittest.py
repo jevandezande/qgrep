@@ -49,7 +49,8 @@ H             0.00000000     -1.00000000     11.00000000"""
         """Test check_geom throws errors correctly"""
         water = [['H', 0, 0, 0], ['O', 0, 0, 1], ['H', 0, 1, 1]]
         self.assertTrue(Molecule.check_geom(water))
-        self.assertRaises(SyntaxError, Molecule.check_geom, [[]])
+        # Zero-length geometries are valid
+        self.assertTrue(Molecule.check_geom([]))
         self.assertRaises(SyntaxError, Molecule.check_geom, [[[1, 2, 3]]])
         self.assertRaises(SyntaxError, Molecule.check_geom, [[[0, 1, 2, 3]]])
         self.assertRaises(SyntaxError, Molecule.check_geom, [[['H', 1, 'a', 3]]])
