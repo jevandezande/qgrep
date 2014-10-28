@@ -10,50 +10,64 @@ class TestMolecule(unittest.TestCase):
 
     def setUp(self):
         """Set up for every test"""
-        self.water = Molecule([['H', 0, 0, 10], ['O', 0, 0, 11], ['H', 0, -1, 11]])
+        self.water_xyz = Molecule([['H', 0, 0, 10], ['O', 0, 0, 11], ['H', 0, -1, 11]])
+        self.water_zmatrix = Molecule([['O'], ['H', 1, 0], ['H', 1, 1, 2, 104.5]])
 
     def test_len(self):
         """Testing __len__"""
-        self.assertEqual(len(self.water), 3)
+        self.assertEqual(len(self.water_xyz), 3)
 
-    def test_getsetdeleqinsert(self):
+    def test_getsetdeleqinsert_xyz(self):
         """Test getting, setting and deleting atoms"""
-        self.assertEqual(self.water[0], ['H', 0, 0, 10])
-        del self.water[1]
-        self.assertEqual(self.water[1], ['H', 0, -1, 11])
-        self.water[0] = ['H', 0, 0, 0]
-        self.water[1] = ['H', 0, 1, 1]
-        self.assertEqual(self.water[1], ['H', 0, 1, 1])
-        self.water.insert(1, ['O', 0, 0, 1])
-        self.assertEqual(self.water[1], ['O', 0, 0, 1])
-        self.assertEqual(self.water[2], ['H', 0, 1, 1])
-        self.assertEqual(self.water, Molecule([['H', 0, 0, 0], ['O', 0, 0, 1], ['H', 0, 1, 1]]))
+        self.assertEqual(self.water_xyz[0], ['H', 0, 0, 10])
+        del self.water_xyz[1]
+        self.assertEqual(self.water_xyz[1], ['H', 0, -1, 11])
+        self.water_xyz[0] = ['H', 0, 0, 0]
+        self.water_xyz[1] = ['H', 0, 1, 1]
+        self.assertEqual(self.water_xyz[1], ['H', 0, 1, 1])
+        self.water_xyz.insert(1, ['O', 0, 0, 1])
+        self.assertEqual(self.water_xyz[1], ['O', 0, 0, 1])
+        self.assertEqual(self.water_xyz[2], ['H', 0, 1, 1])
+        self.assertEqual(self.water_xyz, Molecule([['H', 0, 0, 0], ['O', 0, 0, 1], ['H', 0, 1, 1]]))
+
+    def test_getsetdeleqinsert_zmat(self):
+        """Test getting, setting and deleting atoms"""
+        self.assertEqual(self.water_xyz[0], ['H', 0, 0, 10])
+        del self.water_xyz[1]
+        self.assertEqual(self.water_xyz[1], ['H', 0, -1, 11])
+        self.water_xyz[0] = ['H', 0, 0, 0]
+        self.water_xyz[1] = ['H', 0, 1, 1]
+        self.assertEqual(self.water_xyz[1], ['H', 0, 1, 1])
+        self.water_xyz.insert(1, ['O', 0, 0, 1])
+        self.assertEqual(self.water_xyz[1], ['O', 0, 0, 1])
+        self.assertEqual(self.water_xyz[2], ['H', 0, 1, 1])
+        self.assertEqual(self.water_xyz, Molecule([['H', 0, 0, 0], ['O', 0, 0, 1], ['H', 0, 1, 1]]))
 
     def test_str(self):
         """Testing __str__"""
-        water_string = """H             0.00000000      0.00000000     10.00000000
+        water_xyz_string = """H             0.00000000      0.00000000     10.00000000
 O             0.00000000      0.00000000     11.00000000
 H             0.00000000     -1.00000000     11.00000000"""
-        self.assertEqual(str(self.water), water_string)
+        self.assertEqual(str(self.water_xyz), water_xyz_string)
 
-    def test_check_atom(self):
-        """Test check_atom throws errors correctly"""
+    def test_check_xyz_atom(self):
+        """Test check_xyz_atom throws errors correctly"""
         atom = ['H', 0, 1, 2]
-        self.assertTrue(Molecule.check_atom(atom))
-        self.assertRaises(SyntaxError, Molecule.check_atom, [[]])
-        self.assertRaises(SyntaxError, Molecule.check_atom, [[1, 2, 3]])
-        self.assertRaises(SyntaxError, Molecule.check_atom, [[0, 1, 2, 3]])
-        self.assertRaises(SyntaxError, Molecule.check_atom, [['H', 1, 'a', 3]])
+        self.assertTrue(Molecule.check_xyz_atom(atom))
+        self.assertRaises(SyntaxError, Molecule.check_xyz_atom, [[]])
+        self.assertRaises(SyntaxError, Molecule.check_xyz_atom, [[1, 2, 3]])
+        self.assertRaises(SyntaxError, Molecule.check_xyz_atom, [[0, 1, 2, 3]])
+        self.assertRaises(SyntaxError, Molecule.check_xyz_atom, [['H', 1, 'a', 3]])
 
     def test_check_geom(self):
         """Test check_geom throws errors correctly"""
-        water = [['H', 0, 0, 0], ['O', 0, 0, 1], ['H', 0, 1, 1]]
-        self.assertTrue(Molecule.check_geom(water))
+        water_xyz = [['H', 0, 0, 0], ['O', 0, 0, 1], ['H', 0, 1, 1]]
+        self.assertTrue(Molecule.check_xyz(water_xyz))
         # Zero-length geometries are valid
-        self.assertTrue(Molecule.check_geom([]))
-        self.assertRaises(SyntaxError, Molecule.check_geom, [[[1, 2, 3]]])
-        self.assertRaises(SyntaxError, Molecule.check_geom, [[[0, 1, 2, 3]]])
-        self.assertRaises(SyntaxError, Molecule.check_geom, [[['H', 1, 'a', 3]]])
+        self.assertTrue(Molecule.check_xyz([]))
+        self.assertRaises(SyntaxError, Molecule.check_xyz, [[[1, 2, 3]]])
+        self.assertRaises(SyntaxError, Molecule.check_xyz, [[[0, 1, 2, 3]]])
+        self.assertRaises(SyntaxError, Molecule.check_xyz, [[['H', 1, 'a', 3]]])
 
     def test_check_zmatrix(self):
         """Test check_zmatrix"""
@@ -73,10 +87,10 @@ H             0.00000000     -1.00000000     11.00000000"""
     def test_read_write_geometry(self):
         """Testing read and write"""
         test_file = 'geom.xyz.tmp'
-        self.water.write(test_file, True)
+        self.water_xyz.write(test_file, True)
         mol = Molecule()
         mol.read(test_file)
-        self.assertEqual(mol.geometry, self.water.geometry)
+        self.assertEqual(mol.geometry, self.water_xyz.geometry)
 
         os.remove(test_file)
 
