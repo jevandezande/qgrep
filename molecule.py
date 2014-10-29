@@ -85,7 +85,7 @@ class Molecule(object):
 
     def insert(self, i, atom):
         """Insert the atom in the specified position"""
-        if self.eom_type == 'zmat':
+        if self.geom_type == 'zmat':
             Molecule.check_zmatrix_atom(atom, i)
             self.xyz.insert(i, list(atom))
         else:
