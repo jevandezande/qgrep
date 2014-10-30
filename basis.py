@@ -77,8 +77,9 @@ class Contraction:
         out = '{:<2}    {}'.format(self.func_type, len(self))
         if style == 'gaussian94':
             if self.c2:
-                return out + '\n' + '\n'.join(('{:>17.7f}' + ' {:> 11.7f}'*2).format(*trip) for trip in self.values)
-            out += '\n' + '\n'.join('{:>17.7f} {:> 11.7f}'.format(*pair) for pair in self.values)
+                out += '\n' + '\n'.join(('{:>17.7f}' + ' {:> 11.7f}'*2).format(*trip) for trip in self.values)
+            else:
+                out += '\n' + '\n'.join('{:>17.7f} {:> 11.7f}'.format(*pair) for pair in self.values)
         elif style == 'gamess':
             if self.c2:
                 for i, trip in enumerate(self.values, start=1):

@@ -55,8 +55,15 @@ class TestContraction(unittest.TestCase):
         0.2000000   0.4000000
         1.0000000   0.3000000
 '''
+        sp_gaussian94 = '''SP    3
+        0.1000000   0.2000000   0.1000000
+        0.4000000   0.3000000   0.3000000
+        3.0000000   0.5000000   0.6000000
+'''
         self.assertEqual(s_gamess, self.cons.print('gamess'))
         self.assertEqual(p_gaussian94, self.conp.print())
+        #print(self.consp.print())
+        self.assertEqual(sp_gaussian94, self.consp.print())
 
 
 class TestBasis(unittest.TestCase):
@@ -64,11 +71,12 @@ class TestBasis(unittest.TestCase):
     def setUp(self):
         self.cons = Contraction('S', [1, 2], [0.5, 0.5])
         self.conp = Contraction('P', [0.01, 0.2, 1], [0.3, 0.4, 0.3])
-        self.basis = Basis('C', [self.cons, self.conp])
+        self.consp = Contraction('SP', [0.1, 0.4, 3], [0.2, 0.3, 0.5], [0.1, 0.3, 0.6])
+        self.basis = Basis('C', [self.cons, self.conp, self.consp])
 
     def test_len(self):
         """Test __len__"""
-        self.assertEqual(2, len(self.basis))
+        self.assertEqual(3, len(self.basis))
 
     def test_getset(self):
         """Test __getitem__ and __setitem__"""
@@ -87,6 +95,10 @@ P     3
   1      0.0100000   0.3000000
   2      0.2000000   0.4000000
   3      1.0000000   0.3000000
+SP    3
+  1      0.1000000   0.2000000   0.1000000
+  2      0.4000000   0.3000000   0.3000000
+  3      3.0000000   0.5000000   0.6000000
 '''
         c_gaussian94 = '''C    0
 S     2
@@ -96,6 +108,10 @@ P     3
         0.0100000   0.3000000
         0.2000000   0.4000000
         1.0000000   0.3000000
+SP    3
+        0.1000000   0.2000000   0.1000000
+        0.4000000   0.3000000   0.3000000
+        3.0000000   0.5000000   0.6000000
 '''
         self.assertEqual(c_gaussian94, self.basis.print())
         self.assertEqual(c_gamess, self.basis.print('gamess'))
