@@ -167,6 +167,7 @@ class BasisSet:
         """Check if the two basis sets are equal"""
         for atom, basis in self.atoms.items():
             b2 = other[atom]
+            print(basis == b2)
             if not atom in other or not basis == b2:
                 return False
         return True
@@ -229,7 +230,7 @@ class BasisSet:
                 i += num + 1
             self.atoms[name] = Basis(name, con_list)
 
-    def print_basis_set(self, style='gaussian94'):
+    def print(self, style='gaussian94'):
         """Print the basis to a string"""
         out = ''
         if style == 'gaussian94':
