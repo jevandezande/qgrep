@@ -111,6 +111,10 @@ class Basis:
             raise SyntaxError("Expecting a Contraction object, instead got: {}".format(type(value)))
         self.cons[i] = value
 
+    def __delitem__(self, key):
+        """Delete the selected key"""
+        del self.cons[key]
+
     def print(self, style='gaussian94', print_name=True):
         """Print all contractions in the specified format"""
         out = ''
@@ -137,6 +141,20 @@ class BasisSet:
             self.read_basis(atoms)
         else:
             raise SyntaxError("Invalid input basis set")
+
+    def __getitem__(self, item):
+        """Return the basis for the specified atom"""
+        return self.atoms[item]
+
+    def __setitem__(self, item, value):
+        """Return the basis for the specified atom"""
+        if not isinstance(value, Basis):
+            raise SyntaxError("Expecting a Basis object, got a: {}".format(Basis))
+        self.atoms[item] = value
+
+    def __delitem__(self, key):
+        """Delete the specified key"""
+        del self.atoms[key]
 
     @staticmethod
     def check_basis_set(atoms):

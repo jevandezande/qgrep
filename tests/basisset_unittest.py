@@ -83,12 +83,14 @@ class TestBasis(unittest.TestCase):
         """Test __len__"""
         self.assertEqual(3, len(self.basis))
 
-    def test_getset(self):
+    def test_getsetdel(self):
         """Test __getitem__ and __setitem__"""
         con = Contraction('F', [4, 9], [0.1, 0.9])
         self.basis[0] = con
         self.assertEqual(con, self.basis[0])
         self.assertRaises(SyntaxError, self.basis.__setitem__, 0, 1)
+        del self.basis[2]
+        self.assertRaises(IndexError, self.basis.__getitem__, 2)
 
     def test_print(self):
         """Test print"""
@@ -130,10 +132,20 @@ class TestBasisSet(unittest.TestCase):
         h = Basis('H', [cons, conp])
         cons = Contraction('S', [0.1, 0.4], [0.6, 0.4])
         consp = Contraction('SP', [0.1, 0.4, 3], [0.2, 0.3, 0.5], [0.1, 0.3, 0.6])
-        c = Basis('C', [cons, consp])
+        self.c = Basis('C', [cons, consp])
 
-        atoms = OrderedDict([('H', h), ('C', c)])
+        atoms = OrderedDict([('H', h), ('C', self.c)])
         self.basis_set = BasisSet(atoms)
+
+    def test_getsetdel(self):
+        """Test __getitem__, __setitem__, and __delitem__"""
+        cons = Contraction('S', [0.2, 0.4], [0.3, 0.7])
+        b = Basis('B', [cons])
+        self.basis_set['B'] = b
+        self.assertEqual(self.c, self.basis_set['C'])
+        self.assertEqual(b, self.basis_set['B'])
+        del self.basis_set['H']
+        self.assertRaises(KeyError, self.basis_set.__getitem__, 'H')
 
     def test_check_basis_set(self):
         """Test check_basis_set"""
