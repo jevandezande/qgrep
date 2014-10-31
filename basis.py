@@ -6,10 +6,9 @@ import numpy as np
 class Contraction:
     """A contraction of basis functions"""
     def __init__(self, func_type, exps, coeffs, c2=[]):
-        func_type = func_type.upper()
-        if not func_type in 'SPDFGHIKLMN':
+        self.func_type = func_type.upper()
+        if not self.func_type in 'SPDFGHIKLMN':
             raise SyntaxError("Invalid angular momentum.")
-        self.func_type = func_type
 
         if len(exps) == 0 or len(exps) != len(coeffs):
             raise SyntaxError('Need coefficients and exponents of the same length, got: \n{}\n{}'.format(exps, coeffs))
@@ -36,6 +35,10 @@ class Contraction:
         if not value[0] > 0:
             raise ValueError("All exponents must be greater than 0")
         self.values[item] = value
+
+    def __eq__(self, other):
+        """Check if the two contractions are the same"""
+        return self.func_type and (self.values == other.values).all()
 
     @staticmethod
     def check_exps(exps):
@@ -115,6 +118,10 @@ class Basis:
         """Delete the selected key"""
         del self.cons[key]
 
+    def __eq__(self, other):
+        """Check if the two basis are equivalent"""
+        return self.cons == other.cons
+
     def print(self, style='gaussian94', print_name=True):
         """Print all contractions in the specified format"""
         out = ''
@@ -131,7 +138,7 @@ class Basis:
 
 class BasisSet:
     """A BasisSet, which consists of the basis for multiple atoms"""
-    def __init__(self, atoms=OrderedDict):
+    def __init__(self, atoms=OrderedDict()):
         """Atoms is a dictionary of atom:Basis"""
         if isinstance(atoms, OrderedDict):
             BasisSet.check_basis_set(atoms)
@@ -155,6 +162,18 @@ class BasisSet:
     def __delitem__(self, key):
         """Delete the specified key"""
         del self.atoms[key]
+
+    def __eq__(self, other):
+        """Check if the two basis sets are equal"""
+        for atom, basis in self.atoms.items():
+            b2 = other[atom]
+            if not atom in other or not basis == b2:
+                return False
+        return True
+
+    def __contains__(self, item):
+        """Check if the item (atom) is in atoms"""
+        return item in self.atoms
 
     @staticmethod
     def check_basis_set(atoms):
