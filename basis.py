@@ -130,7 +130,7 @@ class Basis:
                 out += '{}    0\n'.format(self.atom)
         elif style == 'gamess':
             if print_name:
-                out += '{}\n'.format(convert_name(self.atom).upper(), len(self))
+                out += '{}\n'.format(self.atom, len(self))
         else:
             raise SyntaxError('Only gaussian94 and gamess currently supported')
         return out + ''.join([c.print(style, self.atom) for c in self.cons])

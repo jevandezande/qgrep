@@ -98,7 +98,7 @@ class TestBasis(unittest.TestCase):
 
     def test_print(self):
         """Test print"""
-        c_gamess = '''CARBON
+        c_gamess = '''C
 S     2
   1         1.0000000   0.5000000
   2         2.0000000   0.5000000
