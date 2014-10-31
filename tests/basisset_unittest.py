@@ -38,6 +38,11 @@ class TestContraction(unittest.TestCase):
         self.assertEqual([1, 2, 4], list(self.consp[0]))
         self.assertRaises(ValueError, self.consp.__setitem__, 1, [1, 2])
 
+    def test_check_exps(self):
+        """Test check_exps"""
+        Contraction.check_exps([1, 2])
+        self.assertRaises(ValueError, Contraction.check_exps, [1, 2, -3])
+
     def test_exps_coeffs_coeffs2(self):
         """Test exps, coeffs, and coeffs2"""
         self.assertEqual([1, 2], list(self.cons.exps))
@@ -47,8 +52,8 @@ class TestContraction(unittest.TestCase):
     def test_print(self):
         """Test print"""
         s_gamess = '''S     2
-  1      1.0000000   0.5000000
-  2      2.0000000   0.5000000
+  1         1.0000000   0.5000000
+  2         2.0000000   0.5000000
 '''
         p_gaussian94 = '''P     3
         0.0100000   0.3000000
@@ -89,16 +94,16 @@ class TestBasis(unittest.TestCase):
         """Test print"""
         c_gamess = '''CARBON
 S     2
-  1      1.0000000   0.5000000
-  2      2.0000000   0.5000000
+  1         1.0000000   0.5000000
+  2         2.0000000   0.5000000
 P     3
-  1      0.0100000   0.3000000
-  2      0.2000000   0.4000000
-  3      1.0000000   0.3000000
+  1         0.0100000   0.3000000
+  2         0.2000000   0.4000000
+  3         1.0000000   0.3000000
 SP    3
-  1      0.1000000   0.2000000   0.1000000
-  2      0.4000000   0.3000000   0.3000000
-  3      3.0000000   0.5000000   0.6000000
+  1         0.1000000   0.2000000   0.1000000
+  2         0.4000000   0.3000000   0.3000000
+  3         3.0000000   0.5000000   0.6000000
 '''
         c_gaussian94 = '''C    0
 S     2
@@ -149,8 +154,8 @@ class TestBasisSet(unittest.TestCase):
         self.basis_set.read_basis_set(test_file, 'gaussian94')
         open(test_file, 'w').write(self.basis_set.print_basis_set('gamess'))
         self.basis_set.read_basis_set(test_file, 'gamess')
-
         os.remove(test_file)
+        self.assertRaises(SyntaxError, self.basis_set.print_basis_set, 'turbomole')
 
     def test_values(self):
         """Test values"""

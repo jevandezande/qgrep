@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from helper import convert_name, atomic_number
+from helper import convert_name
 import numpy as np
 
 
@@ -33,6 +33,8 @@ class Contraction:
     def __setitem__(self, item, value):
         if len(value) != len(self.values[0]):
             raise ValueError("Incorrect size, expected {} elements.".format(len(self.values[0])))
+        if not value[0] > 0:
+            raise ValueError("All exponents must be greater than 0")
         self.values[item] = value
 
     @staticmethod
@@ -40,7 +42,7 @@ class Contraction:
         """Check to make sure that the exponents are valid"""
         for exp in exps:
             if not exp > 0:
-                raise SyntaxError("Exponents must be greater than 0.")
+                raise ValueError("Exponents must be greater than 0.")
 
     @staticmethod
     def check_coeffs(coeffs):
@@ -74,19 +76,14 @@ class Contraction:
 
     def print(self, style='gaussian94', atom=''):
         """Print the contraction to a string"""
-        out = '{:<2}    {}'.format(self.func_type, len(self))
+        num_coeffs = 1 + int(self.c2)
+        form = '{:>17.7f}' + ' {:> 11.7f}'*num_coeffs
+        out = '{:<2}    {}\n'.format(self.func_type, len(self))
         if style == 'gaussian94':
-            if self.c2:
-                out += '\n' + '\n'.join(('{:>17.7f}' + ' {:> 11.7f}'*2).format(*trip) for trip in self.values)
-            else:
-                out += '\n' + '\n'.join('{:>17.7f} {:> 11.7f}'.format(*pair) for pair in self.values)
+            out += '\n'.join([form.format(*group) for group in self.values])
         elif style == 'gamess':
-            if self.c2:
-                for i, trip in enumerate(self.values, start=1):
-                    out += ('\n {:>2} {:>14.7f}' + ' {:> 11.7f}'*2).format(i, *trip)
-            else:
-                for i, pair in enumerate(self.values, start=1):
-                    out += '\n {:>2} {:>14.7f} {:> 11.7f}'.format(i, *pair)
+            form = ' {:>2} ' + form
+            out += '\n'.join([form.format(i, *group) for i, group in enumerate(self.values, start=1)])
         else:
             raise SyntaxError('Only gaussian94 and gamess are currently supported.')
         return out + '\n'
@@ -169,8 +166,9 @@ class BasisSet:
             num_skip = 1
             atom_separator = '\n\n'
         else:
-            raise NotImplementedError("Only gaussian94 style basis sets are currently supported.")
+            raise SyntaxError("Only gaussian94 style basis sets are currently supported.")
         basis_set_str = open(in_file).read().strip()
+        # Split into atoms
         for chunk in basis_set_str.split(atom_separator):
             if len(chunk) == 0:
                 continue
@@ -179,10 +177,11 @@ class BasisSet:
             i = 0
             con_list = []
             while i < len(basis_chunk):
+                # Split into contractions
                 am, num = basis_chunk[i].split()
                 num = int(num)
                 con = []
-                for line in basis_chunk[i+1:i + num + 1]:
+                for line in basis_chunk[i + 1:i + num + 1]:
                     con.append([float(x) for x in line.split()[num_skip:]])
                 # Makes an empty list if no elements for coeffs2
                 exps, coeffs, *coeffs2 = zip(*con)
@@ -198,24 +197,17 @@ class BasisSet:
         out = ''
         if style == 'gaussian94':
             separator = '****\n'
-            atom_format = '{}    0\n'
             out = separator
-        if style == 'gamess':
+        elif style == 'gamess':
             separator = '\n'
-            atom_format = '{}'
+        else:
+            raise SyntaxError('Only gaussian94 and gamess currently supported')
         # Ideally would be sorted according to periodic table
-        for atom, basis in self.atoms.items():
-            out += basis.print(style) + separator
+        out += separator.join([basis.print(style) for basis in self.atoms.values()])
 
-        return out
+        return out + separator
 
     def values(self):
         """Returns a list of list of np.array(exp, coeff, *coeff2)"""
-        vals = []
-        for name, basis in self.atoms.items():
-            atom_vals = []
-            for con in basis:
-                atom_vals.append(con.values)
-                pass
-            vals.append(atom_vals)
+        vals = [[con.values for con in basis] for basis in self.atoms.values()]
         return vals
