@@ -217,7 +217,7 @@ class Molecule(object):
             for line in lines:
                 atom, x, y, z = line.split()
                 xyz.append([atom, float(x), float(y), float(z)])
-        elif program == 'zmatrixrix':
+        elif program == 'zmatrix':
             raise SyntaxError('Zmatrices are not yet supported')
         else:
             # TODO, make get_xyz actually output a molecule
