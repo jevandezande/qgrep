@@ -1,4 +1,5 @@
 """Source for all orca related functions"""
+from molecule import Molecule
 
 
 def get_geom(lines, type='xyz', units='angstrom'):
@@ -320,3 +321,25 @@ def energy_levels(lines):
             break
 
     return levels, info
+
+
+def get_molecule(lines):
+    start = 'CARTESIAN COORDINATES (ANGSTROEM)\n'
+    end = '\n'
+    geom_start = -1
+    for i, line in reversed(list(enumerate(lines))):
+        if start == line:
+            geom_start = i + 2
+            break
+    if geom_start == -1:
+        return ''
+
+    done = False
+    mol = Molecule()
+    for i in range(geom_start, len(lines)):
+        if end == lines[i]:
+            break
+        data = lines[i].split()
+        mol.append([data[0]] + list(map(float, data[1:4])))
+
+    return mol
