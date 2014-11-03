@@ -62,7 +62,6 @@ O-ECP NONE"""
         self.formaldehyde_xyz.write(tmp_geom_file)
         tmp_ecp_file = 'ecp.dat.tmp'
         ecp = """\
-H-ECP NONE
 C-ECP GEN   10  2
     3      ----- d-ul potential     -----
       -10.0000000        1    357.3914469

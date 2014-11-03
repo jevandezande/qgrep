@@ -58,7 +58,10 @@ class Gamessifier():
             an = atomic_number(name)
             atom_basis = self.basis_set[name].print(print_name=False)
             data += '{} {}     {}  {}  {}\n{}\n'.format(name, an, x, y, z, atom_basis)
-            ecp += self.ecp[name].strip() + '\n'
+            if name in self.ecp:
+                ecp += self.ecp[name].strip() + '\n'
+            else:
+                ecp += '{}-ECP NONE\n'.format(name)
         data += ' $END\n'
         ecp += ' $END\n'
         input_data = '{}\n{}\n{}'.format(self.other, data, ecp)
