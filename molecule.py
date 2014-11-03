@@ -67,14 +67,16 @@ class Molecule(object):
         """Sets the ith atom"""
         if self.geom_type == 'zmat':
             Molecule.check_zmatrix_atom(atom, i)
-        Molecule.check_xyz_atom(atom)
-        self.xyz[i] = list(atom)
+        else:
+            Molecule.check_xyz_atom(atom)
+            self.xyz[i] = list(atom)
 
     def __delitem__(self, i):
         """Deletes the ith atom"""
         if self.geom_type == 'zmat':
             del self.zmat[i]
-        del self.xyz[i]
+        else:
+            del self.xyz[i]
 
     def __eq__(self, other):
         if not isinstance(other, Molecule):
