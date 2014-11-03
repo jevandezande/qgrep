@@ -36,7 +36,7 @@ class Molecule(object):
             Molecule.check_xyz(geom)
             self.xyz = geom
 
-        self.name = None
+        self.name = name
 
     def __len__(self):
         """Return the number of atoms in the molecule"""
@@ -210,21 +210,23 @@ class Molecule(object):
     def read_xyz(infile="geom.xyz"):
         """Read the xyzetry from a file, currectly only supports XYZ files"""
         lines, program = helper.read(infile)
-        if program is None:
-            # Attempt to read as an XYZ file
-            if lines[0].strip().isdigit():
-                # Strip off length if provided
-                lines = lines[2:]
-            xyz = []
-            for line in lines:
-                atom, x, y, z = line.split()
-                xyz.append([atom, float(x), float(y), float(z)])
-        elif program == 'zmatrix':
-            raise SyntaxError('Zmatrices are not yet supported')
-        else:
-            # TODO, make get_xyz actually output a molecule
-            mod = importlib(program)
-            xyz = mod.get_geom()
+        if program:
+            if program == 'zmatrix':
+                raise SyntaxError('Zmatrices are not yet supported')
+            mod = importlib.import_module(program)
+            lines = mod.get_geom(lines)
+
+        # Attempt to read as an XYZ file
+        if lines[0].strip().isdigit():
+            # Strip off length if provided
+            lines = lines[2:]
+        xyz = []
+        for line in lines:
+            if line.strip() == '':
+                continue
+            atom, x, y, z = line.split()
+            xyz.append([atom, float(x), float(y), float(z)])
+
         return xyz
 
     def read(self, infile="geom.xyz"):
