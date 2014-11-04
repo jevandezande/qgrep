@@ -31,7 +31,7 @@ class Gamessifier():
             name, ecp_type = lines[i].split()[:2]
             name = name.split('-')[0]
             if ecp_type == 'GEN':
-                self.ecp[name] = ''
+                self.ecp[name] = lines[i]
                 done = False
                 while not done:
                     i += 1
@@ -56,7 +56,7 @@ class Gamessifier():
         ecp = ' $ECP\n'
         for name, x, y, z in self.mol:
             an = atomic_number(name)
-            atom_basis = self.basis_set[name].print(print_name=False)
+            atom_basis = self.basis_set[name].print(style='gamess', print_name=False)
             data += '{} {}     {}  {}  {}\n{}\n'.format(name, an, x, y, z, atom_basis)
             if name in self.ecp:
                 ecp += self.ecp[name].strip() + '\n'
