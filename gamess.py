@@ -39,3 +39,14 @@ def get_geom(lines, type='xyz', units='angstrom'):
     geom = lines[geom_start: geom_end]
 
     return geom
+
+def get_energy(lines, energy_type='sp'):
+    """Returns the energy"""
+    if energy_type != 'sp':
+        raise SyntaxError("Invalid energy type")
+    energy_line = ' '*23 + 'TOTAL ENERGY'
+    for line in reversed(lines):
+        if line[:35] == energy_line:
+            energy = line.split()[-1]
+
+    return energy
