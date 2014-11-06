@@ -48,5 +48,6 @@ def get_energy(lines, energy_type='sp'):
     for line in reversed(lines):
         if line[:35] == energy_line:
             energy = line.split()[-1]
+            break
 
     return energy
