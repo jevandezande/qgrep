@@ -42,6 +42,7 @@ def get_geom(lines, type='xyz', units='angstrom'):
 
 def get_energy(lines, energy_type='sp'):
     """Returns the energy"""
+    energy = 0
     if energy_type != 'sp':
         raise SyntaxError("Invalid energy type")
     energy_line = ' '*23 + 'TOTAL ENERGY'
