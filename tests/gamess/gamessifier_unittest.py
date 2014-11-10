@@ -1,7 +1,7 @@
 import unittest
 from sys import path
 path.append('../..')
-from gamessifier import Gamessifier
+from gamess import Gamessifier
 from molecule import Molecule
 from basis import Contraction, Basis, BasisSet
 import os
