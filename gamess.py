@@ -65,7 +65,6 @@ class Gamessifier():
         self.mol = Molecule()
         self.basis_set = BasisSet()
         self.ecp = {}
-        self.options_str = ''
         self.options_dict = {}
         self.vec = ''
         self.hess = ''
@@ -124,14 +123,22 @@ class Gamessifier():
             else:
                 raise SyntaxError('Invalid ecp type, only GEN and NONE are currently accepted.')
 
+    def write_options_str(self):
+        # Dictionary of form
+        # { block1:((option1, value1), (option2,value2)), block2:((option1, value1)) }
+        options_str = ''
+        for block, values in self.options_dict.items():
+            block_options = '\n'.join(['    {}={}'.format(key, value) for key, value in values.items()])
+            options_str += ' ${}\n{}\n $END\n\n'.format(block.upper(), block_options)
+        return options_str
+
     def read_options(self, options):
         """Reads options that will be prepended to the input file"""
-        self.options_str = ''
         self.options_dict = OrderedDict()
         if isinstance(options, str):
             if os.path.isfile(options):
-                self.options_str = open(options).read()
-                matches = re.findall('^ \$\w+.*?\$END', self.options_str, re.DOTALL + re.MULTILINE)
+                options_str = open(options).read()
+                matches = re.findall('^ \$\w+.*?\$END', options_str, re.DOTALL + re.MULTILINE)
                 for match in matches:
                     lines = match.split('\n')
                     block = lines[0][2:].strip()
@@ -142,12 +149,7 @@ class Gamessifier():
             else:
                 print('Could not read options.')
         elif isinstance(options, dict):
-            # Dictionary of form
-            # { block1:((option1, value1), (option2,value2)), block2:((option1, value1)) }
-            for block, values in options.items():
-                self.options_str += ' ${}\n'.format(block.upper())
-                self.options_str += '\n'.join(['    {}={}'.format(key, value) for key, value in values.items()])
-                self.options_str += '\n $END\n\n'
+            self.options_dict = options
         else:
             raise SyntaxError('Invalid options format, must be either a string or a dictionary.')
 
@@ -192,5 +194,5 @@ class Gamessifier():
                 ecp += '{}-ECP NONE\n'.format(name)
         data += ' $END\n'
         ecp += ' $END\n'
-        input_data = '{}\n{}\n{}\n{}\n{}'.format(self.options_str, data, ecp, self.vec, self.hess)
+        input_data = '{}\n{}\n{}\n{}\n{}'.format(self.write_options_str(), data, ecp, self.vec, self.hess)
         open(input_file, 'w').write(input_data)

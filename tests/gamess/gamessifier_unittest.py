@@ -55,14 +55,14 @@ O-ECP NONE"""
         """Testing read options"""
         self.g.read_options({})
         self.assertEqual({}, self.g.options_dict)
-        self.assertEqual('', self.g.options_str)
+        self.assertEqual('', self.g.write_options_str())
         options_dir = OrderedDict([
             ['CONTRL', OrderedDict([['SCFTYP', 'RHF']])],
             ['SCF', OrderedDict([['DIRSCF', '.TRUE.']])]
         ])
         options_str = ' $CONTRL\n    SCFTYP=RHF\n $END\n\n $SCF\n    DIRSCF=.TRUE.\n $END\n\n'
         self.g.read_options(options_dir)
-        self.assertEqual(options_str, self.g.options_str)
+        self.assertEqual(options_str, self.g.write_options_str())
 
         tmp_options_file = 'options.dat.tmp'
         open(tmp_options_file, 'w').write(options_str)
