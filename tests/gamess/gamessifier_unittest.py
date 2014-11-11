@@ -50,6 +50,19 @@ O-ECP NONE"""
         self.g.read_ecp(tmp_ecp_file)
         os.remove(tmp_ecp_file)
 
+    def test_read_other_data(self):
+        """Testing read_other_data"""
+        tmp_dat_file = 'dat.tmp'
+        vec = ' $VEC\n12 23 31\n33241 32523 11.0\n $END'
+        hess = ' $HESS\n32 43 987\n453 443 11.0\n $END'
+        data = 'Hey\n' + vec + ' \n random other text\n' + hess + '\n more text\n122\n'
+        open(tmp_dat_file, 'w').write(data)
+        self.g.read_data(tmp_dat_file)
+        self.assertEqual(vec, self.g.vec)
+        self.assertEqual(hess, self.g.hess)
+
+        os.remove(tmp_dat_file)
+
     def test_write_input(self):
         """Test writing an input to a basis file"""
         tmp_basis_file = 'basis.gbs.tmp'
@@ -71,11 +84,17 @@ O-ECP NONE"""
         open(tmp_ecp_file, 'w').write(ecp)
         tmp_other_file = 'other.dat'
         open(tmp_other_file, 'w').write('Hello\n')
+        tmp_dat_file = 'dat.tmp'
+        vec = ' $VEC\n12 23 31\n33241 32523 11.0\n $END'
+        hess = ' $HESS\n32 43 987\n453 443 11.0\n $END'
+        data = 'Hey\n' + vec + ' \n random other text\n' + hess + '\n more text\n122\n'
+        open(tmp_dat_file, 'w').write(data)
 
         self.g.read_mol(tmp_geom_file)
         self.g.read_basis_set(tmp_basis_file)
         self.g.read_ecp(tmp_ecp_file)
         self.g.read_other(tmp_other_file)
+        self.g.read_data(tmp_dat_file)
 
         tmp_input_file = 'input.inp.tmp'
         self.g.write_input(tmp_input_file)
@@ -85,5 +104,6 @@ O-ECP NONE"""
         os.remove(tmp_ecp_file)
         os.remove(tmp_other_file)
         os.remove(tmp_input_file)
+        os.remove(tmp_dat_file)
 
 

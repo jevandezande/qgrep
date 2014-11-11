@@ -1,4 +1,5 @@
 import os
+import re
 from molecule import Molecule
 from helper import atomic_number, convert_name
 from basis import BasisSet
@@ -64,17 +65,42 @@ class Gamessifier():
         self.basis_set = BasisSet()
         self.ecp = {}
         self.other = ''
+        self.vec = ''
+        self.hess = ''
+        self.vec_re = re.compile("^ \$VEC.*?^ \$END", re.MULTILINE + re.DOTALL)
+        self.hess_re = re.compile("^ \$HESS.*?^ \$END", re.MULTILINE + re.DOTALL)
 
     def read_mol(self, geom_file='geom.xyz'):
         """Reads a geometry file and generates a molecule"""
+        self.mol = Molecule()
+        if not geom_file:
+            return
+        if not os.path.isfile(geom_file):
+            print("Couldn't find geom file: " + geom_file)
+            return
+
         self.mol.read(geom_file)
 
     def read_basis_set(self, basis_file='basis.gbs'):
         """Reads a basis file and makes a dictionary with the form atom:basis_functions"""
+        self.basis_set = BasisSet()
+        if not basis_file:
+            return
+        if not os.path.isfile(basis_file):
+            print("Couldn't find basis file: " + basis_file)
+            return
+
         self.basis_set.read_basis_set(basis_file, style='gamess')
 
     def read_ecp(self, ecp_file='ecp.dat'):
         """Reads an ecp file and makes a dictionary with the form atom:ecp"""
+        self.ecp = ''
+        if not ecp_file:
+            return
+        if not os.path.isfile(ecp_file):
+            print("Couldn't find ecp file: " + ecp_file)
+            return
+
         lines = open(ecp_file).readlines()
         self.ecp = {}
         i = 0
@@ -98,8 +124,39 @@ class Gamessifier():
 
     def read_other(self, other_file=''):
         """Reads a file that will be prepended to the input file"""
-        if other_file:
-            self.other = open(other_file).read()
+        self.other = ''
+        if not other_file:
+            return
+        if not os.path.isfile(other_file):
+            print("Couldn't find ecp file: " + other_file)
+            return
+
+        self.other = open(other_file).read()
+
+    def read_data(self, dat_file='input.dat'):
+        """Read vec and hess from .dat file that gamess makes"""
+        self.vec = ''
+        self.hess = ''
+        if not dat_file:
+            return
+        if not os.path.isfile(dat_file):
+            print("Couldn't find dat file: " + dat_file)
+        data = open(dat_file).read()
+        vec_result = re.findall(self.vec_re, data)
+        hess_result = re.findall(self.hess_re, data)
+        if vec_result:
+            self.vec = vec_result[-1]
+        if hess_result:
+            self.hess = hess_result[-1]
+
+    def read(self, geom_file='geom.xyz', basis_file='basis.gbs', ecp_file='ecp.dat',
+             other_file='other.dat', dat_file='input.dat'):
+        """Quick method to read eveything"""
+        self.read_mol(geom_file)
+        self.read_basis_set(basis_file)
+        self.read_ecp(ecp_file)
+        self.read_other(other_file)
+        self.read_data(dat_file)
 
     def write_input(self, input_file='input.inp', comment=''):
         """Makes an input file with the given geometry and basis"""
@@ -115,5 +172,5 @@ class Gamessifier():
                 ecp += '{}-ECP NONE\n'.format(name)
         data += ' $END\n'
         ecp += ' $END\n'
-        input_data = '{}\n{}\n{}'.format(self.other, data, ecp)
+        input_data = '{}\n{}\n{}\n{}\n{}'.format(self.other, data, ecp, self.vec, self.hess)
         open(input_file, 'w').write(input_data)
