@@ -236,18 +236,26 @@ class Molecule(object):
         """Read (and set) the xyzetry"""
         self.xyz = Molecule.read_xyz(infile)
 
-    def write(self, outfile="geom.xyz", label=True):
+    def write(self, outfile="geom.xyz", label=True, style='xyz'):
         """
         Writes the geometry to the specified file
         If an xyz geometry, prints the size at the beginning if desired (to conform to XYZ format)
         If a zmat, prints  the zmatrix label at the beginning (#ZMATRIX) (to conform to JMol zmatrix format)
         """
         out = ''
-        if label:
-            if self.geom_type == 'zmat':
-                out += '#ZMATRIX\n\n'
-            else:
-                out += '{}\n\n'.format(len(self))
-        out += str(self)
+        if style == 'xyz':
+            if label:
+                if self.geom_type == 'zmat':
+                    out += '#ZMATRIX\n\n'
+                else:
+                    out += '{}\n\n'.format(len(self))
+            out += str(self)
+        elif style == 'latex':
+            if not self.geom_type == 'xyz':
+                raise SyntaxError('Only xyz latex printing currently supported')
+            atoms = ' \\\\\n'.join(['{} & {} & {} & {}'.format(atom, *pos) for atom, *pos in self.xyz])
+            out = '\\begin{align}\n' + atoms + '\n\\end{align}'
+        else:
+            raise SyntaxError('Invalid style')
         with open(outfile, 'w') as f:
             f.write(out)
