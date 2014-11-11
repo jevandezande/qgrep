@@ -1,5 +1,6 @@
 import os
 import re
+from collections import OrderedDict
 from molecule import Molecule
 from helper import atomic_number, convert_name
 from basis import BasisSet
@@ -126,13 +127,20 @@ class Gamessifier():
     def read_options(self, options):
         """Reads options that will be prepended to the input file"""
         self.options_str = ''
-        self.options_dict = {}
+        self.options_dict = OrderedDict()
         if isinstance(options, str):
             if os.path.isfile(options):
                 self.options_str = open(options).read()
+                matches = re.findall('^ \$\w+.*?\$END', self.options_str, re.DOTALL + re.MULTILINE)
+                for match in matches:
+                    lines = match.split('\n')
+                    block = lines[0][2:].strip()
+                    self.options_dict[block] = OrderedDict()
+                    for line in lines[1:-1]:
+                        key, value = line.split('=')
+                        self.options_dict[block][key.strip()] = value.strip()
             else:
                 print('Could not read options.')
-            return
         elif isinstance(options, dict):
             # Dictionary of form
             # { block1:((option1, value1), (option2,value2)), block2:((option1, value1)) }
@@ -140,7 +148,6 @@ class Gamessifier():
                 self.options_str += ' ${}\n'.format(block.upper())
                 self.options_str += '\n'.join(['    {}={}'.format(key, value) for key, value in values.items()])
                 self.options_str += '\n $END\n\n'
-            print(options)
         else:
             raise SyntaxError('Invalid options format, must be either a string or a dictionary.')
 

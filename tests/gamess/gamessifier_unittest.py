@@ -60,9 +60,13 @@ O-ECP NONE"""
             ['CONTRL', OrderedDict([['SCFTYP', 'RHF']])],
             ['SCF', OrderedDict([['DIRSCF', '.TRUE.']])]
         ])
-        options_str = ''' $CONTRL\n    SCFTYP=RHF\n $END\n\n $SCF\n    DIRSCF=.TRUE.\n $END\n\n'''
+        options_str = ' $CONTRL\n    SCFTYP=RHF\n $END\n\n $SCF\n    DIRSCF=.TRUE.\n $END\n\n'
         self.g.read_options(options_dir)
         self.assertEqual(options_str, self.g.options_str)
+
+        tmp_options_file = 'options.dat.tmp'
+        open(tmp_options_file, 'w').write(options_str)
+        self.g.read_options(tmp_options_file)
 
     def test_read_other_data(self):
         """Testing read_other_data"""
@@ -96,15 +100,16 @@ C-ECP GEN   10  2
       -10.4217834        2     16.0960833
 O-ECP NONE"""
         open(tmp_ecp_file, 'w').write(ecp)
-        tmp_other_file = 'other.dat'
-        open(tmp_other_file, 'w').write('Hello\n')
+        tmp_options_file = 'options.dat.tmp'
+        options_str = ' $CONTRL\n    SCFTYP=RHF\n $END\n\n $SCF\n    DIRSCF=.TRUE.\n $END\n\n'
+        open(tmp_options_file, 'w').write(options_str)
         tmp_dat_file = 'dat.tmp'
         vec = ' $VEC\n12 23 31\n33241 32523 11.0\n $END'
         hess = ' $HESS\n32 43 987\n453 443 11.0\n $END'
         data = 'Hey\n' + vec + ' \n random other text\n' + hess + '\n more text\n122\n'
         open(tmp_dat_file, 'w').write(data)
 
-        self.g.read(tmp_geom_file, tmp_basis_file, tmp_ecp_file, tmp_other_file, tmp_dat_file)
+        self.g.read(tmp_geom_file, tmp_basis_file, tmp_ecp_file, tmp_options_file, tmp_dat_file)
 
         tmp_input_file = 'input.inp.tmp'
         self.g.write_input(tmp_input_file)
@@ -112,7 +117,7 @@ O-ECP NONE"""
         os.remove(tmp_geom_file)
         os.remove(tmp_basis_file)
         os.remove(tmp_ecp_file)
-        os.remove(tmp_other_file)
+        os.remove(tmp_options_file)
         os.remove(tmp_input_file)
         os.remove(tmp_dat_file)
 
