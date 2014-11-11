@@ -90,15 +90,20 @@ H             0.00000000     -1.00000000     11.00000000"""
         self.water_xyz.write(test_file, True)
         mol = Molecule()
         mol.read(test_file)
+        mol.name = 'H2O'
         self.assertEqual(mol.geometry, self.water_xyz.geometry)
         mol.write(test_file, style='latex')
-        latex_geom = '''3\\\\
-\\begin{tabular}{c c c c}
-H & 0.0 & 0.0 & 10.0 \\\\
-O & 0.0 & 0.0 & 11.0 \\\\
-H & 0.0 & -1.0 & 11.0
-\\end{tabular}'''
-        self.assertEqual(latex_geom, open(test_file).read())
+        latex_geom = '''\
+H2O\\\\
+3\\\\
+\\begin{verbatim}
+H       0.000000      0.000000     10.000000
+O       0.000000      0.000000     11.000000
+H       0.000000     -1.000000     11.000000
+\\end{verbatim}'''
+        with open(test_file) as f:
+            out_tex = f.read()
+        self.assertEqual(latex_geom, out_tex)
 
         os.remove(test_file)
 
