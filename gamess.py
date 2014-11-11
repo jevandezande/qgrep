@@ -64,7 +64,8 @@ class Gamessifier():
         self.mol = Molecule()
         self.basis_set = BasisSet()
         self.ecp = {}
-        self.other = ''
+        self.options_str = ''
+        self.options_dict = {}
         self.vec = ''
         self.hess = ''
         self.vec_re = re.compile("^ \$VEC.*?^ \$END", re.MULTILINE + re.DOTALL)
@@ -122,16 +123,26 @@ class Gamessifier():
             else:
                 raise SyntaxError('Invalid ecp type, only GEN and NONE are currently accepted.')
 
-    def read_other(self, other_file=''):
-        """Reads a file that will be prepended to the input file"""
-        self.other = ''
-        if not other_file:
+    def read_options(self, options):
+        """Reads options that will be prepended to the input file"""
+        self.options_str = ''
+        self.options_dict = {}
+        if isinstance(options, str):
+            if os.path.isfile(options):
+                self.options_str = open(options).read()
+            else:
+                print('Could not read options.')
             return
-        if not os.path.isfile(other_file):
-            print("Couldn't find ecp file: " + other_file)
-            return
-
-        self.other = open(other_file).read()
+        elif isinstance(options, dict):
+            # Dictionary of form
+            # { block1:((option1, value1), (option2,value2)), block2:((option1, value1)) }
+            for block, values in options.items():
+                self.options_str += ' ${}\n'.format(block.upper())
+                self.options_str += '\n'.join(['    {}={}'.format(key, value) for key, value in values.items()])
+                self.options_str += '\n $END\n\n'
+            print(options)
+        else:
+            raise SyntaxError('Invalid options format, must be either a string or a dictionary.')
 
     def read_data(self, dat_file='input.dat'):
         """Read vec and hess from .dat file that gamess makes"""
@@ -150,12 +161,12 @@ class Gamessifier():
             self.hess = hess_result[-1]
 
     def read(self, geom_file='geom.xyz', basis_file='basis.gbs', ecp_file='ecp.dat',
-             other_file='other.dat', dat_file='input.dat'):
+             options='other.dat', dat_file='input.dat'):
         """Quick method to read eveything"""
         self.read_mol(geom_file)
         self.read_basis_set(basis_file)
         self.read_ecp(ecp_file)
-        self.read_other(other_file)
+        self.read_options(options)
         self.read_data(dat_file)
 
     def write_input(self, input_file='input.inp', comment=''):
@@ -172,5 +183,5 @@ class Gamessifier():
                 ecp += '{}-ECP NONE\n'.format(name)
         data += ' $END\n'
         ecp += ' $END\n'
-        input_data = '{}\n{}\n{}\n{}\n{}'.format(self.other, data, ecp, self.vec, self.hess)
+        input_data = '{}\n{}\n{}\n{}\n{}'.format(self.options_str, data, ecp, self.vec, self.hess)
         open(input_file, 'w').write(input_data)

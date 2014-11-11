@@ -1,4 +1,5 @@
 import unittest
+from collections import OrderedDict
 from sys import path
 path.append('../..')
 from gamess import Gamessifier
@@ -50,6 +51,19 @@ O-ECP NONE"""
         self.g.read_ecp(tmp_ecp_file)
         os.remove(tmp_ecp_file)
 
+    def test_read_options(self):
+        """Testing read options"""
+        self.g.read_options({})
+        self.assertEqual({}, self.g.options_dict)
+        self.assertEqual('', self.g.options_str)
+        options_dir = OrderedDict([
+            ['CONTRL', OrderedDict([['SCFTYP', 'RHF']])],
+            ['SCF', OrderedDict([['DIRSCF', '.TRUE.']])]
+        ])
+        options_str = ''' $CONTRL\n    SCFTYP=RHF\n $END\n\n $SCF\n    DIRSCF=.TRUE.\n $END\n\n'''
+        self.g.read_options(options_dir)
+        self.assertEqual(options_str, self.g.options_str)
+
     def test_read_other_data(self):
         """Testing read_other_data"""
         tmp_dat_file = 'dat.tmp'
@@ -90,11 +104,7 @@ O-ECP NONE"""
         data = 'Hey\n' + vec + ' \n random other text\n' + hess + '\n more text\n122\n'
         open(tmp_dat_file, 'w').write(data)
 
-        self.g.read_mol(tmp_geom_file)
-        self.g.read_basis_set(tmp_basis_file)
-        self.g.read_ecp(tmp_ecp_file)
-        self.g.read_other(tmp_other_file)
-        self.g.read_data(tmp_dat_file)
+        self.g.read(tmp_geom_file, tmp_basis_file, tmp_ecp_file, tmp_other_file, tmp_dat_file)
 
         tmp_input_file = 'input.inp.tmp'
         self.g.write_input(tmp_input_file)
