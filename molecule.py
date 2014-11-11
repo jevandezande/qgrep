@@ -253,8 +253,12 @@ class Molecule(object):
         elif style == 'latex':
             if not self.geom_type == 'xyz':
                 raise SyntaxError('Only xyz latex printing currently supported')
+            if self.name:
+                header = '{}\\\\\n{}\\\\\n'.format(self.name, len(self))
+            else:
+                header = '{}\\\\\n'.format(len(self))
             atoms = ' \\\\\n'.join(['{} & {} & {} & {}'.format(atom, *pos) for atom, *pos in self.xyz])
-            out = '\\begin{align}\n' + atoms + '\n\\end{align}'
+            out = header + '\\begin{tabular}{c c c c}\n' + atoms + '\n\\end{tabular}'
         else:
             raise SyntaxError('Invalid style')
         with open(outfile, 'w') as f:

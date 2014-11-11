@@ -92,12 +92,12 @@ H             0.00000000     -1.00000000     11.00000000"""
         mol.read(test_file)
         self.assertEqual(mol.geometry, self.water_xyz.geometry)
         mol.write(test_file, style='latex')
-        latex_geom = '''\
-\\begin{align}
+        latex_geom = '''3\\\\
+\\begin{tabular}{c c c c}
 H & 0.0 & 0.0 & 10.0 \\\\
 O & 0.0 & 0.0 & 11.0 \\\\
 H & 0.0 & -1.0 & 11.0
-\\end{align}'''
+\\end{tabular}'''
         self.assertEqual(latex_geom, open(test_file).read())
 
         os.remove(test_file)
