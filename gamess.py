@@ -181,6 +181,8 @@ class Gamessifier():
         data = ' $DATA\n{}\nC1\n'.format(comment)
         ecp = ' $ECP\n'
         for name, x, y, z in self.mol:
+            if len(name) > 1:
+                name = name[0].upper() + name[1:].lower()
             an = atomic_number(name)
             atom_basis = self.basis_set[name].print(style='gamess', print_name=False)
             data += '{} {}     {}  {}  {}\n{}\n'.format(name, an, x, y, z, atom_basis)
