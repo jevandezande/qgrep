@@ -178,6 +178,21 @@ class Gamessifier():
         self.read_options(options)
         self.read_data(dat_file)
 
+    def update_options(self):
+        '''Update options based on available data'''
+        if self.vec:
+            if not 'GUESS' in self.options_dict:
+                self.options_dict['GUESS'] = OrderedDict()
+            self.options_dict['GUESS']['GUESS'] = 'MOREAD'
+        else:
+            # If no vector, make sure that the guess is not MOREAD
+            try:
+                if self.options_dict['GUESS']['GUESS'] == 'MOREAD':
+                    self.options_dict['GUESS']['GUESS'] = 'HUCKEL'
+                print('No scf guess MOs available, switching to HUCKEL.')
+            except KeyError:
+                pass
+
     def write_input(self, input_file='input.inp', comment=''):
         """Makes an input file with the given geometry and basis"""
         data = ' $DATA\n{}\nC1\n'.format(comment)
@@ -194,5 +209,8 @@ class Gamessifier():
                 ecp += '{}-ECP NONE\n'.format(name)
         data += ' $END\n'
         ecp += ' $END\n'
+
+        self.update_options()
+
         input_data = '{}\n{}\n{}\n{}\n{}'.format(self.write_options_str(), data, ecp, self.vec, self.hess)
         open(input_file, 'w').write(input_data)
