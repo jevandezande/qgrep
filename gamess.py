@@ -132,7 +132,7 @@ class Gamessifier():
             options_str += ' ${}\n{}\n $END\n\n'.format(block.upper(), block_options)
         return options_str
 
-    def read_options(self, options):
+    def read_options(self, options='options.dat'):
         """Reads options that will be prepended to the input file"""
         self.options_dict = OrderedDict()
         if isinstance(options, str):
@@ -170,7 +170,7 @@ class Gamessifier():
             self.hess = hess_result[-1]
 
     def read(self, geom_file='geom.xyz', basis_file='basis.gbs', ecp_file='ecp.dat',
-             options='other.dat', dat_file='input.dat'):
+             options='options.dat', dat_file='input.dat'):
         """Quick method to read eveything"""
         self.read_mol(geom_file)
         self.read_basis_set(basis_file)
