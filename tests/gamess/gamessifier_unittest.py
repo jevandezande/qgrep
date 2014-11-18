@@ -81,6 +81,14 @@ O-ECP NONE"""
 
         os.remove(tmp_dat_file)
 
+    def test_update_options(self):
+        """Test update_options"""
+        self.g.vec = ' $VEC\n123132\n $END'
+        self.g.options_dict = {'GUESS': {'GUESS': 'HUCKEL'}}
+        self.g.update_options()
+        self.assertEqual('MOREAD', self.g.options_dict['GUESS']['GUESS'])
+        self.g.vec = ' '
+
     def test_write_input(self):
         """Test writing an input to a basis file"""
         tmp_basis_file = 'basis.gbs.tmp'
