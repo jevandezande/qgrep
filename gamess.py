@@ -192,6 +192,15 @@ class Gamessifier():
                 print('No scf guess MOs available, switching to HUCKEL.')
             except KeyError:
                 pass
+        if self.hess:
+            if not 'STATPT' in self.options_dict:
+                self.options_dict['STATPT'] = OrderedDict()
+            self.options_dict['STATPT']['HESS'] = 'READ'
+        else:
+            # If no hessian, make sure that the guess is not READ
+            if 'STATPT' in self.options_dict and self.options_dict['STATPT']['HESS'] == 'READ':
+                del self.options_dict['STATPT']['HESS']
+                print('No guess hessian, removing HESS=READ from STATPT')
 
     def write_input(self, input_file='input.inp', comment=''):
         """Makes an input file with the given geometry and basis"""
