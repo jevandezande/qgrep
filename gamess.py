@@ -45,6 +45,31 @@ def get_geom(lines, type='xyz', units='angstrom'):
 
     return geom
 
+def plot(lines, type='xyz'):
+    """Plots the the geometries from the optimization steps"""
+    start = ' COORDINATES OF ALL ATOMS ARE (ANGS)\n'
+    end = '\n'
+    geoms = []
+    i = 0
+    step = 0
+    while i < len(lines):
+        if lines[i] == start:
+            i += 3
+            start_num = i
+            while lines[i] != end:
+                i += 1
+            end_num = i
+            geom = str(end_num - start_num) + '\nStep {0}\n'.format(step)
+            for line in lines[start_num:end_num]:
+                atom, num, x, y, z = line.split()
+                geom += '\t'.join([atom, x, y, z]) + '\n'
+
+            geoms.append(geom)
+            step += 1
+        i += 1
+
+    return geoms
+
 def get_energy(lines, energy_type='sp'):
     """Returns the energy"""
     energy = 0
