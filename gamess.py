@@ -41,7 +41,10 @@ def get_geom(lines, type='xyz', units='angstrom'):
     if geom_end == -1:
         return ''
 
-    geom = lines[geom_start: geom_end]
+    geom = []
+    for line in lines[geom_start: geom_end]:
+        atom, an, x, y, z = line.split()
+        geom.append('\t'.join([atom, x, y, z]))
 
     return geom
 
