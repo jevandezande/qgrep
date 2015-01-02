@@ -201,7 +201,8 @@ class Gamessifier():
         self.read_basis_set(basis_file)
         self.read_ecp(ecp_file)
         self.read_options(options)
-        self.read_data(dat_file)
+        if os.path.isfile(dat_file):
+            self.read_data(dat_file)
 
     def update_options(self):
         '''Update options based on available data'''
