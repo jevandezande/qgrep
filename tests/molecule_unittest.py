@@ -49,6 +49,11 @@ class TestMolecule(unittest.TestCase):
 O             0.00000000      0.00000000     11.00000000
 H             0.00000000     -1.00000000     11.00000000"""
         self.assertEqual(str(self.water_xyz), water_xyz_string)
+        water_zmatrix_string = """O
+H           1      0.00000000
+H           1      1.00000000    2    104.50000000"""
+        print(self.water_zmatrix)
+        self.assertEqual(str(self.water_zmatrix), water_zmatrix_string)
 
     def test_check_xyz_atom(self):
         """Test check_xyz_atom throws errors correctly"""

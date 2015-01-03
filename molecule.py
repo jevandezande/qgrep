@@ -47,15 +47,12 @@ class Molecule(object):
     def __str__(self):
         """Returns a string of the geometry, filling out positions with zeros and spaces as needed"""
         if self.geom_type == 'zmat':
-            out = self.zmat[0]
-            if len(self.zmat) > 1:
-                out += '\n{:<8} {:>4d} {:> 15.8f}'.format(*self.zmat[1])
-            if len(self.zmat) > 2:
-                out += ('\n{:<8}' + ' {:>4d} {:> 15.8f}'*2).format(*self.zmat[2])
-            for atom in self.zmat[3:]:
-                out += ('\n{:<8}' + ' {:>4d} {:> 15.8f}'*3).format(*atom)
+            out = self.zmat[0][0]
+            for i, atom in enumerate(self.zmat[1:], start=1):
+                form = '\n{:<8}' + ' {:>4d} {:> 15.8f}'*min(i, 3)
+                out += form.format(*atom)
             return out
-        return '\n'.join([('{:<8}' + ' {:> 15.8f}'*3).format(*line) for line in self.xyz])
+        return '\n'.join([('{:<8}' + ' {:> 15.8f}'*3).format(*atom) for atom in self.xyz])
 
     def __getitem__(self, i):
         """Returns the ith atom"""
