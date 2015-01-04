@@ -221,10 +221,7 @@ class Molecule(object):
         for line in lines:
             if line.strip() == '':
                 continue
-            if program == 'gamess':
-                atom, atomic_num, x, y, z = line.split()
-            else:
-                atom, x, y, z = line.split()
+            atom, x, y, z = line.split()
             xyz.append([atom, float(x), float(y), float(z)])
 
         return xyz
