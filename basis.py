@@ -36,9 +36,16 @@ class Contraction:
             raise ValueError("All exponents must be greater than 0")
         self.values[item] = value
 
+    def __str__(self):
+        """Return a string of the contraction"""
+        return self.print()
+
     def __eq__(self, other):
         """Check if the two contractions are the same"""
-        return self.func_type and (self.values == other.values).all()
+        print(self.func_type, other.func_type)
+        print(self.values, other.values)
+        print(self.values == other.values)
+        return self.func_type == other.func_type and (self.values == other.values).all()
 
     @staticmethod
     def check_exps(exps):
@@ -120,7 +127,16 @@ class Basis:
 
     def __eq__(self, other):
         """Check if the two basis are equivalent"""
-        return self.cons == other.cons
+        if not len(self.cons) == len(other.cons):
+            print("Wrong length")
+            return False
+        for s, o in zip(self.cons, other.cons):
+            print(s, o)
+            print(s == o)
+            if not s == o:
+                print("NEQ")
+                return False
+        return True
 
     def print(self, style='gaussian94', print_name=True):
         """Print all contractions in the specified format"""
@@ -167,7 +183,6 @@ class BasisSet:
         """Check if the two basis sets are equal"""
         for atom, basis in self.atoms.items():
             b2 = other[atom]
-            print(basis == b2)
             if not atom in other or not basis == b2:
                 return False
         return True
@@ -175,6 +190,10 @@ class BasisSet:
     def __contains__(self, item):
         """Check if the item (atom) is in atoms"""
         return item in self.atoms
+
+    def __str__(self):
+        """Print the basis in gaussian94 style"""
+        return self.print(style='gaussian94')
 
     @staticmethod
     def check_basis_set(atoms):

@@ -32,6 +32,8 @@ class TestGamessifier(unittest.TestCase):
         basis_set['B'] = Basis('B', [Contraction('S', [0.2, 0.4], [0.3, 0.7])])
         open(tmp_basis_file, 'w').write(basis_set.print('gamess'))
         self.g.read_basis_set(tmp_basis_file)
+        print(basis_set)
+        print(self.g.basis_set)
         self.assertEqual(basis_set, self.g.basis_set)
 
         os.remove(tmp_basis_file)
@@ -129,4 +131,5 @@ O-ECP NONE"""
         os.remove(tmp_input_file)
         os.remove(tmp_dat_file)
 
-
+if __name__ == '__main__':
+    unittest.main()

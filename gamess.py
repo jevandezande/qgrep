@@ -232,6 +232,17 @@ class Gamessifier():
                 print('No guess hessian, removing HESS=READ from STATPT')
             except KeyError:
                 pass
+        del_ecp = True
+        if self.ecp:
+            for key, value in self.ecp.items():
+                if value.split()[1] != 'NONE':
+                    del_ecp = False
+                    break
+        if del_ecp == True:
+            try:
+                del self.options_dict['STATPT']['HESS']
+            except KeyError:
+                pass
 
     def write_input(self, input_file='input.inp', comment=''):
         """Makes an input file with the given geometry and basis"""
