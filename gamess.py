@@ -216,7 +216,7 @@ class Gamessifier():
         else:
             # If no vector, make sure that the guess is not MOREAD
             try:
-                if self.options_dict['GUESS']['GUESS'] == 'READ':
+                if self.options_dict['GUESS']['GUESS'] == 'MOREAD':
                     self.options_dict['GUESS']['GUESS'] = 'HUCKEL'
                 print('No scf guess MOs available, switching to HUCKEL.')
             except KeyError:
