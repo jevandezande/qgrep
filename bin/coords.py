@@ -5,7 +5,7 @@
 import argparse
 from sys import exit
 
-from coordinate_converter import CoordinateConverter
+from qgrep.coordinate_converter import CoordinateConverter
 
 
 parser = argparse.ArgumentParser(description='Convert coordinates between cartesian and zmatrix.')

@@ -2,9 +2,9 @@ import unittest
 from sys import path
 import re
 
-path.append('../..')
+path.insert(0, '../..')
 
-import gamess
+from qgrep import gamess
 
 
 class TestOrca(unittest.TestCase):

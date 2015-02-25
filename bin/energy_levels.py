@@ -3,8 +3,9 @@
 # Script that takes an output file and returns the orbital energies
 
 import argparse
+import importlib
 
-from helper import read
+from qgrep.helper import read
 
 
 parser = argparse.ArgumentParser(description='Get the final energy of an output file.')
@@ -16,17 +17,17 @@ args = parser.parse_args()
 lines, program = read(args.input)
 
 levels = []
-if program == 'orca':
-    from orca import energy_levels
-    levels, info = energy_levels(lines)
-#elif program == 'qchem':
-#    from qchem import energy_levels
-#    levels = energy_levels(lines)
-#elif program == 'psi4':
-#    from psi4 import energy_levels
-#    levels = energy_levels(lines)
+if program:
+    try:
+        mod = importlib.import_module('qgrep.' + program)
+        if hasattr(mod, 'energy_levels'):
+            levels, info = mod.energy_levels(lines)
+        else:
+            print(program + ' does not yet have energy_levels implemented.')
+    except ImportError:
+        print(program + ' is not yet supported.')
 else:
-    print("Not yet supported")
+    print('Cannot determine what program made this output file.')
 
 with open(args.output, 'w') as f:
     for level in levels:

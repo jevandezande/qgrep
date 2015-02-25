@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from helper import convert_name
+from qgrep.helper import convert_name
 import numpy as np
 
 

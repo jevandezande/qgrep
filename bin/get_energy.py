@@ -5,7 +5,7 @@
 import argparse
 import importlib
 
-from helper import read
+from qgrep.helper import read
 
 
 parser = argparse.ArgumentParser(description='Get the final energy of an output file.')
@@ -18,7 +18,7 @@ lines, program = read(args.input)
 
 if program:
     try:
-        mod = importlib.import_module(program)
+        mod = importlib.import_module('qgrep.' + program)
         if hasattr(mod, 'get_energy'):
             energy = mod.get_energy(lines, args.energy_type)
             if energy == 0:

@@ -5,7 +5,7 @@
 import argparse
 import importlib
 
-from helper import read
+from qgrep.helper import read
 
 parser = argparse.ArgumentParser(description='Get the geometry of an output file.')
 parser.add_argument('-i', '--input', help='The file to be read.', type=str, default='output.dat')
@@ -18,7 +18,7 @@ lines, program = read(args.input)
 
 if program:
     try:
-        mod = importlib.import_module(program)
+        mod = importlib.import_module('qgrep.' + program)
         if hasattr(mod, 'plot'):
             geoms = mod.plot(lines, args.type)
             with open(args.output, 'w') as f:

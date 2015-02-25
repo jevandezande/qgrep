@@ -4,7 +4,8 @@
 
 import argparse
 
-from helper import read
+from qgrep.helper import read
+from qgrep.orca import convert_zmatrix, convert_to_orca_zmatrix
 
 
 parser = argparse.ArgumentParser(description=
@@ -20,15 +21,13 @@ lines, program = read(args.input)
 
 zmat = ''
 if program == 'orca':
-    import orca
-    zmat = orca.convert_zmatrix(lines, args.units)
+    zmat = convert_zmatrix(lines, args.units)
 elif program == 'zmatrix':
     # If already a proper zmatrix, convert to orca style
-    import orca
     # Skip the first two line if they are a header
     if lines[0] == '#ZMATRIX\n':
         lines = lines[2:]
-    zmat = orca.convert_to_orca_zmatrix(lines)
+    zmat = convert_to_orca_zmatrix(lines)
 else:
     print("Not yet supported")
 

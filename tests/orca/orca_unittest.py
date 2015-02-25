@@ -4,7 +4,7 @@ import re
 
 path.insert(0, '../..')
 
-import orca
+from qgrep import orca
 
 
 class TestOrca(unittest.TestCase):

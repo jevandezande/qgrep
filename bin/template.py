@@ -3,6 +3,7 @@
 # Script that makes an input file with the specified parameters
 
 import argparse
+import importlib
 
 parser = argparse.ArgumentParser(description='Get the geometry of an output file.')
 parser.add_argument('-p', '--program', help='The program', type=str, default='orca')
@@ -23,17 +24,17 @@ except IOError:
     print("No geometry specified")
 
 program = args.program
-if program == 'orca':
-    from orca import template
-    temp = template(geom, args.nprocs, args.jobtype, args.functional, args.basis, args.iterations)
-elif program == 'qchem':
-    from qchem import template
-    temp = template(geom, args.jobtype, args.functional, args.basis)
-#elif program == 'psi4':
-#    from psi4 import template
-#    temp = template(geom)
+if program:
+    try:
+        mod = importlib.import_module('qgrep.' + program)
+        if hasattr(mod, 'template'):
+            temp = mod.template(geom, args.nprocs, args.jobtype, args.functional, args.basis, args.iterations)
+        else:
+            print(program + ' does not yet have template implemented.')
+    except ImportError:
+        print(program + ' is not yet supported.')
 else:
-    print("Not yet supported")
+    print('Cannot determine what program made this output file.')
 
 with open('input.dat', 'w') as f:
     f.write(temp)

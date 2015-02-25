@@ -1,5 +1,5 @@
 """Source for all orca related functions"""
-from molecule import Molecule
+from qgrep.molecule import Molecule
 
 
 def get_geom(lines, type='xyz', units='angstrom'):

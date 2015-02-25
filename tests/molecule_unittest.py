@@ -1,7 +1,7 @@
 import unittest
 from sys import path
-path.append('../..')
-from molecule import Molecule
+path.insert(0, '..')
+from qgrep.molecule import Molecule
 import os
 
 
@@ -52,7 +52,6 @@ H             0.00000000     -1.00000000     11.00000000"""
         water_zmatrix_string = """O
 H           1      0.00000000
 H           1      1.00000000    2    104.50000000"""
-        print(self.water_zmatrix)
         self.assertEqual(str(self.water_zmatrix), water_zmatrix_string)
 
     def test_check_xyz_atom(self):

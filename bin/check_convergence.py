@@ -5,7 +5,7 @@
 import argparse
 import importlib
 
-from helper import read
+from qgrep.helper import read
 
 
 parser = argparse.ArgumentParser(description='Get the geometry of an output file.')
@@ -18,7 +18,7 @@ lines, program = read(args.input)
 
 if program:
     try:
-        mod = importlib.import_module(program)
+        mod = importlib.import_module('qgrep.' + program)
         if hasattr(mod, 'check_convergence'):
             convergence_list = mod.check_convergence(lines)
             # Print the last number of convergence results (even works for too big numbers)

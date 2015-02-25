@@ -1,9 +1,9 @@
 import os
 import re
 from collections import OrderedDict
-from molecule import Molecule
-from helper import atomic_number, convert_name
-from basis import BasisSet
+from qgrep.molecule import Molecule
+from qgrep.helper import atomic_number, convert_name
+from qgrep.basis import BasisSet
 
 
 def check_convergence(lines):
