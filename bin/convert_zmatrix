@@ -19,18 +19,21 @@ args = parser.parse_args()
 # Read in the file
 lines, program = read(args.input)
 
+def write(zmat):
+    # Simple function to write a zmatrix to file
+    with open(args.output, 'w') as f:
+        for line in zmat:
+            f.write('\t'.join(line) + '\n')
+
 zmat = ''
 if program == 'orca':
-    zmat = convert_zmatrix(lines, args.units)
+    write(convert_zmatrix(lines, args.units))
 elif program == 'zmatrix':
     # If already a proper zmatrix, convert to orca style
     # Skip the first two line if they are a header
     if lines[0] == '#ZMATRIX\n':
         lines = lines[2:]
-    zmat = convert_to_orca_zmatrix(lines)
+    write(convert_to_orca_zmatrix(lines))
 else:
     print("Not yet supported")
 
-with open(args.output, 'w') as f:
-    for line in zmat:
-        f.write('\t'.join(line) + '\n')

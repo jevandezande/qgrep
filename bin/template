@@ -29,6 +29,8 @@ if program:
         mod = importlib.import_module('qgrep.' + program)
         if hasattr(mod, 'template'):
             temp = mod.template(geom, args.nprocs, args.jobtype, args.functional, args.basis, args.iterations)
+            with open('input.dat', 'w') as f:
+                f.write(temp)
         else:
             print(program + ' does not yet have template implemented.')
     except ImportError:
@@ -36,5 +38,3 @@ if program:
 else:
     print('Cannot determine what program made this output file.')
 
-with open('input.dat', 'w') as f:
-    f.write(temp)
