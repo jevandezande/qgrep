@@ -4,6 +4,8 @@
 
 import argparse
 import importlib
+import sys
+sys.path.insert(0, '../')
 
 parser = argparse.ArgumentParser(description='Get the geometry of an output file.')
 parser.add_argument('-p', '--program', help='The program', type=str, default='orca')

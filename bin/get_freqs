@@ -2,6 +2,8 @@
 
 import argparse
 import importlib
+import sys
+sys.path.insert(0, '../')
 
 from qgrep.helper import read
 

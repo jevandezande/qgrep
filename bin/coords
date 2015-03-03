@@ -3,7 +3,8 @@
 # Script that takes a geometry in zmatrix or cartesian coordinates and converts it to the other
 
 import argparse
-from sys import exit
+import sys
+sys.path.insert(0, '../')
 
 from qgrep.coordinate_converter import CoordinateConverter
 
@@ -22,7 +23,7 @@ if not (args.type == 'xyz' or args.type == 'zmat'):
         args.type = 'zmat'
     else:
         print("Please specify a type")
-        exit(1)
+        sys.exit(1)
 
 if not args.output:
     if args.type == 'xyz':

@@ -3,6 +3,8 @@
 # Script that takes an output file and writes a proper zmatrix or the reverse if already proper
 
 import argparse
+import sys
+sys.path.insert(0, '../')
 
 from qgrep.helper import read
 from qgrep.orca import convert_zmatrix, convert_to_orca_zmatrix
