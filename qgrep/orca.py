@@ -84,19 +84,19 @@ def check_convergence(lines):
     return convergence_list
 
 
-def template(geom='', nprocs=8, jobtype='Opt', functional='B3LYP', basis='sto-3g', scf_iter=300):
+def template(geom='', jobtype='Opt', functional='B3LYP', basis='sto-3g'):
     """Returns a template with the specified geometry and other variables"""
-    template_style = """% pal nprocs {0} end
+    template_style = """% pal nprocs 8 end
 
-! {1} {2} {3}
+! {0} {1} {2} RIJCOSX AutoAux
 
-% SCF maxiter {4} end
+% SCF maxiter 300 end
 
 * xyz 0 1
-{5}
+{3}
 *
 """
-    return template_style.format(nprocs, jobtype, functional, basis, scf_iter, geom)
+    return template_style.format(jobtype, functional, basis, geom)
 
 
 def get_freqs(lines):
