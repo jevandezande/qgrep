@@ -210,7 +210,7 @@ class Molecule(object):
         if program:
             if program == 'zmatrix':
                 raise SyntaxError('Zmatrices are not yet supported')
-            mod = importlib.import_module(program)
+            mod = importlib.import_module('qgrep.' + program)
             lines = mod.get_geom(lines)
 
         # Attempt to read as an XYZ file
