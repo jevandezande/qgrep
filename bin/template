@@ -18,7 +18,7 @@ args = parser.parse_args()
 
 geom = ''
 try:
-    with open('geom.xyz', 'r') as f:
+    with open(args.geom, 'r') as f:
         geom = f.read().strip()
 except IOError:
     print("No geometry specified")
