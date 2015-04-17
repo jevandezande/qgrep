@@ -211,6 +211,24 @@ def get_freqs(lines):
 
     return output
 
+def get_ir(lines):
+    vib_freqs_start = 0
+    vib_freqs_end = 0
+    for i in reversed(list(range(len(lines)))):
+        line = lines[i]
+        if 'NORMAL MODES\n' == line:
+            vib_freqs_end = i - 3
+        elif 'VIBRATIONAL FREQUENCIES\n' == line:
+            vib_freqs_start = i + 3
+            break
+
+    vib_freqs = []
+    # Read in the vibrational frequencies
+    for i in range(vib_freqs_start, vib_freqs_end):
+        vib_freqs.append(lines[i].split()[1])
+
+    return vib_freqs
+
 
 def get_energy(lines, energy_type='sp'):
     """Returns the last calculated energy
