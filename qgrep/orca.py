@@ -240,6 +240,13 @@ def get_energy(lines, energy_type='sp'):
             if energy_line == line[:24]:
                 energy = line.split()[4]
                 break
+    elif energy_type == 'zpve':
+        energy_line = 'Zero point energy'
+        for line in reversed(lines):
+            if energy_line == line[:17]:
+                energy = line.split()[4]
+                break
+
     return energy
 
 
