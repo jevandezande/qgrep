@@ -368,3 +368,13 @@ def get_molecule(lines):
         mol.append([data[0]] + list(map(float, data[1:4])))
 
     return mol
+
+def get_multiplicity(lines):
+    """
+    Returns the multiplicity of the computation. Uses the SCF value.
+    If no multiplicity can be found, it returns 0
+    """
+    for line in reversed(lines):
+        if line[:13] == ' Multiplicity':
+            return int(line.split()[-1])
+    return 0
