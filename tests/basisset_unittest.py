@@ -1,7 +1,7 @@
 import unittest
 from sys import path
-path.append('../..')
-from basis import Contraction, Basis, BasisSet
+path.insert(0, '..')
+from qgrep.basis import Contraction, Basis, BasisSet
 import numpy as np
 from collections import OrderedDict
 import os

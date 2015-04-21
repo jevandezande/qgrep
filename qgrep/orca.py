@@ -1,5 +1,5 @@
 """Source for all orca related functions"""
-from molecule import Molecule
+from qgrep.molecule import Molecule
 
 
 def get_geom(lines, type='xyz', units='angstrom'):
@@ -84,19 +84,19 @@ def check_convergence(lines):
     return convergence_list
 
 
-def template(geom='', nprocs=8, jobtype='Opt', functional='B3LYP', basis='sto-3g', scf_iter=300):
+def template(geom='', jobtype='Opt', functional='B3LYP', basis='sto-3g'):
     """Returns a template with the specified geometry and other variables"""
-    template_style = """% pal nprocs {0} end
+    template_style = """% pal nprocs 8 end
 
-! {1} {2} {3}
+! {0} {1} {2} RIJCOSX AutoAux
 
-% SCF maxiter {4} end
+% SCF maxiter 300 end
 
 * xyz 0 1
-{5}
+{3}
 *
 """
-    return template_style.format(nprocs, jobtype, functional, basis, scf_iter, geom)
+    return template_style.format(jobtype, functional, basis, geom)
 
 
 def get_freqs(lines):
@@ -211,6 +211,24 @@ def get_freqs(lines):
 
     return output
 
+def get_ir(lines):
+    vib_freqs_start = 0
+    vib_freqs_end = 0
+    for i in reversed(list(range(len(lines)))):
+        line = lines[i]
+        if 'NORMAL MODES\n' == line:
+            vib_freqs_end = i - 3
+        elif 'VIBRATIONAL FREQUENCIES\n' == line:
+            vib_freqs_start = i + 3
+            break
+
+    vib_freqs = []
+    # Read in the vibrational frequencies
+    for i in range(vib_freqs_start, vib_freqs_end):
+        vib_freqs.append(lines[i].split()[1])
+
+    return vib_freqs
+
 
 def get_energy(lines, energy_type='sp'):
     """Returns the last calculated energy
@@ -240,6 +258,13 @@ def get_energy(lines, energy_type='sp'):
             if energy_line == line[:24]:
                 energy = line.split()[4]
                 break
+    elif energy_type == 'zpve':
+        energy_line = 'Zero point energy'
+        for line in reversed(lines):
+            if energy_line == line[:17]:
+                energy = line.split()[4]
+                break
+
     return energy
 
 
@@ -343,3 +368,13 @@ def get_molecule(lines):
         mol.append([data[0]] + list(map(float, data[1:4])))
 
     return mol
+
+def get_multiplicity(lines):
+    """
+    Returns the multiplicity of the computation. Uses the SCF value.
+    If no multiplicity can be found, it returns 0
+    """
+    for line in reversed(lines):
+        if line[:13] == ' Multiplicity':
+            return int(line.split()[-1])
+    return 0

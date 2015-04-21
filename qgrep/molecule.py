@@ -1,4 +1,4 @@
-import helper
+from qgrep import helper
 import importlib
 
 
@@ -49,10 +49,10 @@ class Molecule(object):
         if self.geom_type == 'zmat':
             out = self.zmat[0][0]
             for i, atom in enumerate(self.zmat[1:], start=1):
-                form = '\n{:<8}' + ' {:>4d} {:> 15.8f}'*min(i, 3)
+                form = '\n{:<4}' + ' {:>4d} {:> 15.8f}'*min(i, 3)
                 out += form.format(*atom)
             return out
-        return '\n'.join([('{:<8}' + ' {:> 15.8f}'*3).format(*atom) for atom in self.xyz])
+        return '\n'.join([('{:<4}' + ' {:> 13.8f}'*3).format(*atom) for atom in self.xyz])
 
     def __getitem__(self, i):
         """Returns the ith atom"""
@@ -210,7 +210,7 @@ class Molecule(object):
         if program:
             if program == 'zmatrix':
                 raise SyntaxError('Zmatrices are not yet supported')
-            mod = importlib.import_module(program)
+            mod = importlib.import_module('qgrep.' + program)
             lines = mod.get_geom(lines)
 
         # Attempt to read as an XYZ file
@@ -250,7 +250,7 @@ class Molecule(object):
             header = '{}\\\\\n'.format(len(self))
             if self.name:
                 header = self.name + '\\\\\n' + header
-            line_format = '{:<2}' + ' {:> 13.6f}'*3
+            line_format = '{:<2}' + ' {:> 13.8f}'*3
             atoms = '\n'.join([line_format.format(atom, *pos) for atom, *pos in self.xyz])
             out = header + '\\begin{verbatim}\n' + atoms + '\n\\end{verbatim}'
         else:

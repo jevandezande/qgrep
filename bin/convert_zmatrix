@@ -3,8 +3,11 @@
 # Script that takes an output file and writes a proper zmatrix or the reverse if already proper
 
 import argparse
+import sys
+sys.path.insert(0, '../')
 
-from helper import read
+from qgrep.helper import read
+from qgrep.orca import convert_zmatrix, convert_to_orca_zmatrix
 
 
 parser = argparse.ArgumentParser(description=
@@ -18,20 +21,21 @@ args = parser.parse_args()
 # Read in the file
 lines, program = read(args.input)
 
+def write(zmat):
+    # Simple function to write a zmatrix to file
+    with open(args.output, 'w') as f:
+        for line in zmat:
+            f.write('\t'.join(line) + '\n')
+
 zmat = ''
 if program == 'orca':
-    import orca
-    zmat = orca.convert_zmatrix(lines, args.units)
+    write(convert_zmatrix(lines, args.units))
 elif program == 'zmatrix':
     # If already a proper zmatrix, convert to orca style
-    import orca
     # Skip the first two line if they are a header
     if lines[0] == '#ZMATRIX\n':
         lines = lines[2:]
-    zmat = orca.convert_to_orca_zmatrix(lines)
+    write(convert_to_orca_zmatrix(lines))
 else:
     print("Not yet supported")
 
-with open(args.output, 'w') as f:
-    for line in zmat:
-        f.write('\t'.join(line) + '\n')

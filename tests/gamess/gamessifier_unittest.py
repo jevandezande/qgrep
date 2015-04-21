@@ -1,10 +1,10 @@
 import unittest
 from collections import OrderedDict
 from sys import path
-path.append('../..')
-from gamess import Gamessifier
-from molecule import Molecule
-from basis import Contraction, Basis, BasisSet
+path.insert(0, '../..')
+from qgrep.gamess import Gamessifier
+from qgrep.molecule import Molecule
+from qgrep.basis import Contraction, Basis, BasisSet
 import os
 
 

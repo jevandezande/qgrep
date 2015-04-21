@@ -4,7 +4,7 @@ import re
 
 path.insert(0, '../..')
 
-import orca
+from qgrep import orca
 
 
 class TestOrca(unittest.TestCase):
@@ -82,12 +82,12 @@ class TestOrca(unittest.TestCase):
     def test_get_molecule(self):
         """Testing get_molecule"""
         molecule = '''\
-C            -2.56433400     -0.44012300      0.02117400
-Cl            0.45928100     -0.43465300     -0.02124300
-H            -2.13859100     -1.22065300      0.67206200
-H            -2.16397700     -0.61749900     -0.98997300
-H            -2.14677300      0.52045900      0.36334300
-F            -3.76420600     -0.44266200      0.03854700'''
+C      -2.56433400   -0.44012300    0.02117400
+Cl      0.45928100   -0.43465300   -0.02124300
+H      -2.13859100   -1.22065300    0.67206200
+H      -2.16397700   -0.61749900   -0.98997300
+H      -2.14677300    0.52045900    0.36334300
+F      -3.76420600   -0.44266200    0.03854700'''
         self.assertEqual(molecule, str(orca.get_molecule(self.files['CH3F_Cl_scan.out'])))
 
 if __name__ == '__main__':

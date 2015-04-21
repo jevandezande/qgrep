@@ -1,8 +1,8 @@
 import unittest
 from sys import path
 import numpy as np
-path.append('../..')
-import helper
+path.insert(0, '..')
+from qgrep import helper
 
 
 class TestGamessifier(unittest.TestCase):

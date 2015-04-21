@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+
+# Script that takes an output file and returns the orbital energies
+
+import argparse
+import importlib
+import sys
+sys.path.insert(0, '../')
+
+from qgrep.helper import read
+
+
+parser = argparse.ArgumentParser(description='Get the final energy of an output file.')
+parser.add_argument('-i', '--input', help='The file to be read.', type=str, default='output.dat')
+parser.add_argument('-o', '--output', help='Where to output the orbital energies', type=str, default='energies.dat')
+
+args = parser.parse_args()
+
+lines, program = read(args.input)
+
+levels = []
+if program:
+    try:
+        mod = importlib.import_module('qgrep.' + program)
+        if hasattr(mod, 'energy_levels'):
+            levels, info = mod.energy_levels(lines)
+            with open(args.output, 'w') as f:
+                for level in levels:
+                    f.write(level)
+
+            for item in info:
+                print('{0}:\t{1}'.format(item, info[item]))
+        else:
+            print(program + ' does not yet have energy_levels implemented.')
+    except ImportError:
+        print(program + ' is not yet supported.')
+else:
+    print('Cannot determine what program made this output file.')
+
