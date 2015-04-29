@@ -3,29 +3,54 @@
 
 def get_geom(lines, type='xyz', units='Angstroms'):
     """Takes the lines of an psi4 output file and returns its last geometry"""
-    start = '\tCartesian Geometry (in Angstrom)\n'
-    end = '\t\t\t OPTKING Finished Execution \n'
+    if type == 'xyz':
+        start = '\tCartesian Geometry (in Angstrom)\n'
+        end = '\t\t\t OPTKING Finished Execution \n'
 
-    geom_end = 0
-    for i in reversed(list(range(len(lines)))):
-        if end == lines[i]:
-            geom_end = i - 2
-            break
-    if geom_end == 0:
-        return ''
+        geom_end = 0
+        for i in reversed(list(range(len(lines)))):
+            if end == lines[i]:
+                geom_end = i - 2
+                break
+        if geom_end == 0:
+            return ''
 
-    geom_start = 0
-    # Iterate backwards until the beginning of the last set of coordinates is found
-    for i in reversed(list(range(geom_end))):
-        if start == lines[i]:
-            geom_start = i + 1
-            break
-    if geom_start == 0:
-        return ''
+        geom_start = 0
+        # Iterate backwards until the beginning of the last set of coordinates is found
+        for i in reversed(list(range(geom_end))):
+            if start == lines[i]:
+                geom_start = i + 1
+                break
+        if geom_start == 0:
+            return ''
 
-    geom = lines[geom_start: geom_end]
+        geom = lines[geom_start: geom_end]
 
-    return geom
+        return geom
+
+    elif type == 'zmat':
+        start = '    Geometry (in Angstrom),'
+
+        geom_start = 0
+        # Iterate backwards until the beginning of the last set of coordinates is found
+        for i in reversed(range(len(lines))):
+            if start == lines[i][:27]:
+                geom_start = i + 2
+                break
+        if geom_start == 0:
+            return ''
+        
+        geom_end = 0
+        for i, line in enumerate(lines[geom_start:], start=geom_start):
+            if line == '\n':
+                geom_end = i
+                break
+        if geom_end == 0:
+            return ''
+
+        geom = lines[geom_start: geom_end]
+
+        return geom
 
 
 def plot(lines, type='xyz'):
