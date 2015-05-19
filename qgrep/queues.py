@@ -26,10 +26,20 @@ class Queues:
         # Process jobs and get a count
         job_list = []
         running_count = []
+        debug = []
+        debug_jobs_running = 0
         # Iterate over all the jobs and make a list of queues, which each are a list of jobs
         for queue, jobs in self.queues.items():
-            # skip large if requested
-            if 'large' in self.queues and queue == 'large' and large == False:
+            # skip large if requested 
+            if queue == 'large' and large == False:
+                continue
+            # set aside debug for later
+            if queue == 'debug':
+                for job in jobs:
+                    debug_jobs_running += 1 if jobs[job].state == 'r' else 0
+                    # ignore user command for debug
+                    #if user and jobs[job].owner != username:
+                    debug.append(jobs[job])
                 continue
             jobs_running = 0
             username = getpass.getuser()
@@ -42,7 +52,10 @@ class Queues:
         
         # Form header
         q_num = len(self.queues)
+        # Subtract off queues that are not being shown
         if 'large' in self.queues and not large:
+            q_num -= 1
+        if 'debug' in self.queues:
             q_num -= 1
         line = '\033[95m' + '-'*30*q_num + '\033[0m\n'
         header_list = list(self.queues.keys())
@@ -51,8 +64,8 @@ class Queues:
         running_iter = iter(running_count)
         # Print a nice header
         for queue, jobs in self.queues.items():
-            # skip the large queue if requested
-            if 'large' in self.queues and queue == 'large' and large == False:
+            # skip debug, or large if requested 
+            if queue == 'debug' or (queue == 'large' and large == False):
                 continue
             count = len(jobs)
             used = next(running_iter)
@@ -76,6 +89,17 @@ class Queues:
                     state = job.state
                     out += str(job) + ' \033[95m|\033[0m'
             out += '\n'
+        out += line
+
+        # Print the debug queue at the bottom
+        num_debug_print = 2
+        debug_used = debug_jobs_running
+        debug_avail = self.sizes['debug'] - debug_used
+        used_avail = 'debug ({} / {})'.format(debug_used, debug_avail)
+        out += '{:^28s} \033[95m|\033[0m'.format(used_avail)
+        out += ' \033[95m|\033[0m'.join(map(str, debug[:num_debug_print]))
+        out += '\n'
+
         out += line
 
         print(out)
