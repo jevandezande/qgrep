@@ -184,7 +184,3 @@ class Job:
         return job_form.format(self.id, self.owner[:5], self.name[:12],
                                color, self.state)
 
-
-if __name__ == '__main__':
-    queues = Queues()
-    queues.print()
