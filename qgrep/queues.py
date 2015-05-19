@@ -4,13 +4,14 @@ import subprocess
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
 from itertools import zip_longest
+import getpass
 from pprint import pprint
 
 class Queues:
     def __init__(self):
-        self.tree = self.qstat()
+        self.tree = self.qxml()
         self.parse_tree()
-        self.max_q = {'debug':1, 'gen3':14, 'gen4': 48, 'gen5':1, 'large':1}
+        self.sizes = {'debug':1, 'gen3':16, 'gen4': 48, 'gen5':2, 'large':1}
     
     def __str__(self):
         """
@@ -22,6 +23,24 @@ class Queues:
         """
         Print the queues in a nice table
         """
+        # Process jobs and get a count
+        job_list = []
+        running_count = []
+        # Iterate over all the jobs and make a list of queues, which each are a list of jobs
+        for queue, jobs in self.queues.items():
+            # skip large if requested
+            if 'large' in self.queues and queue == 'large' and large == False:
+                continue
+            jobs_running = 0
+            username = getpass.getuser()
+            for job in jobs:
+                jobs_running += 1 if jobs[job].state == 'r' else 0
+                if user and jobs[job].owner != username:
+                    jobs.pop(job)
+            running_count.append(jobs_running)
+            job_list.append(list(jobs.values()))
+        
+        # Form header
         q_num = len(self.queues)
         if 'large' in self.queues and not large:
             q_num -= 1
@@ -29,32 +48,24 @@ class Queues:
         header_list = list(self.queues.keys())
         name_form = '{} ({:2d} /{:2d})'
         out = line
+        running_iter = iter(running_count)
         # Print a nice header
         for queue, jobs in self.queues.items():
-            # skip large if requested
+            # skip the large queue if requested
             if 'large' in self.queues and queue == 'large' and large == False:
                 continue
             count = len(jobs)
-            used = 0
-            avail = self.max_q[queue] - used
+            used = next(running_iter)
+            avail = self.sizes[queue] - used
             out += '{:^28} \033[95m|\033[0m'.format(name_form.format(queue, used, avail))
         out += '\n' + line
         header = ' ID  USER    Job Name    St. \033[95m|\033[0m'
         out += header*q_num + '\n'
         out += line
         
+        # Iterate through the jobs, job row is a tuple of jobs
+        # job is None if they are all used up
         blank = ' '*29 + '\033[95m|\033[0m'
-        job_list = []
-        for queue, jobs in self.queues.items():
-            # skip large if requested
-            if 'large' in self.queues and queue == 'large' and large == False:
-                continue
-            if user:
-                for job in jobs:
-                    if jobs[job].owner != user:
-                        jobs.pop(job)
-            job_list.append(list(jobs.values()))
-            
         for i, job_row in enumerate(zip_longest(*job_list)):
             if i > numlines:
                 break
@@ -69,12 +80,8 @@ class Queues:
 
         print(out)
         
-
-    def __getitem__(self, key):
-        pass    
-
     @staticmethod
-    def qstat():
+    def qxml():
         """
         Produce an xml ElementTree object containing all the queued jobs
 
@@ -116,9 +123,9 @@ class Queues:
     ...
     </job_info>
         """
-        qstat_cmd = "qstat -u '*' -r -f -xml"
+        qstat_xml_cmd = "qstat -u '*' -r -f -xml"
         try:
-            xml = subprocess.check_output(qstat_cmd, shell=True)
+            xml = subprocess.check_output(qstat_xml_cmd, shell=True)
             return ET.fromstring(xml)
         except FileNotFoundError as e:
             print("Could not find qstat")
@@ -126,7 +133,7 @@ class Queues:
 
     def parse_tree(self):
         """
-        Parse the xml tree from qstat
+        Parse the xml tree from qxml
         """
         self.queues = OrderedDict()
         for child in self.tree:
@@ -168,6 +175,9 @@ class Queues:
 
 
 class Job:
+    """
+    A simple class that conatins important information about a job and prints it nicely
+    """
     def __init__(self, id, name, owner, state):
         self.id = id
         self.name = name
