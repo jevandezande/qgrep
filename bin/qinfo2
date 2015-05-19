@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+
+# Script prints out the queues in a nice format
+
+import argparse
+import sys
+sys.path.insert(0, '../')
+
+from qgrep.queues import Queues
+
+parser = argparse.ArgumentParser(description='Get the final energy of an output file.')
+parser.add_argument('-n', '--number', help='The number of jobs to be output', type=int, default=50)
+parser.add_argument('-l', '--large', help='Output the large queue', action='store_true', default=False)
+parser.add_argument('-u', '--user', help='Output only the users jobs', action='store_true', default=False)
+
+args = parser.parse_args()
+
+queues = Queues()
+queues.print(numlines=args.number, large=args.large, user=args.user)
