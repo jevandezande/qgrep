@@ -57,10 +57,11 @@ class Queues:
             q_num -= 1
         if 'debug' in self.queues:
             q_num -= 1
-        line = '\033[95m' + '-'*30*q_num + '\033[0m\n'
+        line = '\033[95m' + '-'*(30*q_num + 1)+ '\033[0m\n'
         header_list = list(self.queues.keys())
         name_form = '{} ({:2d} /{:2d})'
         out = line
+        out +=  '\033[95m|\033[0m'
         running_iter = iter(running_count)
         # Print a nice header
         for queue, jobs in self.queues.items():
@@ -72,6 +73,7 @@ class Queues:
             avail = self.sizes[queue] - used
             out += '{:^28} \033[95m|\033[0m'.format(name_form.format(queue, used, avail))
         out += '\n' + line
+        out +=  '\033[95m|\033[0m'
         header = ' ID  USER    Job Name    St. \033[95m|\033[0m'
         out += header*q_num + '\n'
         out += line
@@ -82,6 +84,7 @@ class Queues:
         for i, job_row in enumerate(zip_longest(*job_list)):
             if i > numlines:
                 break
+            out += '\033[95m|\033[0m'
             for job in job_row:
                 if job is None:
                     out += blank
@@ -96,9 +99,11 @@ class Queues:
         debug_used = debug_jobs_running
         debug_avail = self.sizes['debug'] - debug_used
         used_avail = 'debug ({} / {})'.format(debug_used, debug_avail)
-        out += '{:^28s} \033[95m|\033[0m'.format(used_avail)
-        out += ' \033[95m|\033[0m'.join(map(str, debug[:num_debug_print]))
-        out += '\n'
+        out += '\033[95m|\033[0m {:^27s} \033[95m|\033[0m'.format(used_avail)
+        out += ' \033[95m|\033[0m '.join(map(str, debug[:num_debug_print]))
+        if num_debug_print > len(debug):
+            out += ' '*29*(num_debug_print - len(debug))
+        out += ' \033[95m|\033[0m\n'
 
         out += line
 
