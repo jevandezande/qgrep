@@ -105,7 +105,8 @@ class Queues:
             out += ' '*29*(num_debug_print - len(debug))
         out += ' \033[95m|\033[0m\n'
 
-        out += line
+        # Remove newline
+        out += line[:-1]
 
         print(out)
         
