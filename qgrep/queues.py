@@ -2,7 +2,7 @@
 
 import subprocess
 import xml.etree.ElementTree as ET
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from itertools import zip_longest
 import getpass
 from pprint import pprint
@@ -101,6 +101,7 @@ class Queues:
         used_avail = 'debug ({} / {})'.format(debug_used, debug_avail)
         out += '\033[95m|\033[0m {:^27s} \033[95m|\033[0m'.format(used_avail)
         out += ' \033[95m|\033[0m '.join(map(str, debug[:num_debug_print]))
+        # Add spaces if only a few queued
         if num_debug_print > len(debug):
             out += ' '*29*(num_debug_print - len(debug))
         out += ' \033[95m|\033[0m\n'
@@ -175,52 +176,49 @@ class Queues:
                     queue = next(node.iterfind('name')).text.split('.')[0]
                     if not queue in self.queues:
                         self.queues[queue] = OrderedDict()
-                    for job in node.iterfind('job_list'):
-                        state = job.get('state')
-                        id = next(job.iterfind('JB_job_number')).text
-                        name = next(job.iterfind('JB_name')).text
-                        owner = next(job.iterfind('JB_owner')).text
-                        state2 = next(job.iterfind('state')).text
-                        req_queue = next(job.iterfind('hard_req_queue')).text
-                        if not (state == 'running' and state2 == 'r'):
-                            raise Exception('States do not agree')
-                        
-                        self.queues[queue][id] = Job(int(id), name, owner, state2)
+
+                    for job_xml in node.iterfind('job_list'):
+                        job = Job(job_xml)
+                        self.queues[queue][job.id] = job
+
             # Queued jobs
             elif child.tag == 'job_info':
-                for job in child:
-                    state = job.get('state')
-                    id = next(job.iterfind('JB_job_number')).text
-                    name = next(job.iterfind('JB_name')).text
-                    owner = next(job.iterfind('JB_owner')).text
-                    state2 = next(job.iterfind('state')).text
-                    queue = next(job.iterfind('hard_req_queue')).text.split('.')[0]
+                for job_xml in child:
+                    job = Job(job_xml)
+                    queue = job.queue.split('.')[0]
                     if not queue in self.queues:
                         self.queues[queue] = OrderedDict()
-                    if not (state == 'pending' and state2 == 'qw'):
-                        raise Exception('States do not agree: job {}, states:' +
-                                        '{} {}'.format(id, state, state2))
 
-                    self.queues[queue][id] = Job(int(id), name, owner, state2)
-
+                    self.queues[queue][job.id] = job
+        
 
 class Job:
     """
     A simple class that conatins important information about a job and prints it nicely
     """
-    def __init__(self, id, name, owner, state):
-        self.id = id
-        self.name = name
-        self.owner = owner
-        self.state = state
+    def __init__(self, job_xml):
+        self.id, self.name, self.state, self.owner, self.queue = Job.read_job_xml(job_xml)
 
     def __str__(self):
+        """Print a short description of the job, with color"""
         job_form = '{:>6d} {:<5s} {:<12s} {}{:2s}\033[0m'
-        color = '\033[93m'
-        if self.state == 'r':
-            color = '\033[92m'
-        elif self.state == 'qw':
-            color = '\033[94m'
+        colors = defaultdict(lambda: '\033[93m', {'r':'\033[92m', 'qw': '\033[94m'})
         return job_form.format(self.id, self.owner[:5], self.name[:12],
-                               color, self.state)
+                               colors[self.state], self.state)
+
+    @staticmethod
+    def read_job_xml(job_xml):
+        """
+        Read the xml of qstat and find the necessary variables
+        """
+        id = int(next(job_xml.iterfind('JB_job_number')).text)
+        name = next(job_xml.iterfind('JB_name')).text
+        state = job_xml.get('state')
+        owner = next(job_xml.iterfind('JB_owner')).text
+        state2 = next(job_xml.iterfind('state')).text
+        queue = next(job_xml.iterfind('hard_req_queue')).text
+        if (state == 'running' and state2 != 'r') or \
+           (state == 'pending' and state2 != 'qw'):
+            print('States do not agree: job {}, states:{} {}'.format(id, state, state2))
+        return id, name, state2, owner, queue
 
