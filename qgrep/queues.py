@@ -194,7 +194,7 @@ class Queues:
 
 class Job:
     """
-    A simple class that conatins important information about a job and prints it nicely
+    A simple class that contains important information about a job and prints it nicely
     """
     def __init__(self, job_xml):
         self.id, self.name, self.state, self.owner, self.queue = Job.read_job_xml(job_xml)
@@ -211,12 +211,12 @@ class Job:
         """
         Read the xml of qstat and find the necessary variables
         """
-        id = int(next(job_xml.iterfind('JB_job_number')).text)
-        name = next(job_xml.iterfind('JB_name')).text
+        id = int(job_xml.find('JB_job_number').text)
+        name = job_xml.find('JB_name').text
         state = job_xml.get('state')
-        owner = next(job_xml.iterfind('JB_owner')).text
-        state2 = next(job_xml.iterfind('state')).text
-        queue = next(job_xml.iterfind('hard_req_queue')).text
+        owner = job_xml.find('JB_owner').text
+        state2 = job_xml.find('state').text
+        queue = job_xml.find('hard_req_queue').text
         if (state == 'running' and state2 != 'r') or \
            (state == 'pending' and state2 != 'qw'):
             print('States do not agree: job {}, states:{} {}'.format(id, state, state2))
