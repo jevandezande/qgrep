@@ -23,88 +23,76 @@ class Queues:
         """
         Print the queues in a nice table
         """
+        bar = '\033[95m|\033[0m'
         # Process jobs and get a count
         job_list = []
-        running_count = []
+        running_count = {}
         debug = []
-        debug_jobs_running = 0
         # Iterate over all the jobs and make a list of queues, which each are a list of jobs
         for queue, jobs in self.queues.items():
             # skip large if requested 
             if queue == 'large' and large == False:
                 continue
-            # set aside debug for later
-            if queue == 'debug':
-                for job in jobs:
-                    debug_jobs_running += 1 if jobs[job].state == 'r' else 0
-                    # ignore user command for debug
-                    #if user and jobs[job].owner != username:
-                    debug.append(jobs[job])
-                continue
             jobs_running = 0
             username = getpass.getuser()
             for job in jobs:
                 jobs_running += 1 if jobs[job].state == 'r' else 0
-                if user and jobs[job].owner != username:
+                # If on the debug queue, show non-user jobs
+                if user and (jobs[job].owner != username or queue == 'debug'):
                     jobs.pop(job)
-            running_count.append(jobs_running)
-            job_list.append(list(jobs.values()))
+            running_count[queue] = jobs_running
+            if queue == 'debug':
+                debug = list(jobs.values())
+            else:
+                job_list.append(list(jobs.values()))
         
-        # Form header
-        q_num = len(self.queues)
+        # Form header (without debug queue)
+        q_num = len(self.queues) - int('debug' in self.queues)
         # Subtract off queues that are not being shown
         if 'large' in self.queues and not large:
             q_num -= 1
-        if 'debug' in self.queues:
-            q_num -= 1
-        line = '\033[95m' + '-'*(30*q_num + 1)+ '\033[0m\n'
-        header_list = list(self.queues.keys())
+        # Horizontal line
+        line = '\033[95m' + '-'*(29*q_num + 1)+ '\033[0m\n'
         name_form = '{} ({:2d} /{:2d})'
         out = line
-        out +=  '\033[95m|\033[0m'
-        running_iter = iter(running_count)
         # Print a nice header
         for queue, jobs in self.queues.items():
             # skip debug, or large if requested 
             if queue == 'debug' or (queue == 'large' and large == False):
                 continue
-            count = len(jobs)
-            used = next(running_iter)
+            used = running_count[queue]
             avail = self.sizes[queue] - used
-            out += '{:^28} \033[95m|\033[0m'.format(name_form.format(queue, used, avail))
-        out += '\n' + line
-        out +=  '\033[95m|\033[0m'
-        header = ' ID  USER    Job Name    St. \033[95m|\033[0m'
-        out += header*q_num + '\n'
-        out += line
+            out +=  bar + '{:^28}'.format(name_form.format(queue, used, avail))
+        out += bar + '\n' + line
+        header = bar + '  ID   USER    Job Name   St'
+        out += header*q_num + bar + '\n' + line
         
         # Iterate through the jobs, job row is a tuple of jobs
         # job is None if they are all used up
-        blank = ' '*29 + '\033[95m|\033[0m'
+        blank = bar + ' '*28
         for i, job_row in enumerate(zip_longest(*job_list)):
             if i > numlines:
                 break
-            out += '\033[95m|\033[0m'
             for job in job_row:
                 if job is None:
                     out += blank
                 else:
-                    state = job.state
-                    out += str(job) + ' \033[95m|\033[0m'
-            out += '\n'
+                    out += bar + str(job) 
+            out += bar + '\n'
         out += line
 
         # Print the debug queue at the bottom
-        num_debug_print = 2
-        debug_used = debug_jobs_running
+        num_debug_print = q_num - 1
+        debug_used = running_count['debug']
         debug_avail = self.sizes['debug'] - debug_used
         used_avail = 'debug ({} / {})'.format(debug_used, debug_avail)
-        out += '\033[95m|\033[0m {:^27s} \033[95m|\033[0m'.format(used_avail)
-        out += ' \033[95m|\033[0m '.join(map(str, debug[:num_debug_print]))
+        out += bar + '{:^28s}'.format(used_avail) + bar
+        for job in debug[:num_debug_print]:
+            out += str(job) + bar
         # Add spaces if only a few queued
         if num_debug_print > len(debug):
-            out += ' '*29*(num_debug_print - len(debug))
-        out += ' \033[95m|\033[0m\n'
+            out += (' '*29*(num_debug_print - len(debug)))[:-1]
+        out = out + bar + '\n'
 
         # Remove newline
         out += line[:-1]
@@ -173,7 +161,7 @@ class Queues:
                 for node in child:
                     #<Queue-List>
                     #   <name>gen3.q@v10.cl.ccqc.uga.edu</name>
-                    queue = next(node.iterfind('name')).text.split('.')[0]
+                    queue = node.find('name').text.split('.')[0]
                     if not queue in self.queues:
                         self.queues[queue] = OrderedDict()
 
@@ -217,6 +205,9 @@ class Job:
         owner = job_xml.find('JB_owner').text
         state2 = job_xml.find('state').text
         queue = job_xml.find('hard_req_queue').text
+        tasks = job_xml.find('tasks')
+        if tasks:
+            jobs_left = 1
         if (state == 'running' and state2 != 'r') or \
            (state == 'pending' and state2 != 'qw'):
             print('States do not agree: job {}, states:{} {}'.format(id, state, state2))
