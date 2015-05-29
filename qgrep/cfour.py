@@ -5,8 +5,6 @@ def get_geom(lines, type='xyz', units='bohr'):
         the specified format"""
     if type == 'xyz' and units in ['bohr', 'angstrom']:
         start = ' Z-matrix   Atomic            Coordinates (in bohr)\n'
-        if units == 'angstrom':
-            print('Warning: Switching units to bohr.')
     else:
         print("Invalid format")
         return ''
@@ -34,7 +32,8 @@ def get_geom(lines, type='xyz', units='bohr'):
     geom = []
     for line in lines[geom_start: geom_end]:
         atom, an, *xyz = line.split()
-        geom.append('{:<2s}  {}  {}  {}\n'.format(atom, *xyz))
+        xyz = list(map(lambda x: float(x) / 1.889725989, xyz))
+        geom.append('{:s}\t{}\t{}\t{}\n'.format(atom, *xyz))
 
     return geom
 

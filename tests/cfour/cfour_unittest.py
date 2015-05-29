@@ -12,7 +12,7 @@ class TestCFour(unittest.TestCase):
 
     def setUp(self):
         """Read in the necessary files"""
-        files = ['h2o.out', 'h2o.xyz.bohr']
+        files = ['h2o.out', 'h2o.xyz']
         self.files = {}
         for file in files:
             with open(file, 'r') as f:
@@ -20,9 +20,8 @@ class TestCFour(unittest.TestCase):
 
     def test_get_geom(self):
         """Testing get_geom"""
-        self.assertEqual(self.files['h2o.xyz.bohr'],
-                         cfour.get_geom(self.files['h2o.out'], type='xyz',
-                                        units='bohr'))
+        self.assertEqual(self.files['h2o.xyz'],
+                         cfour.get_geom(self.files['h2o.out'], type='xyz'))
 
     def test_check_convergence(self):
         """Testing check_convergence"""
