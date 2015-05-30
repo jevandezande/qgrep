@@ -130,3 +130,5 @@ O-ECP NONE"""
         os.remove(tmp_dat_file)
 
 
+if __name__ == '__main__':
+    unittest.main()

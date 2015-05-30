@@ -46,3 +46,7 @@ class TestCFour(unittest.TestCase):
     def test_get_molecule(self):
         """Testing get_molecule"""
         raise NotImplementedError
+
+
+if __name__ == '__main__':
+    unittest.main()
