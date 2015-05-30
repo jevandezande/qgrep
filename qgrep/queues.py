@@ -189,7 +189,7 @@ class Job:
 
     def __str__(self):
         """Print a short description of the job, with color"""
-        job_form = '{:>6d} {:<5s} {:<12s} {}{:2s}\033[0m'
+        job_form = '{:>6.0f} {:<5s} {:<12s} {}{:2s}\033[0m'
         colors = defaultdict(lambda: '\033[93m', {'r':'\033[92m', 'qw': '\033[94m'})
         return job_form.format(self.id, self.owner[:5], self.name[:12],
                                colors[self.state], self.state)
@@ -200,12 +200,18 @@ class Job:
         Read the xml of qstat and find the necessary variables
         """
         id = int(job_xml.find('JB_job_number').text)
+        tasks = job_xml.find('tasks')
+        # If there are multiple tasks with the same id, make the id a float
+        # with the task number being the decimal
+        if tasks != None:
+            # If it is a range of jobs, e.g. 17-78:1, just take the first
+            task = tasks.text.split('-')[0] # If not a range, this does nothing
+            id += int(task) / 10**len(task)
         name = job_xml.find('JB_name').text
         state = job_xml.get('state')
         owner = job_xml.find('JB_owner').text
         state2 = job_xml.find('state').text
         queue = job_xml.find('hard_req_queue').text
-        tasks = job_xml.find('tasks')
         if tasks:
             jobs_left = 1
         if (state == 'running' and state2 != 'r') or \
