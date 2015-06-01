@@ -17,6 +17,7 @@ def check_program(lines):
         '* O   R   C   A *': 'orca',
         'Welcome to Q-Chem': 'qchem',
         'PSI4: An Open-Source Ab Initio Electronic Structure Package': 'psi4',
+        'Psi4: An Open-Source Ab Initio Electronic Structure Package': 'psi4',
         'Northwest Computational Chemistry Package (NWChem)': 'nwchem',
         '#ZMATRIX': 'zmatrix',
         '* CFOUR Coupled-Cluster techniques for Computational Chemistry *': 'cfour',
