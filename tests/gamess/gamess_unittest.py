@@ -7,7 +7,7 @@ path.insert(0, '../..')
 from qgrep import gamess
 
 
-class TestOrca(unittest.TestCase):
+class TestGamess(unittest.TestCase):
     """Tests the gamess module"""
 
     def setUp(self):
