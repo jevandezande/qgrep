@@ -19,7 +19,7 @@ class Queues:
         """
         return self.print()
 
-    def print(self, numjobs=50, large=False, user=False):
+    def print(self, numjobs=50, user=False):
         """
         Print the queues in a nice table
         """
@@ -30,35 +30,31 @@ class Queues:
         debug = []
         # Iterate over all the jobs and make a list of queues, which each are a list of jobs
         for queue, jobs in self.queues.items():
-            # skip large if requested 
-            if queue == 'large' and large == False:
-                continue
             jobs_running = 0
             username = getpass.getuser()
             for job in jobs:
                 jobs_running += 1 if jobs[job].state == 'r' else 0
                 # If on the debug queue, show non-user jobs
-                if user and (jobs[job].owner != username or queue == 'debug'):
+                if (user and jobs[job].owner != username) and queue != 'debug' and queue != 'large':
                     jobs.pop(job)
             running_count[queue] = jobs_running
             if queue == 'debug':
                 debug = list(jobs.values())
+            elif queue == 'large':
+                large = list(jobs.values())
             else:
                 job_list.append(list(jobs.values()))
         
-        # Form header (without debug queue)
-        q_num = len(self.queues) - int('debug' in self.queues)
-        # Subtract off queues that are not being shown
-        if 'large' in self.queues and not large:
-            q_num -= 1
+        # Form header (without debug and large queue)
+        q_num = len(self.queues) - int('debug' in self.queues) - int('large' in self.queues)
         # Horizontal line
         line = '\033[95m' + '-'*(29*q_num + 1)+ '\033[0m\n'
         name_form = '{} ({:2d} /{:2d})'
         out = line
         # Print a nice header
         for queue, jobs in self.queues.items():
-            # skip debug, or large if requested 
-            if queue == 'debug' or (queue == 'large' and large == False):
+            # skip debug and large
+            if queue == 'debug' or queue == 'large':
                 continue
             used = running_count[queue]
             avail = self.sizes[queue] - used
@@ -92,7 +88,20 @@ class Queues:
         # Add spaces if only a few queued
         if num_debug_print > len(debug):
             out += (' '*29*(num_debug_print - len(debug)))[:-1]
-        out = out + bar + '\n'
+        out += bar + '\n' + line
+
+        # Print the large queue at the bottom
+        num_large_print = q_num - 1
+        large_used = running_count['large']
+        large_avail = self.sizes['large'] - large_used
+        used_avail = 'large ({} / {})'.format(large_used, large_avail)
+        out += bar + '{:^28s}'.format(used_avail) + bar
+        for job in large[:num_large_print]:
+            out += str(job) + bar
+        # Add spaces if only a few queued
+        if num_large_print > len(large):
+            out += (' '*29*(num_large_print - len(large)))[:-1]
+        out += bar + '\n'
 
         # Remove newline
         out += line[:-1]
