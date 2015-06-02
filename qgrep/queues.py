@@ -187,6 +187,67 @@ class Queues:
                         self.queues[queue] = OrderedDict()
 
                     self.queues[queue][job.id] = job
+
+
+class Queue:
+    """
+    A simple class that contains Jobs that are running and queued
+    """
+    def __init__(self, size, running, queueing):
+        """
+        Initialize a queue with it's jobs
+        
+        :param running: an OrderedDict of Jobs that are running
+        :param queueing: and OrderedDict of Jobs that are queueing
+        """
+        self.size = size
+        self.running = running
+        # not queued to prevent clash
+        self.queueing = queueing
+
+    def __len__(self):
+        return self.size
+
+    def __list__(self):
+        """Make a list of all the Jobs in the queue"""
+        return list(self.running.values()) + list(self.queueing.values())
+
+    # May not work right, may need to have the first argument be Queue as that is what self is
+    #@accepts(Queue, (int, float))
+    def __getitem__(self, job_id):
+        if job_id in self.running:
+            return self.running[job_id]
+        elif job_id in self.queueing:
+            return self.queueing[job_id]
+        raise KeyError("Cannot find the Job with id: " + str(job.id))
+
+    #@accepts((int, float), Job, str)
+    def set(self, job_id, Job, position):
+        """
+        Set a job in the specified position (running or queueing)
+        """
+        if position == 'running':
+            self.running[job_id] = Job
+        elif position == 'queueing':
+            self.queueing[job_id] = Job
+        else:
+            raise Error("Invalid position, must be either running or queueing.")
+    
+    @property
+    def used(self):
+        return len(self.running)
+
+    @property
+    def avail(self):
+        return self.size - self.used
+
+    @property
+    def queued(self):
+        return len(self.queueing)
+
+    def person_jobs(self, owner):
+        """Return a list of the Jobs with the specified owner"""
+        raise NotImplementedError()
         
 
 class Job:
