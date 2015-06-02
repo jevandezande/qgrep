@@ -16,4 +16,4 @@ parser.add_argument('-u', '--user', help='Output only the users jobs', action='s
 args = parser.parse_args()
 
 queues = Queues()
-queues.print(numlines=args.number, large=args.large, user=args.user)
+queues.print(numjobs=args.number, large=args.large, user=args.user)

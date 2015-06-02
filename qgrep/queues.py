@@ -19,7 +19,7 @@ class Queues:
         """
         return self.print()
 
-    def print(self, numlines=50, large=False, user=False):
+    def print(self, numjobs=50, large=False, user=False):
         """
         Print the queues in a nice table
         """
@@ -71,7 +71,7 @@ class Queues:
         # job is None if they are all used up
         blank = bar + ' '*28
         for i, job_row in enumerate(zip_longest(*job_list)):
-            if i > numlines:
+            if i >= numjobs:
                 break
             for job in job_row:
                 if job is None:
