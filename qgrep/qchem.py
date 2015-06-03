@@ -120,6 +120,7 @@ def generate_input(geom='', options=None):
         if geom == 'read':
             if path.isfile('geom.xyz'):
                 geom = [line.split() for line in open('geom.xyz').readlines()]
+                geom = [line.split() for line in open('geom.xyz').readlines()]
                 charge = 0
                 multiplicity = 1
                 if len(geom[0]) == 2 and geom[0][0].isdigit() and geom[0][1].isdigit():
