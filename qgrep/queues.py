@@ -265,10 +265,10 @@ class Job:
 
     def __str__(self):
         """Print a short description of the job, with color"""
-        job_form = '{:>6.0f} {:<5s} {:<12s} {}{:2s}\033[0m'
+        job_form = '{:>6d} {:<5s} {:<12s} {}{:2s}\033[0m'
         colors = defaultdict(lambda: '\033[93m', {'r': '\033[92m',
                                                   'qw': '\033[94m'})
-        return job_form.format(self.id, self.owner[:5], self.name[:12],
+        return job_form.format(int(self.id), self.owner[:5], self.name[:12],
                                colors[self.state], self.state)
 
     @staticmethod
