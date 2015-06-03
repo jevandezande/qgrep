@@ -1,9 +1,10 @@
 """Source for all psi4 related functions"""
 
 
-def get_geom(lines, type='xyz', units='Angstroms'):
+def get_geom(lines, geom_type='xyz', units='Angstroms'):
     """Takes the lines of an psi4 output file and returns its last geometry"""
-    if type == 'xyz':
+    # noinspection PyPep8
+    if geom_type == 'xyz':
         start = '\tCartesian Geometry (in Angstrom)\n'
         end = '\t\t\t OPTKING Finished Execution \n'
 
@@ -28,7 +29,7 @@ def get_geom(lines, type='xyz', units='Angstroms'):
 
         return geom
 
-    elif type == 'zmat':
+    elif geom_type == 'zmat':
         start = '    Geometry (in Angstrom),'
 
         geom_start = 0
@@ -53,7 +54,7 @@ def get_geom(lines, type='xyz', units='Angstroms'):
         return geom
 
 
-def plot(lines, type='xyz'):
+def plot(lines, geom_type='xyz'):
     """Plots the the geometries from the optimization steps"""
     start = '\tCartesian Geometry (in Angstrom)\n'
     end = '\t\t\t OPTKING Finished Execution \n'
@@ -83,8 +84,10 @@ def plot(lines, type='xyz'):
     # Last optimization step has an extra line after it
     start = geoms_start[-1]
     end = geoms_end[-1]
+    geom = ''
     for line in lines[start + 1:end]:
         geom += '\t'.join(line.split()) + '\n'
+    geoms.append(geom)
 
     return geoms
 
@@ -101,16 +104,11 @@ def check_convergence(lines):
 
 
 def get_freqs(lines):
-    """Returns all the frequencies and geometries in xyz format"""
+    """
+    Returns all the frequencies and geometries in xyz format
 
-    geometries = plot(lines)
+    Model of vibrational output for an N atom molecule
 
-    # Save the geometries to the output file
-    output = '\n\n'.join(['\n'.join(geom) for geom in geometries])
-
-
-    # Find the coordinates of the vibrational modes
-    """Model of vibrational output for an N atom molecule
             0    1    ...        5
     atom1x    #    #    ...        #
     atom1y    #    #    ...        #
@@ -131,6 +129,10 @@ def get_freqs(lines):
     atomNz    #    #    ...        #
     ...
     """
+
+    geometries = plot(lines)
+
+    # Find the coordinates of the vibrational modes
     vibrations_start = 0
     vib_modes_start = 0
     vib_modes_end = 0
@@ -200,7 +202,9 @@ def get_freqs(lines):
 
 
 def get_energy(lines, energy_type='sp'):
-    """WARNING: It returns as a string in order to prevent python from rounding"""
+    """
+    WARNING: It returns as a string in order to prevent python from rounding
+    """
     if energy_type == 'sp':
         for line in reversed(lines):
             if line[:18] == '    Total Energy =':

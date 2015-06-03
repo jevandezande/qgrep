@@ -1,6 +1,5 @@
 import unittest
 from sys import path
-import re
 
 path.insert(0, '../..')
 
@@ -8,7 +7,7 @@ from qgrep import cfour
 
 
 class TestCFour(unittest.TestCase):
-    """Tests the orca class"""
+    """Tests the cfour class"""
 
     def setUp(self):
         """Read in the necessary files"""
@@ -21,7 +20,7 @@ class TestCFour(unittest.TestCase):
     def test_get_geom(self):
         """Testing get_geom"""
         self.assertEqual(self.files['h2o.xyz'],
-                         cfour.get_geom(self.files['h2o.out'], type='xyz'))
+                         cfour.get_geom(self.files['h2o.out'], geom_type='xyz'))
 
     def test_check_convergence(self):
         """Testing check_convergence"""

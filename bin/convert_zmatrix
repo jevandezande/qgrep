@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-# Script that takes an output file and writes a proper zmatrix or the reverse if already proper
+# Script that takes an output file and writes a proper zmatrix or the reverse if
+# already proper
 
 import argparse
 import sys
@@ -10,16 +11,19 @@ from qgrep.helper import read
 from qgrep.orca import convert_zmatrix, convert_to_orca_zmatrix
 
 
-parser = argparse.ArgumentParser(description=
-                                 'Converts the last zmatrix to a proper zmatrix or the reverse if already proper.')
-parser.add_argument('-i', '--input', help='The file to be read.', type=str, default='output.dat')
-parser.add_argument('-o', '--output', help='Where to output the geometry.', type=str, default='ZMAT')
-parser.add_argument('-u', '--units', help='What units to output the geometry in.', type=str, default='angstrom')
+parser = argparse.ArgumentParser(description='Converts the last zmatrix to aproper zmatrix or the reverse if already proper.')
+parser.add_argument('-i', '--input', help='The file to be read.', type=str,
+                    default='output.dat')
+parser.add_argument('-o', '--output', help='Where to output the geometry.',
+                    type=str, default='ZMAT')
+parser.add_argument('-u', '--units', help='Units to output the geometry in.',
+                    type=str, default='angstrom')
 
 args = parser.parse_args()
 
 # Read in the file
 lines, program = read(args.input)
+
 
 def write(zmat):
     # Simple function to write a zmatrix to file
@@ -27,7 +31,6 @@ def write(zmat):
         for line in zmat:
             f.write('\t'.join(line) + '\n')
 
-zmat = ''
 if program == 'orca':
     write(convert_zmatrix(lines, args.units))
 elif program == 'zmatrix':

@@ -90,9 +90,7 @@ class TestBasis(unittest.TestCase):
         self.assertRaises(SyntaxError, self.basis.__setitem__, 0, 1)
         del self.basis[2]
         self.assertRaises(IndexError, self.basis.__getitem__, 2)
-        cons = Contraction('SP', [0.1, 3], [0.2, 0.8], [0.1, 0.3])
         basis = Basis('C', [self.consp])
-        cons2 = Contraction('SP', [0.1, 3], [0.2, 0.8], [0.1, 0.3])
         basis2 = Basis('C', [self.consp])
         self.assertEqual(basis, basis2)
 
@@ -184,8 +182,10 @@ class TestBasisSet(unittest.TestCase):
 
     def test_values(self):
         """Test values"""
-        vals = [[np.array([[1.0,  0.5], [2.0,  0.5]]), np.array([[0.01,  0.3], [0.2,  0.4], [1.0,  0.3]])],
-                [np.array([[0.1,  0.6], [0.4,  0.4]]), np.array([[0.1,  0.2], [0.4,  0.3], [3.0,  0.5]])]]
+        vals = [[np.array([[1.0, 0.5], [2.0, 0.5]]),
+                 np.array([[0.01, 0.3], [0.2, 0.4], [1.0, 0.3]])],
+                [np.array([[0.1, 0.6], [0.4, 0.4]]),
+                 np.array([[0.1, 0.2], [0.4, 0.3], [3.0, 0.5]])]]
         self.assertEqual(vals[0][0][0][1], self.basis_set.values()[0][0][0][1])
         self.assertEqual(vals[0][1][1][0], self.basis_set.values()[0][1][1][0])
 

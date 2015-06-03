@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 
 import subprocess
-import xml.etree.ElementTree as ET
+from xml.etree import ElementTree
 from collections import OrderedDict, defaultdict
 from itertools import zip_longest
 import getpass
-from pprint import pprint
+
 
 class Queues:
     def __init__(self):
+        self.queues = OrderedDict()
         self.tree = self.qxml()
         self.parse_tree()
-        self.sizes = {'debug':1, 'gen3':16, 'gen4': 48, 'gen5':2, 'large':1}
+        self.sizes = {'debug': 1, 'gen3': 16, 'gen4': 48, 'gen5': 2, 'large': 1}
     
     def __str__(self):
         """
@@ -19,6 +20,7 @@ class Queues:
         """
         return self.print()
 
+    # noinspection PyPep8
     def print(self, numjobs=50, user=False):
         """
         Print the queues in a nice table
@@ -28,6 +30,7 @@ class Queues:
         job_list = []
         running_count = {}
         debug = []
+        large = []
         # Iterate over all the jobs and make a list of queues, which each are a list of jobs
         for queue, jobs in self.queues.items():
             jobs_running = 0
@@ -154,7 +157,7 @@ class Queues:
         qstat_xml_cmd = "qstat -u '*' -r -f -xml"
         try:
             xml = subprocess.check_output(qstat_xml_cmd, shell=True)
-            return ET.fromstring(xml)
+            return ElementTree.fromstring(xml)
         except FileNotFoundError as e:
             print("Could not find qstat")
             raise e
@@ -212,26 +215,28 @@ class Queue:
         """Make a list of all the Jobs in the queue"""
         return list(self.running.values()) + list(self.queueing.values())
 
-    # May not work right, may need to have the first argument be Queue as that is what self is
+    # May not work right, may need to have the first argument be Queue as that
+    # is what self is
     #@accepts(Queue, (int, float))
     def __getitem__(self, job_id):
         if job_id in self.running:
             return self.running[job_id]
         elif job_id in self.queueing:
             return self.queueing[job_id]
-        raise KeyError("Cannot find the Job with id: " + str(job.id))
+        raise KeyError("Cannot find the Job with id: " + str(job_id))
 
     #@accepts((int, float), Job, str)
-    def set(self, job_id, Job, position):
+    def set(self, job_id, job, position):
         """
         Set a job in the specified position (running or queueing)
         """
         if position == 'running':
-            self.running[job_id] = Job
+            self.running[job_id] = job
         elif position == 'queueing':
-            self.queueing[job_id] = Job
+            self.queueing[job_id] = job
         else:
-            raise Error("Invalid position, must be either running or queueing.")
+            raise Exception("Invalid position, must be either running or"
+                            "queueing.")
     
     @property
     def used(self):
@@ -252,7 +257,8 @@ class Queue:
 
 class Job:
     """
-    A simple class that contains important information about a job and prints it nicely
+    A simple class that contains important information about a job and prints it
+    nicely
     """
     def __init__(self, job_xml):
         self.id, self.name, self.state, self.owner, self.queue = Job.read_job_xml(job_xml)
@@ -260,7 +266,8 @@ class Job:
     def __str__(self):
         """Print a short description of the job, with color"""
         job_form = '{:>6.0f} {:<5s} {:<12s} {}{:2s}\033[0m'
-        colors = defaultdict(lambda: '\033[93m', {'r':'\033[92m', 'qw': '\033[94m'})
+        colors = defaultdict(lambda: '\033[93m', {'r': '\033[92m',
+                                                  'qw': '\033[94m'})
         return job_form.format(self.id, self.owner[:5], self.name[:12],
                                colors[self.state], self.state)
 
@@ -269,23 +276,21 @@ class Job:
         """
         Read the xml of qstat and find the necessary variables
         """
-        id = int(job_xml.find('JB_job_number').text)
+        jid = int(job_xml.find('JB_job_number').text)
         tasks = job_xml.find('tasks')
         # If there are multiple tasks with the same id, make the id a float
         # with the task number being the decimal
-        if tasks != None:
+        if tasks is not None:
             # If it is a range of jobs, e.g. 17-78:1, just take the first
-            task = tasks.text.split('-')[0] # If not a range, this does nothing
-            id += int(task) / 10**len(task)
+            task = tasks.text.split('-')[0]  # If not a range, this does nothing
+            jid += int(task) / 10 ** len(task)
         name = job_xml.find('JB_name').text
         state = job_xml.get('state')
         owner = job_xml.find('JB_owner').text
         state2 = job_xml.find('state').text
         queue = job_xml.find('hard_req_queue').text
-        if tasks:
-            jobs_left = 1
         if (state == 'running' and state2 != 'r') or \
            (state == 'pending' and state2 != 'qw'):
-            print('States do not agree: job {}, states:{} {}'.format(id, state, state2))
-        return id, name, state2, owner, queue
+            print('States do not agree: job {}, states:{} {}'.format(jid, state, state2))
+        return jid, name, state2, owner, queue
 

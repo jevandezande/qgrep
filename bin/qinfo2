@@ -9,8 +9,10 @@ sys.path.insert(0, '../')
 from qgrep.queues import Queues
 
 parser = argparse.ArgumentParser(description='Get the final energy of an output file.')
-parser.add_argument('-n', '--number', help='The number of jobs to be output', type=int, default=50)
-parser.add_argument('-u', '--user', help='Output only the users jobs', action='store_true', default=False)
+parser.add_argument('-n', '--number', help='The number of jobs to be output',
+                    type=int, default=50)
+parser.add_argument('-u', '--user', help='Output only the users jobs',
+                    action='store_true', default=False)
 
 args = parser.parse_args()
 
