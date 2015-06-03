@@ -10,9 +10,11 @@ sys.path.insert(0, '../')
 from qgrep.helper import read
 
 
-parser = argparse.ArgumentParser(description='Get the final energy of an output file.')
-parser.add_argument('-i', '--input', help='The file to be read.', type=str, default='output.dat')
-parser.add_argument('-o', '--output', help='Where to output the orbital energies', type=str, default='energies.dat')
+parser = argparse.ArgumentParser(description='Get orbital energies of an output file.')
+parser.add_argument('-i', '--input', help='The file to be read.', type=str,
+                    default='output.dat')
+parser.add_argument('-o', '--output', help='File for the orbital energies',
+                    type=str, default='energies.dat')
 
 args = parser.parse_args()
 

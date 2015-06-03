@@ -9,8 +9,10 @@ from qgrep.helper import read
 
 
 parser = argparse.ArgumentParser(description='Get the geometry of an output file.')
-parser.add_argument('-i', '--input', help='The file to be read.', type=str, default='output.dat')
-parser.add_argument('-o', '--output', help='Where to output the geometry.', type=str, default='geom.xyz')
+parser.add_argument('-i', '--input', help='The file to be read.', type=str,
+                    default='output.dat')
+parser.add_argument('-o', '--output', help='Where to output the geometry.',
+                    type=str, default='geom.xyz')
 
 args = parser.parse_args()
 

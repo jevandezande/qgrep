@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-# Script that takes a geometry in zmatrix or cartesian coordinates and converts it to the other
+# Script that takes a geometry in zmatrix or cartesian coordinates and converts
+# it to the other
 
 import argparse
 import sys
@@ -10,8 +11,10 @@ from qgrep.coordinate_converter import CoordinateConverter
 
 
 parser = argparse.ArgumentParser(description='Convert coordinates between cartesian and zmatrix.')
-parser.add_argument('-i', '--input', help='The file to be read.', type=str, default='geom.xyz')
-parser.add_argument('-o', '--output', help='Where to output the geometry.', type=str)
+parser.add_argument('-i', '--input', help='The file to be read.', type=str,
+                    default='geom.xyz')
+parser.add_argument('-o', '--output', help='Where to output the geometry.',
+                    type=str)
 parser.add_argument('-t', '--type', help='Type of input geometry', type=str)
 
 args = parser.parse_args()
@@ -37,5 +40,6 @@ if args.type == 'xyz':
 elif args.type == 'zmat':
     conv.convert_zmatrix(args.input, args.output)
 else:
-    print("Invalid type. Please specify either a zmatrix (zmat) or cartesian (xyz) geoetry")
+    print("Invalid type. Please specify either a zmatrix (zmat) or cartesian "
+          "(xyz) geometry")
     exit(1)

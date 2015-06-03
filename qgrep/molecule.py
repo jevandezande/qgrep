@@ -3,9 +3,10 @@ import importlib
 
 
 class Molecule(object):
-    def __init__(self, geom=[], geom_type=None, name=None):
+    def __init__(self, geom=None, geom_type=None, name=None):
         """
-        Simple molecule class that includes zmatrix and cartesian (xyz) coordinates
+        Simple molecule class that includes zmatrix and cartesian (xyz)
+        coordinates
         Geometries:
             XYZ
                 List of lists where the first column corresponds to the element
@@ -14,6 +15,8 @@ class Molecule(object):
                 List of list where the first column corresponds to the element
                 and the others to atom1, distance, atom2, angle, atom3, dihedral
         """
+        if geom is None:
+            geom = []
         self.xyz = None
         self.zmat = None
         if not geom_type is None:
@@ -26,7 +29,8 @@ class Molecule(object):
                 Molecule.check_zmatrix(geom)
                 self.zmat = geom
             else:
-                raise SyntaxError("Invalid geometry type, must be either 'xyz' or 'zmat'.")
+                raise SyntaxError("Invalid geometry type, must be either 'xyz' "
+                                  "or 'zmat'.")
         elif len(geom) > 0 and len(geom[0]) == 1:
             self.geom_type = 'zmat'
             Molecule.check_zmatrix(geom)
@@ -45,7 +49,10 @@ class Molecule(object):
         return len(self.xyz)
 
     def __str__(self):
-        """Returns a string of the geometry, filling out positions with zeros and spaces as needed"""
+        """
+        Returns a string of the geometry, filling out positions with zeros and
+        spaces as needed
+        """
         if self.geom_type == 'zmat':
             out = self.zmat[0][0]
             for i, atom in enumerate(self.zmat[1:], start=1):
@@ -113,6 +120,7 @@ class Molecule(object):
 
     @staticmethod
     def check_type(geom):
+        # noinspection PyPep8
         """Determine the geometry type, and return a string corresponding to it. If not a valid format, returns None"""
         try:
             Molecule.check_xyz(geom)
@@ -162,42 +170,55 @@ class Molecule(object):
             if len(atom) != 1:
                 raise SyntaxError("Only need one atom on first line: " + str(atom))
             if not isinstance(atom[0], str):
-                raise SyntaxError("Atom name must be a string. {} is not a valid atom name".format(atom[0]))
+                raise SyntaxError("Atom name must be a string. {} is not a "
+                                  "valid atom name".format(atom[0]))
         elif i == 2:
             if len(atom) != 3:
-                raise SyntaxError("Need atom, its connection, and distance: " + str(atom))
+                raise SyntaxError("Need atom, its connection, and distance: " +
+                                  str(atom))
             name, atom1, distance = atom
-            if not isinstance(name, str) or not isinstance(atom1, int) or not isinstance(distance, (int, float)):
-                raise SyntaxError("Invalid specification of second atom: {}".format(atom))
+            if not isinstance(name, str) or not isinstance(atom1, int) or not \
+                    isinstance(distance, (int, float)):
+                raise SyntaxError("Invalid specification of second atom: "
+                                  "{}".format(atom))
         elif i == 3:
             if len(atom) != 5:
-                raise SyntaxError("Need atom, its connection, and distance on second line: " + str(atom))
+                raise SyntaxError("Need atom, its connection, and distance on "
+                                  "second line: " + str(atom))
             name, atom1, distance, atom2, angle = atom
-            if not isinstance(name, str) or not isinstance(atom1, int) or not isinstance(distance, (int, float)) or \
-                    not isinstance(atom2, int) or not isinstance(angle, (int, float)):
-                raise SyntaxError("Invalid specification of atom: {}".format(atom))
+            if not isinstance(name, str) or not isinstance(atom1, int) or not \
+                    isinstance(distance, (int, float)) or not \
+                    isinstance(atom2, int) or not isinstance(angle, (int, float)):
+                raise SyntaxError("Invalid specification of atom: "
+                                  "{}".format(atom))
         elif i > 3 and isinstance(i, int):
             if len(atom) != 7:
-                raise SyntaxError("Incorrect number of values, excpecting 6 but got " + str(len(atom)))
+                raise SyntaxError("Incorrect number of values, expecting 6 "
+                                  "but got " + str(len(atom)))
             if not isinstance(atom[0], str):
-                raise SyntaxError("Atom name must be a string. {} is not a valid atom name".format(atom[0]))
+                raise SyntaxError("Atom name must be a string. {} is not a "
+                                  "valid atom name".format(atom[0]))
             atoms = atom[1::2]
             for a in atoms:
                 if not isinstance(a, int):
                     raise SyntaxError("Atoms must be specified with a number.")
                 if a >= i:
                     # Using indexing starting at 1
-                    raise SyntaxError("Cannot use atoms appearing after the current atom.")
+                    raise SyntaxError("Cannot use atoms appearing after the "
+                                      "current atom.")
             params = atom[2::2]
             for p in params:
                 if not isinstance(p, (int, float)):
-                    raise SyntaxError("Distance, angle, and dihedral must be specified with a number: {}".format(atom))
+                    raise SyntaxError("Distance, angle, and dihedral must be "
+                                      "specified with a number: " + str(atom))
         else:
             raise SyntaxError("Index must be an integer greater than one.")
 
     @staticmethod
     def check_zmatrix(zmatrix):
-        """Checks if the given zmatrix is valid, raises a syntax error if not"""
+        """
+        Checks if the given zmatrix is valid, raises a syntax error if not
+        """
         for i, atom in enumerate(zmatrix, start=1):
             Molecule.check_zmatrix_atom(atom, i)
 
@@ -233,8 +254,10 @@ class Molecule(object):
     def write(self, outfile="geom.xyz", label=True, style='xyz'):
         """
         Writes the geometry to the specified file
-        If an xyz geometry, prints the size at the beginning if desired (to conform to XYZ format)
-        If a zmat, prints  the zmatrix label at the beginning (#ZMATRIX) (to conform to JMol zmatrix format)
+        If an xyz geometry, prints the size at the beginning if desired
+            (to conform to XYZ format)
+        If a zmat, prints  the zmatrix label at the beginning (#ZMATRIX)
+            (to conform to JMol zmatrix format)
         """
         out = ''
         if style == 'xyz':
@@ -250,8 +273,9 @@ class Molecule(object):
             header = '{}\\\\\n'.format(len(self))
             if self.name:
                 header = self.name + '\\\\\n' + header
-            line_format = '{:<2}' + ' {:> 13.8f}'*3
-            atoms = '\n'.join([line_format.format(atom, *pos) for atom, *pos in self.xyz])
+            line_form = '{:<2}' + ' {:> 13.8f}'*3
+            atoms = [line_form.format(atom, *pos) for atom, *pos in self.xyz]
+            atoms = '\n'.join(atoms)
             out = header + '\\begin{verbatim}\n' + atoms + '\n\\end{verbatim}'
         else:
             raise SyntaxError('Invalid style')

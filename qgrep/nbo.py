@@ -1,7 +1,7 @@
 """Source for all nbo relate functions"""
 import re
 import numpy as np
-from pprint import pprint
+
 
 class NPA():
     """Natural Population Analysis class"""
@@ -38,7 +38,7 @@ class NPA():
                 start = i + 6
                 break
         if start == 0:
-            raise Error('Unable to find the start of NPA analysis')
+            raise Exception('Unable to find the start of NPA analysis')
 
         npa = []
         atoms = []
@@ -61,17 +61,21 @@ class NBO():
         self.nbos = self.read(lines)
 
     def __str__(self):
-        ret = 'Bond #, Bond Order, type, sub bond #, atom1, atom1 #, atom2, atom2 #\n'
-        nbo_form = ' {:>3d}     {:6.5f}     {:<3s}      {:d}        {:<2s}     {:>3d}       {:<2s}    {:>3d}\n'
+        ret = 'Bond #, Bond Order, type, sub bond #, atom1, atom1 #, atom2,' \
+              'atom2 #\n'
+        nbo_form = ' {:>3d}     {:6.5f}     {:<3s}      {:d}        {:<2s}' \
+                   '     {:>3d}       {:<2s}    {:>3d}\n'
         for nbo in self.nbos:
             ret += nbo_form.format(*nbo)
         return ret
 
     @staticmethod
     def read(lines):
-        """Read the Natural Bond Orbital Analysis
+        # noinspection PyPep8
+        """
+        Read the Natural Bond Orbital Analysis
 
-   1. (1.92050) BD ( 1)Fe  1- C  2       
+   1. (1.92050) BD ( 1)Fe  1- C  2
                ( 32.17%)   0.5672*Fe  1 s( 33.10%)p 0.00(  0.02%)d 2.02( 66.88%)
                                                   f 0.00(  0.00%)
                                          0.0000  0.0000 -0.0044  0.5753  0.0022
@@ -87,7 +91,7 @@ class NBO():
                                                   f 0.02(  0.06%)
                                          0.0000  0.0000  0.0000  0.0000  0.0005
     ...
- 618. (0.67669) BD*( 1)Fe  1- C  2       
+ 618. (0.67669) BD*( 1)Fe  1- C  2
                ( 67.83%)   0.8236*Fe  1 s( 33.10%)p 0.00(  0.02%)d 2.02( 66.88%)
                                                   f 0.00(  0.00%)
     ...

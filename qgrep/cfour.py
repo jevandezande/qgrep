@@ -1,9 +1,9 @@
 
 
-def get_geom(lines, type='xyz', units='bohr'):
+def get_geom(lines, geom_type='xyz', units='bohr'):
     """Takes the lines of an cfour output file and returns its last geometry in
         the specified format"""
-    if type == 'xyz' and units in ['bohr', 'angstrom']:
+    if geom_type == 'xyz' and units in ['bohr', 'angstrom']:
         start = ' Z-matrix   Atomic            Coordinates (in bohr)\n'
     else:
         print("Invalid format")

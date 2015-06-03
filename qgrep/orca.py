@@ -2,17 +2,20 @@
 from qgrep.molecule import Molecule
 
 
-def get_geom(lines, type='xyz', units='angstrom'):
-    """Takes the lines of an orca output file and returns its last geometry in the specified format"""
+def get_geom(lines, geom_type='xyz', units='angstrom'):
+    """
+    Takes the lines of an orca output file and returns its last geometry in the
+    specified format
+    """
     start = ''
     end = '\n'
-    if type == 'xyz' and units == 'angstrom':
+    if geom_type == 'xyz' and units == 'angstrom':
         start = 'CARTESIAN COORDINATES (ANGSTROEM)\n'
-    elif type == 'zmat' and units == 'angstrom':
+    elif geom_type == 'zmat' and units == 'angstrom':
         start = 'INTERNAL COORDINATES (ANGSTROEM)\n'
-    elif type == 'xyz' and units == 'bohr':
+    elif geom_type == 'xyz' and units == 'bohr':
         start = 'CARTESIAN COORDINATES (A.U.)\n'
-    elif type == 'zmat' and units == 'bohr':
+    elif geom_type == 'zmat' and units == 'bohr':
         start = 'INTERNAL COORDINATES (A.U.)\n'
     else:
         print("Invalid format or units")
@@ -36,14 +39,14 @@ def get_geom(lines, type='xyz', units='angstrom'):
     if geom_end == -1:
         return ''
 
-    if type == 'xyz' and units == 'bohr':
+    if geom_type == 'xyz' and units == 'bohr':
         geom_start += 1
     geom = lines[geom_start: geom_end]
 
     return geom
 
 
-def plot(lines, type='xyz'):
+def plot(lines, geom_type='xyz'):
     """Plots the the geometries from the optimization steps"""
     start = 'CARTESIAN COORDINATES (ANGSTROEM)\n'
     end = 'CARTESIAN COORDINATES (A.U.)\n'
@@ -199,7 +202,8 @@ def get_freqs(lines):
     # Don't print the first six modes, as they are not vibrations
     for i in range(len(modes) - 6):
         mode = modes[i + 6]
-        # xyz header including the vibrational frequency (offset by 6 to avoid non-vibrational modes)
+        # xyz header including the vibrational frequency
+        # offset by 6 to avoid non-vibrational modes
         vibrations.append([str(num_atoms), '{0} cm^-1'.format(vib_freqs[i + 6])])
         for j in range(len(modes[i])):
             # Geometry goes first, then x, y, and z displacements for modes
@@ -210,6 +214,7 @@ def get_freqs(lines):
         output += '\n'.join(freq) + '\n\n'
 
     return output
+
 
 def get_ir(lines):
     vib_freqs_start = 0
@@ -301,13 +306,17 @@ def convert_to_orca_zmatrix(lines):
     # All other lines
     for line in lines[3:]:
         element, atom1, distance, atom2, angle, atom3, dihedral = line.split()[:7]
-        orca_zmatrix.append([element, atom1, atom2, atom3, distance, angle, dihedral])
+        orca_zmatrix.append([element, atom1, atom2, atom3,
+                             distance, angle, dihedral])
 
     return orca_zmatrix
 
 
 def energy_levels(lines):
-    """Returns the orbital occupations and energies of the last geometry as well as useful information"""
+    """
+    Returns the orbital occupations and energies of the last geometry as well as
+    useful information
+    """
     start = 'ORBITAL ENERGIES\n'
     end = '\n'
 
@@ -359,7 +368,6 @@ def get_molecule(lines):
     if geom_start == -1:
         return ''
 
-    done = False
     mol = Molecule()
     for i in range(geom_start, len(lines)):
         if end == lines[i]:
@@ -368,6 +376,7 @@ def get_molecule(lines):
         mol.append([data[0]] + list(map(float, data[1:4])))
 
     return mol
+
 
 def get_multiplicity(lines):
     """

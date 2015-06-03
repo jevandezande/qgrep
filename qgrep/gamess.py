@@ -2,7 +2,7 @@ import os
 import re
 from collections import OrderedDict
 from qgrep.molecule import Molecule
-from qgrep.helper import atomic_number, convert_name
+from qgrep.helper import atomic_number
 from qgrep.basis import BasisSet
 
 
@@ -12,16 +12,21 @@ def check_convergence(lines):
     convergence_list = []
     for i in range(len(lines)):
         if convergence_result in lines[i]:
-            convergence_list.append(''.join(lines[i+2].strip()))
+            convergence_list.append(''.join(lines[i + 2].strip()))
 
     return convergence_list
 
-def get_geom(lines, type='xyz', units='angstrom'):
-    """Takes the lines of an output file and returns its last geometry in the specified format"""
+
+def get_geom(lines, geom_type='xyz', units='angstrom'):
+    """
+    Takes the lines of an output file and returns its last geometry in the
+    specified format
+    """
     start = ' COORDINATES OF ALL ATOMS ARE (ANGS)\n'
     end = '\n'
-    if type=='zmat' or units=='bohr':
-        raise SyntaxError("Currently only supports Angstroms and xyz coordinates")
+    if geom_type == 'zmat' or units == 'bohr':
+        raise SyntaxError(
+            "Currently only supports Angstroms and xyz coordinates")
 
     geom_start = -1
     # Iterate backwards until the start of the last set of coordinates is found
@@ -48,7 +53,8 @@ def get_geom(lines, type='xyz', units='angstrom'):
 
     return geom
 
-def plot(lines, type='xyz'):
+
+def plot(lines, geom_type='xyz'):
     """Plots the the geometries from the optimization steps"""
     start = ' COORDINATES OF ALL ATOMS ARE (ANGS)\n'
     end = '\n'
@@ -73,12 +79,13 @@ def plot(lines, type='xyz'):
 
     return geoms
 
+
 def get_energy(lines, energy_type='sp'):
     """Returns the energy"""
     energy = 0
     if energy_type != 'sp':
         raise SyntaxError("Invalid energy type")
-    energy_line = ' '*23 + 'TOTAL ENERGY'
+    energy_line = ' ' * 23 + 'TOTAL ENERGY'
     for line in reversed(lines):
         if line[:35] == energy_line:
             energy = line.split()[-1]
@@ -89,6 +96,7 @@ def get_energy(lines, energy_type='sp'):
 
 class Gamessifier():
     """Class for making Gamess input files"""
+
     def __init__(self):
         self.mol = Molecule()
         self.basis_set = BasisSet()
@@ -97,7 +105,8 @@ class Gamessifier():
         self.vec = ''
         self.hess = ''
         self.vec_re = re.compile("^ \$VEC.*?^ \$END", re.MULTILINE + re.DOTALL)
-        self.hess_re = re.compile("^ \$HESS.*?^ \$END", re.MULTILINE + re.DOTALL)
+        self.hess_re = re.compile("^ \$HESS.*?^ \$END",
+                                  re.MULTILINE + re.DOTALL)
 
     def read_mol(self, geom_file='geom.xyz'):
         """Reads a geometry file and generates a molecule"""
@@ -111,7 +120,10 @@ class Gamessifier():
         self.mol.read(geom_file)
 
     def read_basis_set(self, basis_file='basis.gbs'):
-        """Reads a basis file and makes a dictionary with the form atom:basis_functions"""
+        """
+        Reads a basis file and makes a dictionary with the form
+        atom:basis_functions
+        """
         self.basis_set = BasisSet()
         if not basis_file:
             return
@@ -149,15 +161,25 @@ class Gamessifier():
                 self.ecp[name] = lines[i]
                 i += 1
             else:
-                raise SyntaxError('Invalid ecp type, only GEN and NONE are currently accepted.')
+                raise SyntaxError('Invalid ecp type, only GEN and NONE are'
+                                  'currently accepted.')
 
     def write_options_str(self):
-        # Dictionary of form
-        # { block1:((option1, value1), (option2,value2)), block2:((option1, value1)) }
+        """
+        Make a string out of the options
+        options_dict is of the form
+        {
+            block1:((option1, value1), (option2,value2)),
+            block2:((option1, value1))
+        }
+        """
         options_str = ''
         for block, values in self.options_dict.items():
-            block_options = '\n'.join(['    {}={}'.format(key, value) for key, value in values.items()])
-            options_str += ' ${}\n{}\n $END\n\n'.format(block.upper(), block_options)
+            block_options = '\n'.join(
+                ['    {}={}'.format(key, value) for key, value in
+                 values.items()])
+            options_str += ' ${}\n{}\n $END\n\n'.format(block.upper(),
+                                                        block_options)
         return options_str
 
     def read_options(self, options='options.dat'):
@@ -166,7 +188,8 @@ class Gamessifier():
         if isinstance(options, str):
             if os.path.isfile(options):
                 options_str = open(options).read()
-                matches = re.findall('^ \$\w+.*?\$END', options_str, re.DOTALL + re.MULTILINE)
+                matches = re.findall('^ \$\w+.*?\$END', options_str,
+                                     re.DOTALL + re.MULTILINE)
                 for match in matches:
                     lines = match.split('\n')
                     block = lines[0][2:].strip()
@@ -179,7 +202,8 @@ class Gamessifier():
         elif isinstance(options, dict):
             self.options_dict = options
         else:
-            raise SyntaxError('Invalid options format, must be either a string or a dictionary.')
+            raise SyntaxError('Invalid options format, must be either a string'
+                              'or a dictionary.')
 
     def read_data(self, dat_file='input.dat'):
         """Read vec and hess from .dat file that gamess makes"""
@@ -197,7 +221,8 @@ class Gamessifier():
         if hess_result:
             self.hess = hess_result[-1]
 
-    def read(self, geom_file='geom.xyz', basis_file='basis.gbs', ecp_file='ecp.dat',
+    def read(self, geom_file='geom.xyz', basis_file='basis.gbs',
+             ecp_file='ecp.dat',
              options='options.dat', dat_file='input.dat'):
         """Quick method to read eveything"""
         self.read_mol(geom_file)
@@ -208,7 +233,7 @@ class Gamessifier():
             self.read_data(dat_file)
 
     def update_options(self):
-        '''Update options based on available data'''
+        """Update options based on available data"""
         if self.vec:
             if not 'GUESS' in self.options_dict:
                 self.options_dict['GUESS'] = OrderedDict()
@@ -238,7 +263,7 @@ class Gamessifier():
                 if value.split()[1] != 'NONE':
                     del_ecp = False
                     break
-        if del_ecp == True:
+        if del_ecp:
             try:
                 del self.options_dict['STATPT']['HESS']
             except KeyError:
@@ -252,8 +277,10 @@ class Gamessifier():
             if len(name) > 1:
                 name = name[0].upper() + name[1:].lower()
             an = atomic_number(name)
-            atom_basis = self.basis_set[name].print(style='gamess', print_name=False)
-            data += '{} {}     {}  {}  {}\n{}\n'.format(name, an, x, y, z, atom_basis)
+            atom_basis = self.basis_set[name].print(style='gamess',
+                                                    print_name=False)
+            data += '{} {}     {}  {}  {}\n{}\n'.format(name, an, x, y, z,
+                                                        atom_basis)
             if name in self.ecp:
                 ecp += self.ecp[name].strip() + '\n'
             else:
@@ -263,5 +290,6 @@ class Gamessifier():
 
         self.update_options()
 
-        input_data = '{}\n{}\n{}\n{}\n{}'.format(self.write_options_str(), data, ecp, self.vec, self.hess)
+        input_data = '{}\n{}\n{}\n{}\n{}'.format(self.write_options_str(), data,
+                                                 ecp, self.vec, self.hess)
         open(input_file, 'w').write(input_data)

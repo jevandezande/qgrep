@@ -1,6 +1,5 @@
 import unittest
 from sys import path
-import re
 
 path.insert(0, '../..')
 

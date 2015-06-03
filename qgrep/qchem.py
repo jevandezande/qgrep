@@ -3,7 +3,8 @@
 import os.path as path
 
 
-def get_geom(lines, type='xyz'):
+# noinspection PyPep8
+def get_geom(lines, geom_type='xyz', units='Angstrom'):
     start = 'Standard Nuclear Orientation (Angstroms)'
     end = 'Molecular Point Group'
 
@@ -30,9 +31,9 @@ def get_geom(lines, type='xyz'):
     return geom
 
 
-def plot(lines, type='xyz'):
+def plot(lines, geom_type='xyz'):
     """Plots all the geometries for the optimization steps"""
-    if type != 'xyz':
+    if geom_type != 'xyz':
         raise SyntaxError('Only xyz coordinates are currently supported')
     
     start = 'Standard Nuclear Orientation (Angstroms)'
@@ -91,10 +92,17 @@ $end
     return template_style.format(geom, jobtype, functional, basis)
 
 
-def generate_input(geom='', options={}):
-    '''Generate an input file with the given options and the files available in the folder'''
+def generate_input(geom='', options=None):
+    """
+    Generate an input file with the given options and the files available in the
+    folder
+    """
+    if not options: options = {}
     # Convert keys and values to lowercase strings for ease of use
-    options = { str(k).lower(): str(v).lower() for k,v in options.items() }
+    if options:
+        options = {str(k).lower(): str(v).lower() for k, v in options.items()}
+    else:
+        options = {}
 
     # Run a frequency before these jobs
     job2 = None
@@ -107,26 +115,26 @@ def generate_input(geom='', options={}):
         options['jobtype'] = 'opt'
 
     check = []
-    if not geom == '':
+    if geom:
         if geom == 'read':
             if path.isfile('geom.xyz'):
-                geom = [ line.split() for line in open('geom.xyz').readlines() ]
+                geom = [line.split() for line in open('geom.xyz').readlines() ]
                 charge = 0
                 multiplicity = 1
                 if len(geom[0]) == 2 and geom[0][0].isdigit() and geom[0][1].isdigit():
-                    charge = int( geom[0][0] )
-                    multiplicity = int( geom[0][1] )
+                    charge = int(geom[0][0])
+                    multiplicity = int(geom[0][1])
                 else:
                     check.append('charge/multiplicity')
                     
-                if len( geom[0] ) == 1 and geom[0][0].isdigit():
+                if len(geom[0]) == 1 and geom[0][0].isdigit():
                     # Remove the useless numatoms and blank line
                     geom = geom[2:]
-                geom = ''.join( [ '\t' + '\t'.join(line) + '\n' for line in geom] )
+                geom = ''.join(['\t' + '\t'.join(line) + '\n' for line in geom])
             else:
                 check.append('Missing geometry file')
     # Prettify the geometry by adding tabs
-    input = "$molecule\n{}\n$end\n".format( geom )
+    input_str = "$molecule\n{}\n$end\n".format(geom)
 
     basis = ''
     if 'basis' in options:
@@ -151,30 +159,34 @@ def generate_input(geom='', options={}):
         options['max_scf_cycles'] = '300'
     
     # Write rem section using keys and values from dictionary
-    input += '\n$rem\n' + '\n'.join( [ "\t" + str.ljust(key, 19) + ' ' + value for key, value in sorted(options.items()) ] ) + '\n$end\n'
+    kv_form = '\t{:<19s} {}\n'
+    rem = ''.join([kv_form.format(k, v) for k, v in sorted(options.items())])
+    input_str += '\n$rem\n' + rem + '\n$end\n'
 
     if 'basis' in options:
         if options['basis'] == 'read':
-            input += basis
+            input_str += basis
     if 'ecp' in options:
         if options['ecp'] == 'read':
-            input += ecp
+            input_str += ecp
 
     if job2:
-        input += "\n@@@\n\n$molecule\n\tread\n$end\n"
+        input_str += "\n@@@\n\n$molecule\n\tread\n$end\n"
         if options['basis'] == 'read':
-            input += basis
+            input_str += basis
         if options['ecp'] == 'read':
-            input += ecp
+            input_str += ecp
         options['scf_guess'] = 'read'
         if options['jobtype'] == 'freq':
             options['geom_opt_hessian'] = 'read'
         options['jobtype'] = job2
 
         # Write rem
-        input += '\n$rem\n' + '\n'.join( [ "\t" + str.ljust(key, 19) + ' ' + value for key, value in sorted(options.items()) ] ) + '\n$end\n'
-        
-    print(input)
-    print( 'Check:' + '\n\t'.join(check) )
+        kv_form = '\t{:<19s} {}\n'
+        rem = ''.join([kv_form.format(k, v) for k, v in sorted(options.items())])
+        input_str += '\n$rem\n' + rem + '\n$end\n'
 
-    open('input.dat', 'w').write(input)
+    print(input_str)
+    print('Check:' + '\n\t'.join(check))
+
+    open('input.dat', 'w').write(input_str)

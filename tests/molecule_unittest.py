@@ -10,8 +10,12 @@ class TestMolecule(unittest.TestCase):
 
     def setUp(self):
         """Set up for every test"""
-        self.water_xyz = Molecule([['H', 0, 0, 10], ['O', 0, 0, 11], ['H', 0, -1, 11]])
-        self.water_zmatrix = Molecule([['O'], ['H', 1, 0], ['H', 1, 1, 2, 104.5]])
+        self.water_xyz = Molecule([['H', 0, 0, 10],
+                                   ['O', 0, 0, 11],
+                                   ['H', 0, -1, 11]])
+        self.water_zmatrix = Molecule([['O'],
+                                       ['H', 1, 0],
+                                       ['H', 1, 1, 2, 104.5]])
 
     def test_len(self):
         """Testing __len__"""

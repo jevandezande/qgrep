@@ -1,21 +1,25 @@
 from collections import OrderedDict
-from qgrep.helper import convert_name
 import numpy as np
 
 
 class Contraction:
     """A contraction of basis functions"""
-    def __init__(self, func_type, exps, coeffs, c2=[]):
+
+    def __init__(self, func_type, exps, coeffs, c2=None):
+        if not c2:
+            c2 = []
         self.func_type = func_type.upper()
         if not self.func_type in 'SPDFGHIKLMN':
             raise SyntaxError("Invalid angular momentum.")
 
         if len(exps) == 0 or len(exps) != len(coeffs):
-            raise SyntaxError('Need coefficients and exponents of the same length, got: \n{}\n{}'.format(exps, coeffs))
+            raise SyntaxError(('Need coefficients and exponents of the same'
+                              'length, got: \n{}\n{}').format(exps, coeffs))
         Contraction.check_exps(exps)
         Contraction.check_coeffs(coeffs)
         if len(c2) > 0 and len(c2) != len(coeffs):
-            raise SyntaxError('Second set of coefficients must have the same number as the first set')
+            raise SyntaxError('Second set of coefficients must have the same'
+                              'number as the first set')
         self.c2 = True
         if len(c2) == 0:
             self.values = np.array(list(zip(exps, coeffs)))
@@ -31,7 +35,8 @@ class Contraction:
 
     def __setitem__(self, item, value):
         if len(value) != len(self.values[0]):
-            raise ValueError("Incorrect size, expected {} elements.".format(len(self.values[0])))
+            raise ValueError("Incorrect size, expected {} elements.".format(
+                len(self.values[0])))
         if not value[0] > 0:
             raise ValueError("All exponents must be greater than 0")
         self.values[item] = value
@@ -45,7 +50,8 @@ class Contraction:
         print(self.func_type, other.func_type)
         print(self.values, other.values)
         print(self.values == other.values)
-        return self.func_type == other.func_type and (self.values == other.values).all()
+        return self.func_type == other.func_type and (
+            self.values == other.values).all()
 
     @staticmethod
     def check_exps(exps):
@@ -87,23 +93,29 @@ class Contraction:
     def print(self, style='gaussian94', atom=''):
         """Print the contraction to a string"""
         num_coeffs = 1 + int(self.c2)
-        form = '{:>17.7f}' + ' {:> 11.7f}'*num_coeffs
+        form = '{:>17.7f}' + ' {:> 11.7f}' * num_coeffs
         out = '{:<2}    {}\n'.format(self.func_type, len(self))
         if style == 'gaussian94':
             out += '\n'.join([form.format(*group) for group in self.values])
         elif style == 'gamess':
             form = ' {:>2} ' + form
-            out += '\n'.join([form.format(i, *group) for i, group in enumerate(self.values, start=1)])
+            out += '\n'.join([form.format(i, *group) for i, group in
+                              enumerate(self.values, start=1)])
         else:
-            raise SyntaxError('Only gaussian94 and gamess are currently supported.')
+            raise SyntaxError(
+                'Only gaussian94 and gamess are currently supported.')
         return out + '\n'
 
 
 class Basis:
     """A basis for an atom"""
-    def __init__(self, atom='', contractions=[]):
+
+    def __init__(self, atom='', contractions=None):
+        if contractions is None:
+            contractions = []
         self.atom = atom
-        if not isinstance(contractions, list) or not all(map(lambda x: isinstance(x, Contraction), contractions)):
+        if not isinstance(contractions, list) or not all(
+                map(lambda x: isinstance(x, Contraction), contractions)):
             raise SyntaxError("Expected a list of contractions")
         self.cons = contractions
 
@@ -118,7 +130,9 @@ class Basis:
     def __setitem__(self, i, value):
         """Sets the ith contraction"""
         if not isinstance(value, Contraction):
-            raise SyntaxError("Expecting a Contraction object, instead got: {}".format(type(value)))
+            raise SyntaxError(
+                "Expecting a Contraction object, instead got: {}".format(
+                    type(value)))
         self.cons[i] = value
 
     def __delitem__(self, key):
@@ -154,6 +168,7 @@ class Basis:
 
 class BasisSet:
     """A BasisSet, which consists of the basis for multiple atoms"""
+
     def __init__(self, atoms=OrderedDict()):
         """Atoms is a dictionary of atom:Basis"""
         if isinstance(atoms, OrderedDict):
@@ -172,7 +187,8 @@ class BasisSet:
     def __setitem__(self, item, value):
         """Return the basis for the specified atom"""
         if not isinstance(value, Basis):
-            raise SyntaxError("Expecting a Basis object, got a: {}".format(Basis))
+            raise SyntaxError(
+                "Expecting a Basis object, got a: {}".format(Basis))
         self.atoms[item] = value
 
     def __delitem__(self, key):
@@ -213,7 +229,7 @@ class BasisSet:
 
     def read_basis_set(self, in_file="basis.gbs", style='gaussian94'):
         """Read a gaussian94 style basis set"""
-        #  assume spherical
+        # assume spherical
         self.am = 'spherical'
         self.atoms = OrderedDict()
         num_skip = 0
@@ -223,7 +239,8 @@ class BasisSet:
             num_skip = 1
             atom_separator = '\n\n'
         else:
-            raise SyntaxError("Only gaussian94 style basis sets are currently supported.")
+            raise SyntaxError(
+                "Only gaussian94 style basis sets are currently supported.")
         basis_set_str = open(in_file).read().strip()
         # Split into atoms
         for chunk in basis_set_str.split(atom_separator):
@@ -260,7 +277,8 @@ class BasisSet:
         else:
             raise SyntaxError('Only gaussian94 and gamess currently supported')
         # Ideally would be sorted according to periodic table
-        out += separator.join([basis.print(style) for basis in self.atoms.values()])
+        out += separator.join(
+            [basis.print(style) for basis in self.atoms.values()])
 
         return out + separator
 

@@ -7,29 +7,48 @@ import numpy as np
 
 VERBOSE = True
 
+# Dictionary of the masses of elements indexed by element name
+# includes X for dummy atoms
+masses = {'X': 0, 'Ac': 227.028, 'Al': 26.981539, 'Am': 243,
+          'Sb': 121.757, 'Ar': 39.948, 'As': 74.92159,
+          'At': 210, 'Ba': 137.327, 'Bk': 247, 'Be': 9.012182,
+          'Bi': 208.98037, 'Bh': 262, 'B': 10.811,
+          'Br': 79.904, 'Cd': 112.411, 'Ca': 40.078, 'Cf': 251,
+          'C': 12.011, 'Ce': 140.115,
+          'Cs': 132.90543, 'Cl': 35.4527, 'Cr': 51.9961,
+          'Co': 58.9332, 'Cu': 63.546, 'Cm': 247, 'Db': 262,
+          'Dy': 162.5, 'Es': 252, 'Er': 167.26, 'Eu': 151.965,
+          'Fm': 257, 'F': 18.9984032, 'Fr': 223,
+          'Gd': 157.25, 'Ga': 69.723, 'Ge': 72.61, 'Au': 196.96654,
+          'Hf': 178.49, 'Hs': 265,
+          'He': 4.002602, 'Ho': 164.93032, 'H': 1.00794,
+          'In': 114.82, 'I': 126.90447, 'Ir': 192.22,
+          'Fe': 55.847, 'Kr': 83.8, 'La': 138.9055, 'Lr': 262,
+          'Pb': 207.2, 'Li': 6.941, 'Lu': 174.967,
+          'Mg': 24.305, 'Mn': 54.93805, 'Mt': 266, 'Md': 258,
+          'Hg': 200.59, 'Mo': 95.94, 'Nd': 144.24,
+          'Ne': 20.1797, 'Np': 237.048, 'Ni': 58.6934,
+          'Nb': 92.90638, 'N': 14.00674, 'No': 259,
+          'Os': 190.2, 'O': 15.9994, 'Pd': 106.42, 'P': 30.973762,
+          'Pt': 195.08, 'Pu': 244, 'Po': 209,
+          'K': 39.0983, 'Pr': 140.90765, 'Pm': 145, 'Pa': 231.0359,
+          'Ra': 226.025, 'Rn': 222,
+          'Re': 186.207, 'Rh': 102.9055, 'Rb': 85.4678,
+          'Ru': 101.07, 'Rf': 261, 'Sm': 150.36,
+          'Sc': 44.95591, 'Sg': 263, 'Se': 78.96, 'Si': 28.0855,
+          'Ag': 107.8682, 'Na': 22.989768,
+          'Sr': 87.62, 'S': 32.066, 'Ta': 180.9479, 'Tc': 98,
+          'Te': 127.6, 'Tb': 158.92534, 'Tl': 204.3833,
+          'Th': 232.0381, 'Tm': 168.93421, 'Sn': 118.71,
+          'Ti': 47.88, 'W': 183.85, 'U': 238.0289,
+          'V': 50.9415, 'Xe': 131.29, 'Yb': 173.04, 'Y': 88.90585,
+          'Zn': 65.39, 'Zr': 91.224}
+
 
 class CoordinateConverter:
     """A coordinate converter class"""
 
     def __init__(self):
-        # Dictionary of the masses of elements indexed by element name; includes X for dummy atoms
-        self.masses = {'X': 0, 'Ac': 227.028, 'Al': 26.981539, 'Am': 243, 'Sb': 121.757, 'Ar': 39.948, 'As': 74.92159,
-                       'At': 210, 'Ba': 137.327, 'Bk': 247, 'Be': 9.012182, 'Bi': 208.98037, 'Bh': 262, 'B': 10.811,
-                       'Br': 79.904, 'Cd': 112.411, 'Ca': 40.078, 'Cf': 251, 'C': 12.011, 'Ce': 140.115,
-                       'Cs': 132.90543, 'Cl': 35.4527, 'Cr': 51.9961, 'Co': 58.9332, 'Cu': 63.546, 'Cm': 247, 'Db': 262,
-                       'Dy': 162.5, 'Es': 252, 'Er': 167.26, 'Eu': 151.965, 'Fm': 257, 'F': 18.9984032, 'Fr': 223,
-                       'Gd': 157.25, 'Ga': 69.723, 'Ge': 72.61, 'Au': 196.96654, 'Hf': 178.49, 'Hs': 265,
-                       'He': 4.002602, 'Ho': 164.93032, 'H': 1.00794, 'In': 114.82, 'I': 126.90447, 'Ir': 192.22,
-                       'Fe': 55.847, 'Kr': 83.8, 'La': 138.9055, 'Lr': 262, 'Pb': 207.2, 'Li': 6.941, 'Lu': 174.967,
-                       'Mg': 24.305, 'Mn': 54.93805, 'Mt': 266, 'Md': 258, 'Hg': 200.59, 'Mo': 95.94, 'Nd': 144.24,
-                       'Ne': 20.1797, 'Np': 237.048, 'Ni': 58.6934, 'Nb': 92.90638, 'N': 14.00674, 'No': 259,
-                       'Os': 190.2, 'O': 15.9994, 'Pd': 106.42, 'P': 30.973762, 'Pt': 195.08, 'Pu': 244, 'Po': 209,
-                       'K': 39.0983, 'Pr': 140.90765, 'Pm': 145, 'Pa': 231.0359, 'Ra': 226.025, 'Rn': 222,
-                       'Re': 186.207, 'Rh': 102.9055, 'Rb': 85.4678, 'Ru': 101.07, 'Rf': 261, 'Sm': 150.36,
-                       'Sc': 44.95591, 'Sg': 263, 'Se': 78.96, 'Si': 28.0855, 'Ag': 107.8682, 'Na': 22.989768,
-                       'Sr': 87.62, 'S': 32.066, 'Ta': 180.9479, 'Tc': 98, 'Te': 127.6, 'Tb': 158.92534, 'Tl': 204.3833,
-                       'Th': 232.0381, 'Tm': 168.93421, 'Sn': 118.71, 'Ti': 47.88, 'W': 183.85, 'U': 238.0289,
-                       'V': 50.9415, 'Xe': 131.29, 'Yb': 173.04, 'Y': 88.90585, 'Zn': 65.39, 'Zr': 91.224}
         self.total_mass = 0
         self.cartesian = []
         self.zmatrix = []
@@ -44,25 +63,27 @@ class CoordinateConverter:
             f.readline()
             f.readline()
             name = f.readline().strip()
-            self.zmatrix.append([name, [], self.masses[name]])
+            self.zmatrix.append([name, [], masses[name]])
             name, atom1, distance = f.readline().split()[:3]
             self.zmatrix.append([name,
                                  [[int(atom1) - 1, float(distance)], [], []],
-                                 self.masses[name]])
+                                 masses[name]])
             name, atom1, distance, atom2, angle = f.readline().split()[:5]
             self.zmatrix.append([name,
                                  [[int(atom1) - 1, float(distance)],
-                                  [int(atom2) - 1, m.radians(float(angle))], []],
-                                 self.masses[name]])
+                                  [int(atom2) - 1, m.radians(float(angle))],
+                                     []],
+                                 masses[name]])
             for line in f.readlines():
                 # Get the components of each line, dropping anything extra
-                name, atom1, distance, atom2, angle, atom3, dihedral = line.split()[:7]
+                name, atom1, distance, atom2, angle, atom3, dihedral =\
+                    line.split()[:7]
                 # convert to a base 0 indexing system and use radians
                 atom = [name,
                         [[int(atom1) - 1, float(distance)],
                          [int(atom2) - 1, m.radians(float(angle))],
                          [int(atom3) - 1, m.radians(float(dihedral))]],
-                        self.masses[name]]
+                        masses[name]]
                 self.zmatrix.append(atom)
 
         return self.zmatrix
@@ -70,7 +91,8 @@ class CoordinateConverter:
     def read_cartesian(self, input_file='geom.xyz'):
         """
         Read the cartesian coordinates file (assumes no errors)
-        The cartesian coordiantes consist of a list of atoms formatted as follows
+        The cartesian coordinates consist of a list of atoms formatted as
+        follows:
         [name, np.array([x, y, z]), mass]
         """
         self.cartesian = []
@@ -79,27 +101,22 @@ class CoordinateConverter:
             f.readline()
             f.readline()
             for line in f.readlines():
+                if not line.strip():
+                    break
                 coords = line.split()
                 name = coords[0]
                 position = []
                 for i in coords[1:4]:
                     position.append(float(i))
-                self.cartesian.append([name, np.array(position), self.masses[name]])
+                self.cartesian.append(
+                    [name, np.array(position), masses[name]])
 
         return self.cartesian
 
-    def rotation_matrix(self, axis, angle):
-        """Euler-Rodrigues formula for rotation matrix"""
-        # Normalize the axis
-        axis = axis / np.sqrt(np.dot(axis, axis))
-        a = np.cos(angle / 2)
-        b, c, d = -axis * np.sin(angle / 2)
-        return np.array([[a * a + b * b - c * c - d * d, 2 * (b * c - a * d), 2 * (b * d + a * c)],
-                         [2 * (b * c + a * d), a * a + c * c - b * b - d * d, 2 * (c * d - a * b)],
-                         [2 * (b * d - a * c), 2 * (c * d + a * b), a * a + d * d - b * b - c * c]])
-
     def add_first_three_to_cartesian(self):
-        """The first three atoms in the zmatrix need to be treated differently"""
+        """
+        The first three atoms in the zmatrix need to be treated differently
+        """
         # First atom
         name, coords, mass = self.zmatrix[0]
         self.cartesian = [[name, np.array([0, 0, 0]), mass]]
@@ -107,7 +124,8 @@ class CoordinateConverter:
         # Second atom
         name, coords, mass = self.zmatrix[1]
         distance = coords[0][1]
-        self.cartesian.append([name, np.array([distance, 0, 0]), self.masses[name]])
+        self.cartesian.append(
+            [name, np.array([distance, 0, 0]), masses[name]])
 
         # Third atom
         name, coords, mass = self.zmatrix[2]
@@ -124,11 +142,11 @@ class CoordinateConverter:
         d = distance * a / np.sqrt(np.dot(a, a))
 
         # Rotate d by the angle around the z-axis
-        d = np.dot(self.rotation_matrix([0, 0, 1], angle), d)
+        d = np.dot(rotation_matrix([0, 0, 1], angle), d)
 
         # Add d to the position of q to get the new coordinates of the atom
         p = q + d
-        atom = [name, p, self.masses[name]]
+        atom = [name, p, masses[name]]
         self.cartesian.append(atom)
 
     def add_atom_to_cartesian(self, coords):
@@ -153,10 +171,10 @@ class CoordinateConverter:
         # Vector normal to plane defined by q,r,s
         normal = np.cross(a, b)
         # Rotate d by the angle around the normal to the plane defined by q,r,s
-        d = np.dot(self.rotation_matrix(normal, angle), d)
+        d = np.dot(rotation_matrix(normal, angle), d)
 
         # Rotate d around a by the dihedral
-        d = np.dot(self.rotation_matrix(a, dihedral), d)
+        d = np.dot(rotation_matrix(a, dihedral), d)
 
         # Add d to the position of q to get the new coordinates of the atom
         p = q + d
@@ -204,11 +222,15 @@ class CoordinateConverter:
         distance = np.sqrt(np.dot(q, q))
         # Angle between a and b = acos(dot product of the unit vectors)
         angle = m.acos(np.dot(-q_u, r_u))
-        self.zmatrix.append([name, [[0, distance], [1, np.degrees(angle)], []], mass])
+        self.zmatrix.append(
+            [name, [[0, distance], [1, np.degrees(angle)], []], mass])
 
     def add_atom_to_zmatrix(self, i, line):
-        """Generates an atom for the zmatrix
-        (assumes that three previous atoms have been placed in the cartesian coordiantes)"""
+        """
+        Generates an atom for the zmatrix
+        (assumes that three previous atoms have been placed in the cartesian
+        coordinates)
+        """
         name, position, mass = line
         atom1, atom2, atom3 = self.cartesian[:3]
         pos1, pos2, pos3 = atom1[1], atom2[1], atom3[1]
@@ -216,7 +238,6 @@ class CoordinateConverter:
         q = pos1 - position
         r = pos2 - pos1
         s = pos3 - pos2
-        position_u = position / np.sqrt(np.dot(position, position))
         # Create unit vectors
         q_u = q / np.sqrt(np.dot(q, q))
         r_u = r / np.sqrt(np.dot(r, r))
@@ -224,16 +245,18 @@ class CoordinateConverter:
         distance = np.sqrt(np.dot(q, q))
         # Angle between a and b = acos(dot(a, b) / (|a| |b|))
         angle = m.acos(np.dot(-q_u, r_u))
-        angle_123 = m.acos(np.dot(-r_u, s_u))
-        # Dihedral angle = acos(dot(normal_vec1, normal_vec2) / (|normal_vec1| |normal_vec2|))
+        # Dihedral angle = acos(dot(normal_vec1, normal_vec2) /
+        # (|normal_vec1| |normal_vec2|))
         plane1 = np.cross(q, r)
         plane2 = np.cross(r, s)
-        dihedral = m.acos(np.dot(plane1, plane2) / (np.sqrt(np.dot(plane1, plane1)) * np.sqrt(np.dot(plane2, plane2))))
+        dihedral = m.acos(np.dot(plane1, plane2) / (
+            np.sqrt(np.dot(plane1, plane1)) * np.sqrt(np.dot(plane2, plane2))))
         # Convert to signed dihedral angle
         if np.dot(np.cross(plane1, plane2), r_u) < 0:
             dihedral = -dihedral
 
-        coords = [[0, distance], [1, np.degrees(angle)], [2, np.degrees(dihedral)]]
+        coords = [[0, distance], [1, np.degrees(angle)],
+                  [2, np.degrees(dihedral)]]
         atom = [name, coords, mass]
         self.zmatrix.append(atom)
 
@@ -247,7 +270,10 @@ class CoordinateConverter:
         return self.zmatrix
 
     def remove_dummy_atoms(self):
-        """Delete any dummy atoms that may have been placed in the calculated cartesian coordinates"""
+        """
+        Delete any dummy atoms that may have been placed in the calculated
+        cartesian coordinates
+        """
         new_cartesian = []
         for line in self.cartesian:
             if not line[0] == 'X':
@@ -262,7 +288,7 @@ class CoordinateConverter:
             mass = atom[2]
             self.total_mass += mass
             center_of_mass += atom[1] * mass
-        center_of_mass = center_of_mass / float(self.total_mass)
+        center_of_mass /= float(self.total_mass)
 
         # Translate each atom by the center of mass
         for atom in self.cartesian:
@@ -307,7 +333,9 @@ class CoordinateConverter:
             print(line[0] + '\t' + '\t'.join(str(x) for x in line[1]))
 
     def convert_zmatrix(self, input_file='geom.zmat', output_file='geom.xyz'):
-        """Read in the zmatrix, converts it to cartesian, and outputs it to a file"""
+        """
+        Read in the zmatrix, converts it to cartesian, and outputs it to a file.
+        """
         self.read_zmatrix(input_file)
 
         self.zmatrix_to_cartesian()
@@ -317,7 +345,10 @@ class CoordinateConverter:
         return 0
 
     def convert_cartesian(self, input_file='geom.xyz', output_file='geom.zmat'):
-        """Read in the cartesian coordinates, convert to cartesian, and output the file"""
+        """
+        Read in the cartesian coordinates, convert to cartesian, and output the
+        file.
+        """
         self.read_cartesian(input_file)
 
         self.cartesian_to_zmatrix()
@@ -325,3 +356,17 @@ class CoordinateConverter:
         self.output_zmatrix(output_file)
 
         return 0
+
+
+def rotation_matrix(axis, angle):
+    """Euler-Rodrigues formula for rotation matrix"""
+    # Normalize the axis
+    axis = axis / np.sqrt(np.dot(axis, axis))
+    a = np.cos(angle / 2)
+    b, c, d = -axis * np.sin(angle / 2)
+    return np.array([[a * a + b * b - c * c - d * d, 2 * (b * c - a * d),
+                      2 * (b * d + a * c)],
+                     [2 * (b * c + a * d), a * a + c * c - b * b - d * d,
+                      2 * (c * d - a * b)],
+                     [2 * (b * d - a * c), 2 * (c * d + a * b),
+                      a * a + d * d - b * b - c * c]])

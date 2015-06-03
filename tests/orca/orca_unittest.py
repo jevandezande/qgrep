@@ -1,6 +1,5 @@
 import unittest
 from sys import path
-import re
 
 path.insert(0, '../..')
 
@@ -12,9 +11,12 @@ class TestOrca(unittest.TestCase):
 
     def setUp(self):
         """Read in the necessary files"""
-        files = ['CH3F_Cl_scan.out', 'CH3F_Cl_scan.xyz', 'CH3F_Cl_scan.orca_zmat', 'CH3F_Cl_scan.bohr.xyz',
-                 'CH3F_Cl_scan.bohr.orca_zmat', 'CH3F_Cl_scan.check', 'CH3F_Cl_scan.plot', 'CH3F_Cl_scan.zmat',
-                 'Benzene_freqs.out', 'Benzene_freqs.freqs', 'H2O_hybrid_hess.out', 'H2O_hybrid_hess.freqs']
+        files = ['CH3F_Cl_scan.out', 'CH3F_Cl_scan.xyz',
+                 'CH3F_Cl_scan.orca_zmat', 'CH3F_Cl_scan.bohr.xyz',
+                 'CH3F_Cl_scan.bohr.orca_zmat', 'CH3F_Cl_scan.check',
+                 'CH3F_Cl_scan.plot', 'CH3F_Cl_scan.zmat',
+                 'Benzene_freqs.out', 'Benzene_freqs.freqs',
+                 'H2O_hybrid_hess.out', 'H2O_hybrid_hess.freqs']
         self.files = {}
         for file in files:
             with open(file, 'r') as f:
@@ -22,13 +24,17 @@ class TestOrca(unittest.TestCase):
 
     def test_get_geom(self):
         """Testing get_geom"""
-        self.assertEqual(orca.get_geom(self.files['CH3F_Cl_scan.out'], type='xyz', units='angstrom'),
+        self.assertEqual(orca.get_geom(self.files['CH3F_Cl_scan.out'],
+                                       geom_type='xyz', units='angstrom'),
                          self.files['CH3F_Cl_scan.xyz'])
-        self.assertEqual(orca.get_geom(self.files['CH3F_Cl_scan.out'], type='zmat', units='angstrom'),
+        self.assertEqual(orca.get_geom(self.files['CH3F_Cl_scan.out'],
+                                       geom_type='zmat', units='angstrom'),
                          self.files['CH3F_Cl_scan.orca_zmat'])
-        self.assertEqual(orca.get_geom(self.files['CH3F_Cl_scan.out'], type='xyz', units='bohr'),
+        self.assertEqual(orca.get_geom(self.files['CH3F_Cl_scan.out'],
+                                       geom_type='xyz', units='bohr'),
                          self.files['CH3F_Cl_scan.bohr.xyz'])
-        self.assertEqual(orca.get_geom(self.files['CH3F_Cl_scan.out'], type='zmat', units='bohr'),
+        self.assertEqual(orca.get_geom(self.files['CH3F_Cl_scan.out'],
+                                       geom_type='zmat', units='bohr'),
                          self.files['CH3F_Cl_scan.bohr.orca_zmat'])
 
     def test_check_convergence(self):
