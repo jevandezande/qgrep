@@ -47,9 +47,6 @@ class Contraction:
 
     def __eq__(self, other):
         """Check if the two contractions are the same"""
-        print(self.func_type, other.func_type)
-        print(self.values, other.values)
-        print(self.values == other.values)
         return self.func_type == other.func_type and (
             self.values == other.values).all()
 
@@ -142,13 +139,9 @@ class Basis:
     def __eq__(self, other):
         """Check if the two basis are equivalent"""
         if not len(self.cons) == len(other.cons):
-            print("Wrong length")
             return False
         for s, o in zip(self.cons, other.cons):
-            print(s, o)
-            print(s == o)
             if not s == o:
-                print("NEQ")
                 return False
         return True
 
