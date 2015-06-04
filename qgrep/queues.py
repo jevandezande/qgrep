@@ -3,7 +3,7 @@
 import subprocess
 from xml.etree import ElementTree
 from collections import OrderedDict, defaultdict
-from itertools import zip_longest
+from itertools import zip_longest, filterfalse
 import getpass
 
 
@@ -225,6 +225,17 @@ class Queue:
             return self.queueing[job_id]
         raise KeyError("Cannot find the Job with id: " + str(job_id))
 
+    def __str__(self):
+        """Make a string with each job on a new line"""
+        self.print()
+
+    def print(self, numlines=50, person=False):
+        if owner:
+            jobs = self.person_jobs(person)
+        else:
+            jobs = self.jobs
+        return '\n'.join(map(str, job) for job in jobs[:numlines])
+
     #@accepts((int, float), Job, str)
     def set(self, job_id, job, position):
         """
@@ -250,9 +261,13 @@ class Queue:
     def queued(self):
         return len(self.queueing)
 
-    def person_jobs(self, owner):
+    @property
+    def jobs(self):
+        return self.running + self.queued
+
+    def person_jobs(self, person):
         """Return a list of the Jobs with the specified owner"""
-        raise NotImplementedError()
+        return list(filterfalse(lambda job: job.owner == person, self.jobs))
         
 
 class Job:
