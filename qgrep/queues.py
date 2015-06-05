@@ -215,8 +215,8 @@ class Queue:
             out += str(job) + BAR
         # Add spaces if only a few queued
         if len(self.jobs) < max_num:
-            out += (' '*29*(max_num - len(self.jobs)))[:-1]
-        return out + BAR
+            out += (' '*29*(max_num - len(self.jobs)))[:-1] + BAR
+        return out
 
     #@accepts((int, float), Job, str)
     def set(self, job_id, job, position):
