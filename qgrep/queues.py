@@ -23,7 +23,7 @@ class Queues:
         return self.print()
 
     # noinspection PyPep8
-    def print(self, numjobs=50, user=False):
+    def print(self, numjobs=50, user=None):
         """
         Print the queues in a nice table
         """
@@ -46,13 +46,15 @@ class Queues:
         header = BAR + '  ID   USER    Job Name   St'
         out += header*q_num + BAR + '\n' + line
         
+        if user is True:
+            user = getpass.getuser()
         
         # Remove debug and large
         job_list = []
         for name, queue in sorted(self.queues.items()):
             if name in ['debug', 'large']:
                 continue
-            job_list.append(queue.jobs.values())
+            job_list.append(queue.person_jobs(user).values())
 
         blank = BAR + ' '*28
         for i, job_row in enumerate(zip_longest(*job_list)):
@@ -123,8 +125,7 @@ class Queues:
             xml = subprocess.check_output(qstat_xml_cmd, shell=True)
             return ElementTree.fromstring(xml)
         except FileNotFoundError as e:
-            print("Could not find qstat")
-            raise e
+            raise Exception("Could not find qstat")
 
     def parse_tree(self):
         """
@@ -183,7 +184,6 @@ class Queue:
 
     def __list__(self):
         """Make a list of all the Jobs in the queue"""
-        print(list(self.running.values()))
         return list(self.running.values()) + list(self.queueing.values())
 
     # May not work right, may need to have the first argument be Queue as that
@@ -245,14 +245,29 @@ class Queue:
 
     @property
     def jobs(self):
+        """
+        Makes an OrderedDict of all the running and queueing Jobs
+        """
         ret = OrderedDict()
-        for k, v in list(self.running.items()) + list(self.queueing.items()):
+        # OrderedDicts cannot be readily combined
+        for k, v in self.running.items():
+            ret[k] = v
+        for k, v in self.queueing.items():
             ret[k] = v
         return ret
 
     def person_jobs(self, person):
-        """Return a list of the Jobs with the specified owner"""
-        return list(filterfalse(lambda job: job.owner == person, self.jobs))
+        """Return an OrderedDict of Jobs with the specified owner"""
+        if not person:
+            return self.jobs
+
+        ret = OrderedDict()
+        for job in self.jobs.values():
+            if job.owner == person:
+                ret[job.id] = job
+        return ret
+        #return OrderedDict([(id, job) if job.owner == person for id, job in self.jobs.items()])
+        #return OrderedDict(filterfalse(lambda job: job.owner == person, self.jobs.values()))
         
 
 class Job:
