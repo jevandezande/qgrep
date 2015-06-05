@@ -34,7 +34,7 @@ class Queues:
 
         out = line
 
-        name_form = '{} ({:2d} /{:2d})'
+        name_form = '{} ({:2d}/{:2d})'
         # Print a nice header
         for name in sorted(self.queues.keys()):
             queue = self.queues[name]
@@ -209,7 +209,7 @@ class Queue:
 
     def print_inline(self, max_num):
         """Print jobs inline"""
-        used_avail = '{} ({} / {})'.format(self.name, self.used, self.avail)
+        used_avail = '{} ({:2d}/{:2d})'.format(self.name, self.used, self.avail)
         out = BAR + '{:^28s}'.format(used_avail) + BAR
         for job in list(self.jobs.values())[:max_num]:
             out += str(job) + BAR
