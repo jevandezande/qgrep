@@ -6,13 +6,15 @@ from collections import OrderedDict, defaultdict
 from itertools import zip_longest, filterfalse
 import getpass
 
+SIZES = {'debug': 1, 'gen3': 16, 'gen4': 48, 'gen5': 2, 'large': 1}
+# Purple vertical BAR
+BAR = '\033[95m|\033[0m'
 
 class Queues:
     def __init__(self):
-        self.queues = OrderedDict()
+        self.queues = {}
         self.tree = self.qxml()
         self.parse_tree()
-        self.sizes = {'debug': 1, 'gen3': 16, 'gen4': 48, 'gen5': 2, 'large': 1}
     
     def __str__(self):
         """
@@ -25,91 +27,53 @@ class Queues:
         """
         Print the queues in a nice table
         """
-        bar = '\033[95m|\033[0m'
-        # Process jobs and get a count
-        job_list = []
-        running_count = {}
-        debug = []
-        large = []
-        # Iterate over all the jobs and make a list of queues, which each are a list of jobs
-        for queue, jobs in self.queues.items():
-            jobs_running = 0
-            username = getpass.getuser()
-            for job in jobs:
-                jobs_running += 1 if jobs[job].state == 'r' else 0
-                # If on the debug queue, show non-user jobs
-                if (user and jobs[job].owner != username) and queue != 'debug' and queue != 'large':
-                    jobs.pop(job)
-            running_count[queue] = jobs_running
-            if queue == 'debug':
-                debug = list(jobs.values())
-            elif queue == 'large':
-                large = list(jobs.values())
-            else:
-                job_list.append(list(jobs.values()))
-        
         # Form header (without debug and large queue)
         q_num = len(self.queues) - int('debug' in self.queues) - int('large' in self.queues)
         # Horizontal line
         line = '\033[95m' + '-'*(29*q_num + 1)+ '\033[0m\n'
-        name_form = '{} ({:2d} /{:2d})'
+
         out = line
+
+        name_form = '{} ({:2d} /{:2d})'
         # Print a nice header
-        for queue, jobs in self.queues.items():
+        for name in sorted(self.queues.keys()):
+            queue = self.queues[name]
             # skip debug and large
-            if queue == 'debug' or queue == 'large':
+            if name == 'debug' or name == 'large':
                 continue
-            used = running_count[queue]
-            avail = self.sizes[queue] - used
-            out +=  bar + '{:^28}'.format(name_form.format(queue, used, avail))
-        out += bar + '\n' + line
-        header = bar + '  ID   USER    Job Name   St'
-        out += header*q_num + bar + '\n' + line
+            out +=  BAR + '{:^28}'.format(name_form.format(name, queue.used, queue.avail))
+        out += BAR + '\n' + line
+        header = BAR + '  ID   USER    Job Name   St'
+        out += header*q_num + BAR + '\n' + line
         
-        # Iterate through the jobs, job row is a tuple of jobs
-        # job is None if they are all used up
-        blank = bar + ' '*28
+        
+        # Remove debug and large
+        job_list = []
+        for name, queue in sorted(self.queues.items()):
+            if name in ['debug', 'large']:
+                continue
+            job_list.append(queue.jobs.values())
+
+        blank = BAR + ' '*28
         for i, job_row in enumerate(zip_longest(*job_list)):
             if i >= numjobs:
+                # TODO: Add how many more jobs there are running in each queue
                 break
             for job in job_row:
                 if job is None:
                     out += blank
                 else:
-                    out += bar + str(job) 
-            out += bar + '\n'
+                    out += BAR + str(job) 
+            out += BAR + '\n'
         out += line
 
-        # Print the debug queue at the bottom
-        num_debug_print = q_num - 1
-        debug_used = running_count['debug']
-        debug_avail = self.sizes['debug'] - debug_used
-        used_avail = 'debug ({} / {})'.format(debug_used, debug_avail)
-        out += bar + '{:^28s}'.format(used_avail) + bar
-        for job in debug[:num_debug_print]:
-            out += str(job) + bar
-        # Add spaces if only a few queued
-        if num_debug_print > len(debug):
-            out += (' '*29*(num_debug_print - len(debug)))[:-1]
-        out += bar + '\n' + line
-
-        # Print the large queue at the bottom
-        num_large_print = q_num - 1
-        large_used = running_count['large']
-        large_avail = self.sizes['large'] - large_used
-        used_avail = 'large ({} / {})'.format(large_used, large_avail)
-        out += bar + '{:^28s}'.format(used_avail) + bar
-        for job in large[:num_large_print]:
-            out += str(job) + bar
-        # Add spaces if only a few queued
-        if num_large_print > len(large):
-            out += (' '*29*(num_large_print - len(large)))[:-1]
-        out += bar + '\n'
-
+        out += self.queues['large'].print_inline(q_num - 1) + '\n'
+        out += line
+        out += self.queues['debug'].print_inline(q_num - 1) + '\n'
         # Remove newline
         out += line[:-1]
 
-        print(out)
+        return out
         
     @staticmethod
     def qxml():
@@ -166,37 +130,37 @@ class Queues:
         """
         Parse the xml tree from qxml
         """
-        self.queues = OrderedDict()
+        self.queues = {}
         for child in self.tree:
             # Running jobs are arranged by node/queue
             if child.tag == 'queue_info':
                 for node in child:
                     #<Queue-List>
                     #   <name>gen3.q@v10.cl.ccqc.uga.edu</name>
-                    queue = node.find('name').text.split('.')[0]
-                    if not queue in self.queues:
-                        self.queues[queue] = OrderedDict()
+                    name = node.find('name').text.split('.')[0]
+                    if not name in self.queues:
+                        self.queues[name] = Queue(SIZES[name], name)
 
                     for job_xml in node.iterfind('job_list'):
                         job = Job(job_xml)
-                        self.queues[queue][job.id] = job
+                        self.queues[name].running[job.id] = job
 
             # Queued jobs
             elif child.tag == 'job_info':
                 for job_xml in child:
                     job = Job(job_xml)
-                    queue = job.queue.split('.')[0]
-                    if not queue in self.queues:
-                        self.queues[queue] = OrderedDict()
+                    name = job.queue.split('.')[0]
+                    if not name in self.queues:
+                        self.queues[name] = Queue(SIZES[name], name)
 
-                    self.queues[queue][job.id] = job
+                    self.queues[name].queueing[job.id] = job
 
 
 class Queue:
     """
     A simple class that contains Jobs that are running and queued
     """
-    def __init__(self, size, running, queueing):
+    def __init__(self, size, name='', running=None, queueing=None):
         """
         Initialize a queue with it's jobs
         
@@ -204,37 +168,55 @@ class Queue:
         :param queueing: and OrderedDict of Jobs that are queueing
         """
         self.size = size
-        self.running = running
-        # not queued to prevent clash
-        self.queueing = queueing
+        self.name = name
+        if running is None:
+            self.running = OrderedDict()
+        else:
+            self.running = running
+        if queueing is None:
+            self.queueing = OrderedDict()
+        else:
+            self.queueing = queueing
 
     def __len__(self):
         return self.size
 
     def __list__(self):
         """Make a list of all the Jobs in the queue"""
+        print(list(self.running.values()))
         return list(self.running.values()) + list(self.queueing.values())
 
     # May not work right, may need to have the first argument be Queue as that
     # is what self is
     #@accepts(Queue, (int, float))
-    def __getitem__(self, job_id):
-        if job_id in self.running:
-            return self.running[job_id]
-        elif job_id in self.queueing:
-            return self.queueing[job_id]
-        raise KeyError("Cannot find the Job with id: " + str(job_id))
+    #def __getitem__(self, job_id):
+    #    if job_id in self.running:
+    #        return self.running[job_id]
+    #    elif job_id in self.queueing:
+    #        return self.queueing[job_id]
+    #    raise KeyError("Cannot find the Job with id: " + str(job_id))
 
     def __str__(self):
         """Make a string with each job on a new line"""
-        self.print()
+        return self.print()
 
     def print(self, numlines=50, person=False):
-        if owner:
+        if person:
             jobs = self.person_jobs(person)
         else:
             jobs = self.jobs
-        return '\n'.join(map(str, job) for job in jobs[:numlines])
+        return '\n'.join(list(map(str, jobs.values()))[:numlines])
+
+    def print_inline(self, max_num):
+        """Print jobs inline"""
+        used_avail = '{} ({} / {})'.format(self.name, self.used, self.avail)
+        out = BAR + '{:^28s}'.format(used_avail) + BAR
+        for job in list(self.jobs.values())[:max_num]:
+            out += str(job) + BAR
+        # Add spaces if only a few queued
+        if len(self.jobs) < max_num:
+            out += (' '*29*(max_num - len(self.jobs)))[:-1]
+        return out + BAR
 
     #@accepts((int, float), Job, str)
     def set(self, job_id, job, position):
@@ -263,7 +245,10 @@ class Queue:
 
     @property
     def jobs(self):
-        return self.running + self.queued
+        ret = OrderedDict()
+        for k, v in list(self.running.items()) + list(self.queueing.items()):
+            ret[k] = v
+        return ret
 
     def person_jobs(self, person):
         """Return a list of the Jobs with the specified owner"""
