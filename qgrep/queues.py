@@ -298,6 +298,8 @@ class Job:
         if tasks is not None:
             # If it is a range of jobs, e.g. 17-78:1, just take the first
             task = tasks.text.split('-')[0]  # If not a range, this does nothing
+            # SGE is being cute and comma separates two numbers if sequential
+            task = task.split(',')[0]
             jid += int(task) / 10 ** len(task)
         name = job_xml.find('JB_name').text
         state = job_xml.get('state')
