@@ -205,7 +205,12 @@ class Queue:
             jobs = self.person_jobs(person)
         else:
             jobs = self.jobs
-        return '\n'.join(list(map(str, jobs.values()))[:numlines])
+
+        out = '\n'.join(list(map(str, jobs.values()))[:numlines])
+        if numlines < len(self):
+            out += '\n+{} jobs'.format(len(self) - numlines)
+
+        return out
 
     def print_inline(self, max_num):
         """Print jobs inline"""
