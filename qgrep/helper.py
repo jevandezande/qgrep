@@ -18,6 +18,8 @@ def check_program(lines):
     """
     Takes the lines of an output file and determines what program wrote (or
     reads) them
+    :param lines: lines of an output file
+    :return: string of the program or None
     """
     programs = {
         '* O   R   C   A *': 'orca',
@@ -28,7 +30,8 @@ def check_program(lines):
         '#ZMATRIX': 'zmatrix',
         '* CFOUR Coupled-Cluster techniques for Computational Chemistry *': 'cfour',
         '***  PROGRAM SYSTEM MOLPRO  ***': 'molpro',
-        "----- GAMESS execution script 'rungms' -----": 'gamess'
+        "----- GAMESS execution script 'rungms' -----": 'gamess',
+        'N A T U R A L   A T O M I C   O R B I T A L   A N D': 'nbo',
     }
 
     program = None
@@ -39,6 +42,36 @@ def check_program(lines):
             break
 
     return program
+
+
+def find_input_program(in_file):
+    """
+    Find the type of input file based on unique identifiers
+
+    :param in_file: file name string
+    :return: string of the program or None
+    """
+    lines = open(in_file).readlines()
+    if '***,' == lines[0][:4]:
+        return 'molpro'
+    elif '% pal nprocs ' == lines[0][:13]:
+        return 'orca'
+
+    for line in lines:
+        if '$NBO' == line[:4]:
+            return 'nbo'
+        if '$' == line[0]:
+            return 'qchem'
+        elif '*CFOUR(' == line[:7]:
+            return 'cfour'
+        elif '* xyz' == line[:5] or '* int' == line[:5]:
+            return 'orca'
+        elif ' $' == line[:2]:
+            return 'gamess'
+        elif 'molecule' == line[:8] or 'set ' == line[:4]:
+            return 'psi4'
+    return None
+        
 
 # noinspection PyPep8
 short_to_long_names = {
