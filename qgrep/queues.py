@@ -289,7 +289,7 @@ class Job:
         colors = defaultdict(lambda: '\033[93m', {'r': '\033[92m',
                                                   'qw': '\033[94m'})
         return job_form.format(int(self.id), self.owner[:5], self.name[:12],
-                               colors[self.state], self.state)
+                               colors[self.state], self.state[:2])
 
     @staticmethod
     def read_job_xml(job_xml):
