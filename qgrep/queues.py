@@ -285,9 +285,20 @@ class Job:
 
     def __str__(self):
         """Print a short description of the job, with color"""
-        job_form = '{:>6d} {:<5s} {:<12s} {}{:2s}\033[0m'
-        colors = defaultdict(lambda: '\033[93m', {'r': '\033[92m',
-                                                  'qw': '\033[94m'})
+        normal = '\033[0m'
+        bold = '\033[1m'
+        green = '\033[92m'
+        blue = '\033[94m'
+        yellow = '\033[93m'
+        job_form = '{:>6d} {:<5s} {:<12s} {}{:2s}' + normal
+
+        # Color queue status by type, use yellow if unrecognized
+        colors = defaultdict(lambda: yellow, {'r': green, 'qw': blue})
+        
+        # Bold the user's jobs
+        if self.owner == getpass.getuser():
+            self.owner = bold + owner + normal
+
         return job_form.format(int(self.id), self.owner[:5], self.name[:12],
                                colors[self.state], self.state[:2])
 
