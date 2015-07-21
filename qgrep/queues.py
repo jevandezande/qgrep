@@ -297,9 +297,11 @@ class Job:
         
         # Bold the user's jobs
         if self.owner == getpass.getuser():
-            self.owner = bold + owner + normal
+            owner = bold + self.owner[:5] + normal
+        else:
+            owner = self.owner[:5]
 
-        return job_form.format(int(self.id), self.owner[:5], self.name[:12],
+        return job_form.format(int(self.id), owner, self.name[:12],
                                colors[self.state], self.state[:2])
 
     @staticmethod
