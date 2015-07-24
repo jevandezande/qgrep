@@ -116,7 +116,7 @@ def get_conv_params(lines):
       if 'Integrals less than' in lines[i]:
         int_thresh = lines[i].split()[3]      
       
-      return scf_conv, cc_conv, geo_conv, lineq_conv, int_thresh
+    return scf_conv, cc_conv, geo_conv, lineq_conv, int_thresh
 
 def get_diagnostics(lines):
     """ Gets the S^2 and T1 diagnostics. """
@@ -125,5 +125,5 @@ def get_diagnostics(lines):
       if 'The expectation value of S**2 is' in lines[i]:
         s2 = lines[i].split()[6]
 
-  return s2
+    return s2
 
