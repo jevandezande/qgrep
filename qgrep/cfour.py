@@ -135,3 +135,31 @@ def get_diagnostics(lines):
   
     return s2
 
+def get_final_energy(lines):
+
+    for i in reversed(list(range(len(lines)))):
+      if 'CCSD(T) energy' in lines[i] and len(lines[i].strip().split()) == 3:
+        ccsdpt_energy = lines[i].strip().split()[2]
+        break
+
+    return ccsdpt_energy
+
+
+def get_energy(lines):
+    """ Obtain the latest HF, MP2, CCSD, and CCSD(T), energies. """
+    
+    for i in reversed(list(range(len(lines)))):
+      if 'CCSD(T) energy' in lines[i]:
+        ccsdpt_energy = lines[i].strip().split()[2]
+        break
+      if 'CCSD energy' in lines[i]:
+        ccsd_energy = lines[i].strip().split()[2]
+        break
+      if 'Total MP2 energy' in lines[i]:
+        mp2_energy = lines[i].strip().split()[4]
+        break
+      if 'E(SCF)=' in lines[i]:
+        hf_energy = lines[i].strip().split()[1]
+        break
+
+    return ccsdpt_energy, ccsd_energy, mp2_energy, hf_energy
