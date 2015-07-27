@@ -59,7 +59,10 @@ def get_ir(lines):
         elif 'Zero-point vibrational energy' in line:
             vib_freqs_end = i - 1
         elif 'Cartesian force constants:' in line:
-            vib_freqs_start = i + 1 + 6 # The + 6 is to exclude the 0.000 cm^-1 freqs 
+            if num_atoms == 2:
+              vib_freqs_start = i + 1 + 5 # The + 6 is to exclude the 0.000 cm^-1 freqs 
+            else:
+              vib_freqs_start = i + 1 + 6 # The + 6 is to exclude the 0.000 cm^-1 freqs 
             break
 
 
