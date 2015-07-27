@@ -63,12 +63,15 @@ def get_ir(lines):
             break
 
 
-  freqs = []
-  for i in range(vib_freqs_start, vib_freqs_end + 1):
-    freqs.append(lines[i].split()[1])
+    freqs = []
+    for i in range(vib_freqs_start, vib_freqs_end + 1):
+      freqs.append(lines[i].split()[1])
 
-  freq_num = len(freqs)
-  freqs.reverse()
+    freq_num = len(freqs)
+    freqs.reverse()
+
+    return freqs
+
 
 def get_theo_method(lines):
     """ Get the level of correlation and basis set for the computation. """
@@ -121,9 +124,11 @@ def get_conv_params(lines):
 def get_diagnostics(lines):
     """ Gets the S^2 and T1 diagnostics. """
 
+    s2 = 0.0 
+
     for i in reversed(list(range(len(lines)))):
       if 'The expectation value of S**2 is' in lines[i]:
         s2 = lines[i].split()[6]
-
+  
     return s2
 
