@@ -59,7 +59,13 @@ class Queues:
         blank = BAR + ' '*28
         for i, job_row in enumerate(zip_longest(*job_list)):
             if i >= numjobs:
-                # TODO: Add how many more jobs there are running in each queue
+                # Add how many more jobs are running in each queue
+                for queue in job_list:
+                    if len(queue) > numjobs:
+                        out += BAR + '         \033[1m{: >+3} jobs\033[0m           '.format(len(queue) - numjobs)
+                    else:
+                        out += blank
+                out += BAR + '\n'
                 break
             for job in job_row:
                 if job is None:
