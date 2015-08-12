@@ -43,7 +43,9 @@ def get_ir(lines):
 
     geom = get_geom(lines)
     num_atoms = len(geom)
-
+    version = 1
+    if '/opt/cfour/2.0' in lines[1]:
+       version = 2
     vibrations_start = 0
     vib_modes_start = 0
     vib_modes_end = 0
@@ -52,19 +54,32 @@ def get_ir(lines):
     hybrid_hessian_vib_modes_end = 0
     for i in reversed(list(range(len(lines)))):
         line = lines[i]
-        if 'Gradient vector in normal coordinate representation' in line:
-            vib_modes_end = i - 1
-        elif 'Normal Coordinates' in line:
-            vib_modes_start = i + 2
-        elif 'Zero-point vibrational energy' in line:
-            vib_freqs_end = i - 1
-        elif 'Cartesian force constants:' in line:
-            if num_atoms == 2:
-              vib_freqs_start = i + 1 + 5 # The + 6 is to exclude the 0.000 cm^-1 freqs 
-            else:
-              vib_freqs_start = i + 1 + 6 # The + 6 is to exclude the 0.000 cm^-1 freqs 
-            break
-
+        if version == 1:
+           if 'Gradient vector in normal coordinate representation' in line:
+               vib_modes_end = i - 1
+           elif 'Normal Coordinates' in line:
+               vib_modes_start = i + 2
+           elif 'Zero-point vibrational energy' in line: 
+                  vib_freqs_end = i - 1
+           elif 'Cartesian force constants:' in line:
+               if num_atoms == 2:
+                 vib_freqs_start = i + 1 + 5 # The + 6 is to exclude the 0.000 cm^-1 freqs 
+               else:
+                 vib_freqs_start = i + 1 + 6 # The + 6 is to exclude the 0.000 cm^-1 freqs 
+               break
+        else:
+           if 'Gradient vector in normal coordinate representation' in line:
+               vib_modes_end = i - 1
+           elif 'Normal Coordinates' in line:
+               vib_modes_start = i + 2
+           elif 'Zero-point energy' in line:
+                  vib_freqs_end = i - 1
+           elif 'Cartesian force constants:' in line:
+               if num_atoms == 2:
+                 vib_freqs_start = i + 1 + 5 # The + 6 is to exclude the 0.000 cm^-1 freqs 
+               else:
+                 vib_freqs_start = i + 1 + 6 # The + 6 is to exclude the 0.000 cm^-1 freqs 
+               break
 
     freqs = []
     for i in range(vib_freqs_start, vib_freqs_end + 1):
