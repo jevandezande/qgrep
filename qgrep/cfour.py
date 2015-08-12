@@ -63,9 +63,9 @@ def get_ir(lines):
                   vib_freqs_end = i - 1
            elif 'Cartesian force constants:' in line:
                if num_atoms == 2:
-                 vib_freqs_start = i + 1 + 5 # The + 6 is to exclude the 0.000 cm^-1 freqs 
+                 vib_freqs_start = i # + 1 + 5 # The + 6 is to exclude the 0.000 cm^-1 freqs 
                else:
-                 vib_freqs_start = i + 1 + 6 # The + 6 is to exclude the 0.000 cm^-1 freqs 
+                 vib_freqs_start = i #+ 1 + 6 # The + 6 is to exclude the 0.000 cm^-1 freqs 
                break
         else:
            if 'Gradient vector in normal coordinate representation' in line:
@@ -76,14 +76,15 @@ def get_ir(lines):
                   vib_freqs_end = i - 1
            elif 'Cartesian force constants:' in line:
                if num_atoms == 2:
-                 vib_freqs_start = i + 1 + 5 # The + 6 is to exclude the 0.000 cm^-1 freqs 
+                 vib_freqs_start = i# + 1 + 5 # The + 6 is to exclude the 0.000 cm^-1 freqs 
                else:
-                 vib_freqs_start = i + 1 + 6 # The + 6 is to exclude the 0.000 cm^-1 freqs 
+                 vib_freqs_start = i# + 1 + 6 # The + 6 is to exclude the 0.000 cm^-1 freqs 
                break
 
     freqs = []
     for i in range(vib_freqs_start, vib_freqs_end + 1):
-      freqs.append(lines[i].split()[1])
+       if not '0.0' in lines[i].split()[1]:
+          freqs.append(lines[i].split()[1])
 
     freq_num = len(freqs)
     freqs.reverse()
