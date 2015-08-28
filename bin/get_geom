@@ -26,7 +26,8 @@ args = parser.parse_args()
 
 lines, program = read(args.input)
 
-line_form = '{:<2} {: >15.10f} {: >15.10f} {: >15.10f}\n'
+xyz_form = '{:<2} {: >15.10f} {: >15.10f} {: >15.10f}\n'
+zmat_form = '{:<2} {:<2.0f} {:<2.0f} {:<2.0f} {: >15.10f} {: >15.10f} {: >15.10f}\n'
 if program:
     try:
         mod = importlib.import_module('qgrep.' + program)
@@ -35,9 +36,12 @@ if program:
             out = ''
             if args.length:
                 out = '{0}\n\n'.format(len(geom))
+            form = xyz_form
+            if len(geom[0]) > 4:
+                form = zmat_form
             for line in geom:
-                atom, *xyz = line.split()[:4]
-                out += line_form.format(atom, *map(float, xyz))
+                atom, *coords = line.split()
+                out += form.format(atom, *map(float, coords))
             open(args.output, 'w').write(out)
         else:
             print(program + ' does not yet have check_convergence implemented.')
