@@ -26,6 +26,7 @@ args = parser.parse_args()
 
 lines, program = read(args.input)
 
+line_form = '{:<2} {: >15.10f} {: >15.10f} {: >15.10f}\n'
 if program:
     try:
         mod = importlib.import_module('qgrep.' + program)
@@ -34,7 +35,9 @@ if program:
             out = ''
             if args.length:
                 out = '{0}\n\n'.format(len(geom))
-            out += '\n'.join(['\t'.join(line.split()) for line in geom])
+            for line in geom:
+                atom, *xyz = line.split()[:4]
+                out += line_form.format(atom, *map(float, xyz))
             open(args.output, 'w').write(out)
         else:
             print(program + ' does not yet have check_convergence implemented.')
