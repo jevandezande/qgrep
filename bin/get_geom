@@ -27,8 +27,16 @@ args = parser.parse_args()
 lines, program = read(args.input)
 
 xyz_form = '{:<2} {: >15.10f} {: >15.10f} {: >15.10f}\n'
-zmat_form = '{:<2} {:<2.0f} {:<2.0f} {:<2.0f} {: >15.10f} {: >15.10f} {: >15.10f}\n'
+zmat_form = '{:<2} {:>2.0f} {: > 15.10f} {:>2.0f} {: > 15.10f} {:>2.0f} {: > 15.10f}\n'
+orca_zmat_form = '{:<2} {:>2.0f} {:>2.0f} {:>2.0f} {: >10.6} {: > 10.6} {: > 10.6}\n'
 if program:
+    if args.type == 'zmat':
+        if program == 'orca':
+            form = orca_zmat_form
+        else:
+            form = zmat_form
+    else:
+        form = xyz_form
     try:
         mod = importlib.import_module('qgrep.' + program)
         if hasattr(mod, 'get_geom'):
@@ -36,9 +44,6 @@ if program:
             out = ''
             if args.length:
                 out = '{0}\n\n'.format(len(geom))
-            form = xyz_form
-            if len(geom[0]) > 4:
-                form = zmat_form
             for line in geom:
                 atom, *coords = line.split()
                 out += form.format(atom, *map(float, coords))
