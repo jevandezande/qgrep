@@ -26,8 +26,8 @@ args = parser.parse_args()
 
 lines, program = read(args.input)
 
-xyz_form = '{:<2} {: >15.10f} {: >15.10f} {: >15.10f}\n'
-zmat_form = '{:<2} {:>2.0f} {: > 15.10f} {:>2.0f} {: > 15.10f} {:>2.0f} {: > 15.10f}\n'
+xyz_form = '{:<2} {: >10.6} {: >10.6} {: >10.6}\n'
+zmat_form = '{:<2} {:>2.0f} {: > 10.6} {:>2.0f} {: > 10.6} {:>2.0f} {: > 10.6}\n'
 orca_zmat_form = '{:<2} {:>2.0f} {:>2.0f} {:>2.0f} {: >10.6} {: > 10.6} {: > 10.6}\n'
 if program:
     if args.type == 'zmat':
