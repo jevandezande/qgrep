@@ -8,8 +8,7 @@ import getpass
 from qgrep.helper import colors
 
 SIZES = {'debug': 1, 'gen3': 16, 'gen4': 48, 'gen5': 2, 'large': 1}
-# Purple vertical BAR
-BAR = '\033[95m|\033[0m'
+BAR = colors.purple + '|' + colors.normal
 
 class Queues:
     def __init__(self):
@@ -193,16 +192,6 @@ class Queue:
         """Make a list of all the Jobs in the queue"""
         return list(self.running.values()) + list(self.queueing.values())
 
-    # May not work right, may need to have the first argument be Queue as that
-    # is what self is
-    #@accepts(Queue, (int, float))
-    #def __getitem__(self, job_id):
-    #    if job_id in self.running:
-    #        return self.running[job_id]
-    #    elif job_id in self.queueing:
-    #        return self.queueing[job_id]
-    #    raise KeyError("Cannot find the Job with id: " + str(job_id))
-
     def __str__(self):
         """Make a string with each job on a new line"""
         return self.print()
@@ -230,7 +219,6 @@ class Queue:
             out += (' '*29*(max_num - len(self.jobs)))[:-1] + BAR
         return out
 
-    #@accepts((int, float), Job, str)
     def set(self, job_id, job, position):
         """
         Set a job in the specified position (running or queueing)
@@ -278,8 +266,6 @@ class Queue:
             if job.owner == person:
                 ret[job.id] = job
         return ret
-        #return OrderedDict([(id, job) if job.owner == person for id, job in self.jobs.items()])
-        #return OrderedDict(filterfalse(lambda job: job.owner == person, self.jobs.values()))
         
 
 class Job:
@@ -328,6 +314,6 @@ class Job:
         queue = job_xml.find('hard_req_queue').text
         if (state == 'running' and state2 != 'r') or \
            (state == 'pending' and state2 != 'qw'):
-            print('States do not agree: job {}, states:{} {}'.format(jid, state, state2))
+            print('States do not agree: job {}, states:{}, {}'.format(jid, state, state2))
         return jid, name, state2, owner, queue
 
