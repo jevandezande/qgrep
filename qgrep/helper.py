@@ -134,3 +134,13 @@ def convert_energy(data, in_type='hartree', out_type='kcal/mol'):
             raise SyntaxError("List may only be filled with numbers.")
     else:
         raise SyntaxError(type(data) + " is not currently supported. Please use int, float, np.ndarray, or list")
+
+class colors:
+    normal = '\033[0m'
+    bold = '\033[1m'
+    underline = '\033[4m'
+    red = '\033[91m'
+    green = '\033[92m'
+    yellow = '\033[93m'
+    blue = '\033[94m'
+    purple = '\033[95m'

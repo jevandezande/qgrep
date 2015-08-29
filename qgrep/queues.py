@@ -5,6 +5,7 @@ from xml.etree import ElementTree
 from collections import OrderedDict, defaultdict
 from itertools import zip_longest, filterfalse
 import getpass
+from qgrep.helper import colors
 
 SIZES = {'debug': 1, 'gen3': 16, 'gen4': 48, 'gen5': 2, 'large': 1}
 # Purple vertical BAR
@@ -291,24 +292,19 @@ class Job:
 
     def __str__(self):
         """Print a short description of the job, with color"""
-        normal = '\033[0m'
-        bold = '\033[1m'
-        green = '\033[92m'
-        blue = '\033[94m'
-        yellow = '\033[93m'
-        job_form = '{:>6d} {:<5s} {:<12s} {}{:2s}' + normal
+        job_form = '{:>6d} {:<5s} {:<12s} {}{:2s}' + colors.normal
 
-        # Color queue status by type, use yellow if unrecognized
-        colors = defaultdict(lambda: yellow, {'r': green, 'qw': blue})
+        # Color queue status by type, use red if unrecognized
+        job_colors = defaultdict(lambda: colors.red, {'r': colors.green, 'qw': colors.blue})
         
         # Bold the user's jobs
         if self.owner == getpass.getuser():
-            owner = bold + self.owner[:5] + normal
+            owner = colors.bold + self.owner[:5] + colors.normal
         else:
             owner = self.owner[:5]
 
         return job_form.format(int(self.id), owner, self.name[:12],
-                               colors[self.state], self.state[:2])
+                               job_colors[self.state], self.state[:2])
 
     @staticmethod
     def read_job_xml(job_xml):
