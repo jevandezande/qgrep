@@ -6,6 +6,7 @@ import argparse
 import sys
 sys.path.insert(0, '../')
 
+import time
 from qgrep.queues import Queues
 
 parser = argparse.ArgumentParser(description='Get the final energy of an output file.')
@@ -13,8 +14,22 @@ parser.add_argument('-n', '--number', help='The number of jobs to be output',
                     type=int, default=50)
 parser.add_argument('-u', '--user', help='Output only the users jobs',
                     action='store_true', default=False)
+parser.add_argument('-w', '--watch', help='Update when jobs change',
+                    action='store_true', default=False)
 
 args = parser.parse_args()
 
 queues = Queues()
-print(queues.print(numjobs=args.number, user=args.user))
+out = queues.print(numjobs=args.number, user=args.user)
+print(out)
+
+# Watch for 1 hour
+if args.watch:
+    for i in range(3600):
+        # Check every second
+        time.sleep(1)
+        new_queues = Queues()
+        new_out = new_queues.print(numjobs=args.number, user=args.user)
+        if out != new_out:
+            out = new_out
+            print(out)
