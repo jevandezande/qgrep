@@ -273,10 +273,11 @@ class Molecule(object):
             header = '{}\\\\\n'.format(len(self))
             if self.name:
                 header = self.name + '\\\\\n' + header
-            line_form = '{:<2}' + ' {:> 13.8f}' * 3
+            line_form = '{:<2}' + ' {:> 13.6f}' * 3
             atoms = [line_form.format(atom, *pos) for atom, *pos in self.xyz]
             atoms = '\n'.join(atoms)
-            out = header + '\\begin{verbatim}\n' + atoms + '\n\\end{verbatim}'
+            #out = header + '\\begin{verbatim}\n' + atoms + '\n\\end{verbatim}'
+            out = '\\begin{verbatim}\n' + atoms + '\n\\end{verbatim}'
         else:
             raise SyntaxError('Invalid style')
         with open(outfile, 'w') as f:
