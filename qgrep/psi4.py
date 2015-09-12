@@ -211,3 +211,15 @@ def get_energy(lines, energy_type='sp'):
                 return line.split()[-1]
     else:
         print('Energy type not yet supported')
+
+
+def template(geom='', jobtype='opt', functional='B3LYP', basis='sto-3g'):
+    """Returns a template with the specified geometry and other variables"""
+    template_style = """molecule {{
+{0}
+}}
+set basis {1}
+
+{2}('{3}')
+"""
+    return template_style.format(geom, basis, jobtype, functional)
