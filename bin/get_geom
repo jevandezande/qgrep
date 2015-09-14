@@ -49,7 +49,7 @@ if program:
                 out += form.format(atom, *map(float, coords))
             open(args.output, 'w').write(out)
         else:
-            print(program + ' does not yet have check_convergence implemented.')
+            print(program + ' does not yet have get_geom implemented.')
     except ImportError:
         print(program + ' is not yet supported.')
 else:
