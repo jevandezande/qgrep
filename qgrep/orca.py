@@ -273,6 +273,40 @@ def get_energy(lines, energy_type='sp'):
     return energy
 
 
+def get_energies(lines, energy_type='sp'):
+    """
+    Returns all of the calculated energies
+    """
+    energies = []
+    if energy_type == 'sp':
+        energy_line = 'FINAL SINGLE POINT ENERGY'
+        for line in lines:
+            if energy_line == line[:25]:
+                energies.append(float(line.split()[-1]))
+    elif energy_type == 'gibbs':
+        energy_line = 'Final Gibbs free enthalpy'
+        for line in lines:
+            if energy_line == line[:25]:
+                energies.append(float(line.split()[-2]))
+    elif energy_type == 'enthalpy':
+        energy_line = 'Total enthalpy'
+        for line in lines:
+            if energy_line == line[:14]:
+                energies.append(float(line.split()[-2]))
+    elif energy_type == 'entropy':
+        energy_line = 'Total entropy correction'
+        for line in lines:
+            if energy_line == line[:24]:
+                energies.append(float(line.split()[4]))
+    elif energy_type == 'zpve':
+        energy_line = 'Zero point energy'
+        for line in lines:
+            if energy_line == line[:17]:
+                energies.append(float(line.split()[4]))
+
+    return energies
+
+
 def convert_zmatrix(lines, units):
     """Convert the orca zmatrix to a proper zmatrix"""
     zmat = get_geom(lines, 'zmat', units)
