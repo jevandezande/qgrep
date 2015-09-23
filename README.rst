@@ -7,11 +7,11 @@ from quantum chemistry programs
 
 Install
 -------
- * Obtain the scripts
-  - ``git clone git@github.com:jevandezande/qgrep.git``
- * Edit PATH and PYTHONPATH to include scripts (bash/zsh format shown)
-  - ``export PATH=$PATH:/replace/with/your/path/to/qgrep/bin/``
-  - ``export PYTHONPATH=$PYTHONPATH:/replace/with/your/path/to/qgrep/``
+* Obtain the scripts
+ * ``git clone git@github.com:jevandezande/qgrep.git``
+* Edit PATH and PYTHONPATH to include scripts (bash/zsh format shown)
+ * ``export PATH=$PATH:/replace/with/your/path/to/qgrep/bin/``
+ * ``export PYTHONPATH=$PYTHONPATH:/replace/with/your/path/to/qgrep/``
 
 
 Use
