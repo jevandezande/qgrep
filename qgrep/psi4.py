@@ -213,6 +213,18 @@ def get_energy(lines, energy_type='sp'):
         print('Energy type not yet supported')
 
 
+def get_energies(lines, energy_type='sp'):
+    """
+    Returns the enrgies of an optimization
+    """
+    energies = []
+    if energy_type == 'sp':
+        for line in reversed(lines):
+            if line[:18] == '    Total Energy =':
+                energies.append(float(line.split()[-1]))
+    return energies
+
+
 def template(geom='', jobtype='opt', functional='B3LYP', basis='sto-3g'):
     """Returns a template with the specified geometry and other variables"""
     template_style = """molecule {{
