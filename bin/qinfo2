@@ -29,7 +29,6 @@ if args.watch:
         # Check every second
         time.sleep(1)
         new_queues = Queues()
-        new_out = new_queues.print(numjobs=args.number, user=args.user)
-        if out != new_out:
-            out = new_out
-            print(out)
+        if queues != new_queues:
+            queues = new_queues
+            print(queues.print(numjobs=args.number, user=args.user))

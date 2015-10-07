@@ -5,10 +5,12 @@ from xml.etree import ElementTree
 from collections import OrderedDict, defaultdict
 from itertools import zip_longest, filterfalse
 import getpass
+#import logging
 from qgrep.helper import colors
 
 SIZES = {'debug': 1, 'gen3': 16, 'gen4': 48, 'gen5': 2, 'large': 1}
 BAR = colors.purple + '|' + colors.normal
+#logging.basicConfig(filename='.qgrep.log',level=logging.CRITICAL)
 
 class Queues:
     def __init__(self):
@@ -21,6 +23,20 @@ class Queues:
         Make the tree into a printable form
         """
         return self.print()
+
+    def __eq__(self, other):
+        """
+        Check if queues are equivalent
+        """
+        if len(self.queues) != len(other.queues):
+            return False
+        for my_queue, other_queue in zip(self.queues.values(), other.queues.values()):
+            if my_queue != other_queue:
+                return False
+        return True
+
+    def __ne__(self, other):
+        return not self == other
 
     # noinspection PyPep8
     def print(self, numjobs=50, user=None):
@@ -137,7 +153,7 @@ class Queues:
         """
         Parse the xml tree from qxml
         """
-        self.queues = {}
+        self.queues = OrderedDict()
         for child in self.tree:
             # Running jobs are arranged by node/queue
             if child.tag == 'queue_info':
@@ -165,7 +181,7 @@ class Queues:
 
 class Queue:
     """
-    A simple class that contains Jobs that are running and queued
+    A class that contains Jobs that are running and queued
     """
     def __init__(self, size, name='', running=None, queueing=None):
         """
@@ -184,9 +200,20 @@ class Queue:
             self.queueing = OrderedDict()
         else:
             self.queueing = queueing
+    
+    def __eq__(self, other):
+        if len(self) != len(other):
+            return False
+        for s, o in zip(self.jobs.values(), other.jobs.values()):
+            if s != o:
+                return False
+        return True
+
+    def __ne__(self, other):
+        return not self == other
 
     def __len__(self):
-        return self.size
+        return len(self.running) + len(self.queueing)
 
     def __list__(self):
         """Make a list of all the Jobs in the queue"""
@@ -276,6 +303,18 @@ class Job:
     def __init__(self, job_xml):
         self.id, self.name, self.state, self.owner, self.queue = Job.read_job_xml(job_xml)
 
+    def __eq__(self, other):
+        if self.id == other.id and \
+            self.name == other.name and \
+            self.state == other.state and \
+            self.owner == other.owner and \
+            self.queue == other.queue:
+            return True
+        return False
+    
+    def __ne__(self, other):
+        return not self == other
+
     def __str__(self):
         """Print a short description of the job, with color"""
         job_form = '{:>6d} {:<5s} {:<12s} {}{:2s}' + colors.normal
@@ -314,6 +353,6 @@ class Job:
         queue = job_xml.find('hard_req_queue').text
         if (state == 'running' and state2 != 'r') or \
            (state == 'pending' and state2 != 'qw'):
-            print('States do not agree: job {}, states:{}, {}'.format(jid, state, state2))
+            #logging.warning('States do not agree: job {}, states:{}, {}'.format(jid, state, state2))
+            pass
         return jid, name, state2, owner, queue
-
