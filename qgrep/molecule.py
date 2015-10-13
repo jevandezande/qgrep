@@ -12,7 +12,8 @@ class Molecule(object):
         """
         if geom is None:
             geom = []
-        Molecule.check_geom(geom)
+        else:
+            Molecule.check_geom(geom)
         self.geom = geom
 
         self.name = name
@@ -45,6 +46,8 @@ class Molecule(object):
         if not isinstance(other, Molecule):
             return False
         if self.geom != other.geom:
+            return False
+        if self.name != other.name:
             return False
         return True
 
@@ -86,8 +89,6 @@ class Molecule(object):
     @staticmethod
     def check_geom(geom):
         """Checks if the given geometry is valid, raises a syntax error if it is not"""
-        if len(geom) == 0:
-            return True
         for atom in geom:
             Molecule.check_atom(atom)
 
