@@ -3,146 +3,75 @@ import importlib
 
 
 class Molecule(object):
-    def __init__(self, geom=None, geom_type=None, name=None):
+    def __init__(self, geom=None, name=None):
         """
-        Simple molecule class that includes zmatrix and cartesian (xyz)
-        coordinates
-        Geometries:
-            XYZ
-                List of lists where the first column corresponds to the element
-                and the others to x, y, and z respectively
-            ZMATRIX
-                List of list where the first column corresponds to the element
-                and the others to atom1, distance, atom2, angle, atom3, dihedral
+        Simple molecule class
+
+        :param geom: List of lists where the first column corresponds to the
+            element and the others to x, y, and z respectively
         """
         if geom is None:
             geom = []
-        self.xyz = None
-        self.zmat = None
-        if not geom_type is None:
-            if geom_type == 'xyz':
-                self.geom_type = 'xyz'
-                Molecule.check_xyz(geom)
-                self.xyz = geom
-            elif geom_type == 'zmat':
-                self.geom_type = 'zmat'
-                Molecule.check_zmatrix(geom)
-                self.zmat = geom
-            else:
-                raise SyntaxError("Invalid geometry type, must be either 'xyz' "
-                                  "or 'zmat'.")
-        elif len(geom) > 0 and len(geom[0]) == 1:
-            self.geom_type = 'zmat'
-            Molecule.check_zmatrix(geom)
-            self.zmat = geom
-        else:
-            self.geom_type = 'xyz'
-            Molecule.check_xyz(geom)
-            self.xyz = geom
+        Molecule.check_geom(geom)
+        self.geom = geom
 
         self.name = name
 
     def __len__(self):
         """Return the number of atoms in the molecule"""
-        if self.geom_type == 'zmat':
-            return len(self.zmat)
-        return len(self.xyz)
+        return len(self.geom)
 
     def __str__(self):
         """
         Returns a string of the geometry, filling out positions with zeros and
         spaces as needed
         """
-        if self.geom_type == 'zmat':
-            out = self.zmat[0][0]
-            for i, atom in enumerate(self.zmat[1:], start=1):
-                form = '\n{:<4}' + ' {:>4d} {:> 15.8f}' * min(i, 3)
-                out += form.format(*atom)
-            return out
-        return '\n'.join([('{:<4}' + ' {:> 13.8f}' * 3).format(*atom) for atom in self.xyz])
+        return '\n'.join([('{:<4}' + ' {:> 13.8f}' * 3).format(*atom) for atom in self.geom])
 
     def __getitem__(self, i):
         """Returns the ith atom"""
-        if self.geom_type == 'zmat':
-            return self.zmat[i]
-        return self.xyz[i]
+        return self.geom[i]
 
     def __setitem__(self, i, atom):
         """Sets the ith atom"""
-        if self.geom_type == 'zmat':
-            Molecule.check_zmatrix_atom(atom, i)
-        else:
-            Molecule.check_xyz_atom(atom)
-            self.xyz[i] = list(atom)
+        Molecule.check_atom(atom)
+        self.geom[i] = list(atom)
 
     def __delitem__(self, i):
         """Deletes the ith atom"""
-        if self.geom_type == 'zmat':
-            del self.zmat[i]
-        else:
-            del self.xyz[i]
+        del self.geom[i]
 
     def __eq__(self, other):
         if not isinstance(other, Molecule):
             return False
-        if self.geometry != other.geometry:
+        if self.geom != other.geom:
             return False
         return True
 
     def insert(self, i, atom):
         """Insert the atom in the specified position"""
-        if self.geom_type == 'zmat':
-            Molecule.check_zmatrix_atom(atom, i)
-            self.xyz.insert(i, list(atom))
-        else:
-            Molecule.check_xyz_atom(atom)
-            self.xyz.insert(i, list(atom))
+        Molecule.check_atom(atom)
+        self.geom.insert(i, list(atom))
 
     @property
-    def geometry(self):
-        """Return the geometry"""
-        if self.geom_type == 'zmat':
-            return self.zmat
-        return self.xyz
+    def geom(self):
+        """Return the geometry
+        Use self._geom to store the geomtery so extra checks can be added"""
+        return self._geom
 
-    @geometry.setter
-    def geometry(self, geom):
+    @geom.setter
+    def geom(self, geom):
         """Set the geometry"""
-        geom_type = Molecule.check_type(geom)
-        if geom_type == 'xyz':
-            self.geom_type = 'xyz'
-            self.xyz = geom
-        elif geom_type == 'zmat':
-            self.geom_type = 'zmat'
-            self.xyz = geom
-        else:
-            raise SyntaxError("Invalid geometry.")
-
-    @staticmethod
-    def check_type(geom):
-        # noinspection PyPep8
-        """Determine the geometry type, and return a string corresponding to it. If not a valid format, returns None"""
-        try:
-            Molecule.check_xyz(geom)
-            return 'xyz'
-        except SyntaxError:
-            try:
-                Molecule.check_zmatrix(geom)
-                return 'zmat'
-            except SyntaxError:
-                return None
+        Molecule.check_geom(geom)
+        self._geom = geom
 
     def append(self, atom, i=0):
         """Append atom to geometry"""
-        if self.geom_type == 'zmat':
-            Molecule.check_zmatrix_atom(atom, i)
-            self.xyz.append(list(atom))
-        else:
-            Molecule.check_xyz_atom(atom)
-            self.xyz.append(list(atom))
+        Molecule.check_atom(atom)
+        self.geom.append(list(atom))
 
     @staticmethod
-    def check_xyz_atom(atom):
+    def check_atom(atom):
         """Check if an atom is properly formatted, raises a syntax error if it is not"""
         name, *positions = atom
         if not isinstance(name, str):
@@ -155,78 +84,18 @@ class Molecule(object):
         return True
 
     @staticmethod
-    def check_xyz(xyz):
-        """Checks if the given xyz geometry is valid, raises a syntax error if it is not"""
-        if len(xyz) == 0:
+    def check_geom(geom):
+        """Checks if the given geometry is valid, raises a syntax error if it is not"""
+        if len(geom) == 0:
             return True
-        for atom in xyz:
-            Molecule.check_xyz_atom(atom)
+        for atom in geom:
+            Molecule.check_atom(atom)
 
         return True
 
     @staticmethod
-    def check_zmatrix_atom(atom, i):
-        if i == 1:
-            if len(atom) != 1:
-                raise SyntaxError("Only need one atom on first line: " + str(atom))
-            if not isinstance(atom[0], str):
-                raise SyntaxError("Atom name must be a string. {} is not a "
-                                  "valid atom name".format(atom[0]))
-        elif i == 2:
-            if len(atom) != 3:
-                raise SyntaxError("Need atom, its connection, and distance: " +
-                                  str(atom))
-            name, atom1, distance = atom
-            if not isinstance(name, str) or not isinstance(atom1, int) or not \
-                    isinstance(distance, (int, float)):
-                raise SyntaxError("Invalid specification of second atom: "
-                                  "{}".format(atom))
-        elif i == 3:
-            if len(atom) != 5:
-                raise SyntaxError("Need atom, its connection, and distance on "
-                                  "second line: " + str(atom))
-            name, atom1, distance, atom2, angle = atom
-            if not isinstance(name, str) or not isinstance(atom1, int) or not \
-                    isinstance(distance, (int, float)) or not \
-                    isinstance(atom2, int) or not isinstance(angle, (int, float)):
-                raise SyntaxError("Invalid specification of atom: "
-                                  "{}".format(atom))
-        elif i > 3 and isinstance(i, int):
-            if len(atom) != 7:
-                raise SyntaxError("Incorrect number of values, expecting 6 "
-                                  "but got " + str(len(atom)))
-            if not isinstance(atom[0], str):
-                raise SyntaxError("Atom name must be a string. {} is not a "
-                                  "valid atom name".format(atom[0]))
-            atoms = atom[1::2]
-            for a in atoms:
-                if not isinstance(a, int):
-                    raise SyntaxError("Atoms must be specified with a number.")
-                if a >= i:
-                    # Using indexing starting at 1
-                    raise SyntaxError("Cannot use atoms appearing after the "
-                                      "current atom.")
-            params = atom[2::2]
-            for p in params:
-                if not isinstance(p, (int, float)):
-                    raise SyntaxError("Distance, angle, and dihedral must be "
-                                      "specified with a number: " + str(atom))
-        else:
-            raise SyntaxError("Index must be an integer greater than one.")
-
-    @staticmethod
-    def check_zmatrix(zmatrix):
-        """
-        Checks if the given zmatrix is valid, raises a syntax error if not
-        """
-        for i, atom in enumerate(zmatrix, start=1):
-            Molecule.check_zmatrix_atom(atom, i)
-
-        return True
-
-    @staticmethod
-    def read_xyz(infile="geom.xyz"):
-        """Read the xyzetry from a file, currectly only supports XYZ files"""
+    def read_geom(infile="geom.xyz"):
+        """Read the geometry from a file, currectly only supports XYZ files"""
         lines, program = helper.read(infile)
         if program:
             if program == 'zmatrix':
@@ -238,43 +107,35 @@ class Molecule(object):
         if lines[0].strip().isdigit():
             # Strip off length if provided
             lines = lines[2:]
-        xyz = []
+        geom = []
         for line in lines:
             if line.strip() == '':
                 continue
             atom, x, y, z = line.split()
-            xyz.append([atom, float(x), float(y), float(z)])
+            geom.append([atom, float(x), float(y), float(z)])
 
-        return xyz
+        return geom
 
     def read(self, infile="geom.xyz"):
-        """Read (and set) the xyzetry"""
-        self.xyz = Molecule.read_xyz(infile)
+        """Read (and set) the geometry"""
+        self.geom = Molecule.read_geom(infile)
 
     def write(self, outfile="geom.xyz", label=True, style='xyz'):
         """
         Writes the geometry to the specified file
-        If an xyz geometry, prints the size at the beginning if desired
-            (to conform to XYZ format)
-        If a zmat, prints  the zmatrix label at the beginning (#ZMATRIX)
-            (to conform to JMol zmatrix format)
+        Prints the size at the beginning if desired (to conform to XYZ format)
         """
         out = ''
         if style == 'xyz':
             if label:
-                if self.geom_type == 'zmat':
-                    out += '#ZMATRIX\n\n'
-                else:
-                    out += '{}\n\n'.format(len(self))
+                out += '{}\n\n'.format(len(self))
             out += str(self)
         elif style == 'latex':
-            if not self.geom_type == 'xyz':
-                raise SyntaxError('Only xyz latex printing currently supported')
             header = '{}\\\\\n'.format(len(self))
             if self.name:
                 header = self.name + '\\\\\n' + header
             line_form = '{:<2}' + ' {:> 13.6f}' * 3
-            atoms = [line_form.format(atom, *pos) for atom, *pos in self.xyz]
+            atoms = [line_form.format(atom, *pos) for atom, *pos in self.geom]
             atoms = '\n'.join(atoms)
             #out = header + '\\begin{verbatim}\n' + atoms + '\n\\end{verbatim}'
             out = '\\begin{verbatim}\n' + atoms + '\n\\end{verbatim}'

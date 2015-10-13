@@ -1,5 +1,7 @@
 """Source for all orca related functions"""
 from qgrep.molecule import Molecule
+from qgrep.convergence import Step, Convergence
+import re
 
 
 def get_geom(lines, geom_type='xyz', units='angstrom'):
@@ -421,3 +423,49 @@ def get_multiplicity(lines):
         if line[:13] == ' Multiplicity':
             return int(line.split()[-1])
     return 0
+
+
+def convergence(output_file):
+    """ 
+    Sample geometry convergence output. May not include energy change line
+                                .--------------------.
+          ----------------------|Geometry convergence|---------------------
+          Item                value                 Tolerance   Converged
+          -----------------------------------------------------------------
+          Energy change      -0.42714550            0.00003000      NO
+          RMS gradient        0.23385284            0.00050000      NO
+          MAX gradient        0.96262577            0.00200000      NO
+          RMS step            0.06464278            0.00700000      NO
+          MAX step            0.26280432            0.01000000      NO
+          ....................................................
+          Max(Bonds)      0.1391      Max(Angles)    0.48
+          Max(Dihed)        0.00      Max(Improp)    0.00
+          -----------------------------------------------------------------
+    """
+    convergence_re = r'''(Energy change\s+([-]?\d+.\d+)\s+([-]?\d+.\d+)\s+(YES|NO))?
+          RMS gradient \s+([-]?\d+.\d+)\s+([-]?\d+.\d+)\s+(YES|NO)
+          MAX gradient \s+([-]?\d+.\d+)\s+([-]?\d+.\d+)\s+(YES|NO)
+          RMS step     \s+([-]?\d+.\d+)\s+([-]?\d+.\d+)\s+(YES|NO)
+          MAX step     \s+([-]?\d+.\d+)\s+([-]?\d+.\d+)\s+(YES|NO)
+          ....................................................
+          Max\(Bonds\)\s+([-]?\d+.\d+)\s+Max\(Angles\)\s+([-]?\d+.\d+)
+          Max\(Dihed\)\s+([-]?\d+.\d+)\s+Max\(Improp\)\s+([-]?\d+.\d+)
+          -----------------------------------------------------------------'''
+
+    output = open(output_file).read()
+    matches = re.findall(convergence_re, output)
+    steps = []
+    for match in matches:
+        e_str, e_val,  e_tol, e_conv = match[0:4]
+        if e_val:
+            e_val = float(e_val)
+        else:
+            e_val = 0
+        rg_val, rg_tol, rg_conv = match[4:7]
+        mg_val, mg_tol, mg_conv = match[7:10]
+        rs_val, rs_tol, rs_conv = match[10:13]
+        ms_val, ms_tol, ms_conv = match[13:16]
+        rg_val, mg_val, rs_val, ms_val = float(rg_val), float(mg_val), float(rs_val), float(ms_val)
+        steps.append(Step(e_val, rg_val, mg_val, rs_val, ms_val))
+        
+    return Convergence(steps, [])
