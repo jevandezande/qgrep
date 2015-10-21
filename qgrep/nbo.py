@@ -3,18 +3,66 @@ import re
 import numpy as np
 
 
-class NPA():
+class NPA:
     """Natural Population Analysis class"""
 
-    def __init__(self, lines):
-        self.atoms, self.npa = self.read(lines)
+    def __init__(self, atoms=None, charges=None, lines=''):
+        if atoms is None and charges is None and lines:
+            self.atoms, self.charges = self.read(lines)
+        else:
+            self.atoms = atoms
+            self.charges = charges
     
+    def __eq__(self, other):
+        """
+        Uses np.allclose
+        """
+        return self.atoms == other.atoms and np.allclose(self.charges, other.charges)
+    
+    def __iter__(self):
+        for atom, vals in zip(self.atoms, self.charges):
+            yield [atom] + self.charges
+
+    def __len__(self):
+        return len(self.atoms)
+
+    def __getitem__(self, index):
+        return [self.atoms[index]] + self.charges[index]
+
+    def __setitem__(self, index, value):
+        if len(value) != 6:
+            raise SyntaxError('Invalid number of charges')
+        self.atoms[index] = value[0]
+        self.charges[index] = value[1:]
+
     def __str__(self):
         ret = 'Atom  Charge     Core     Valence   Rydberg   Total\n'
         line_form = '{:<2} ' + '  {: >8.5f}' * 5 + '\n'
-        for atom, pop in zip(self.atoms, self.npa):
-            ret += line_form.format(atom, *pop)
+        for atom, charge in zip(self.atoms, self.charges):
+            ret += line_form.format(atom, *charge)
         return ret
+
+    def __sub__(self, other):
+        if self.atoms != other.atoms:
+            raise SyntaxError('Atoms do not match')
+        npa_diff = NPA_Diff()
+        npa_diff.atoms = self.atoms
+        npa_diff.charges = self.charges - other.charges
+        return npa_diff
+
+    def __add__(self, other):
+        if self.atoms != other.atoms:
+            raise SyntaxError('Atoms do not match')
+        npa = NPA()
+        npa.atoms = self.atoms
+        npa.charges = self.charges + other.charges
+        return npa
+
+    def append(atom, *vals):
+        self.atoms.append(atom)
+        if not len(vals) == 5:
+            raise SyntaxError('Invalid number of charges')
+        self.charges = np.array(list(self.charges).append(list(vals)))
 
     @staticmethod
     def read(lines):
@@ -23,7 +71,7 @@ class NPA():
  Summary of Natural Population Analysis:
                                      Natural Population 
              Natural    --------------------------------------------- 
-  Atom No    Charge        Core      Valence    Rydberg      Total 
+  Atom No    Charge        Core      Valence    Rydberg      Total
  -------------------------------------------------------------------- 
    Fe  1   -0.57877     17.97641     8.54310    0.05926    26.57877 
     C  2    0.60637      1.99951     3.34225    0.05187     5.39363 
@@ -34,8 +82,8 @@ class NPA():
         # Find the NPA Section
         start = 0
         for i, line in enumerate(lines):
-            if line == ' Summary of Natural Population Analysis:\n':
-                start = i + 6
+            if line == '  Atom No    Charge        Core      Valence    Rydberg      Total\n':
+                start = i + 2
                 break
         if start == 0:
             raise Exception('Unable to find the start of NPA analysis')
@@ -53,6 +101,11 @@ class NPA():
             npa.append([charge, core, valence, rydberg, total])
         return atoms, np.array(npa)
 
+class NPA_Diff(NPA):
+    """
+    NPA class without restrictions on population
+    Currently exactly the same
+    """
 
 class NBO():
     """Natural Bond Orbital class"""
