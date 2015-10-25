@@ -188,7 +188,7 @@ class Queue:
         Initialize a queue with it's jobs
         
         :param running: an OrderedDict of Jobs that are running
-        :param queueing: and OrderedDict of Jobs that are queueing
+        :param queueing: an OrderedDict of Jobs that are queueing
         """
         self.size = size
         self.name = name
@@ -277,9 +277,9 @@ class Queue:
         """
         ret = OrderedDict()
         # OrderedDicts cannot be readily combined
-        for k, v in self.running.items():
+        for k, v in sorted(self.running.items()):
             ret[k] = v
-        for k, v in self.queueing.items():
+        for k, v in sorted(self.queueing.items()):
             ret[k] = v
         return ret
 
