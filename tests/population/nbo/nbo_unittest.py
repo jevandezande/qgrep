@@ -2,8 +2,8 @@ import unittest
 from sys import path
 import numpy as np
 from numpy.testing import assert_almost_equal
-path.insert(0, '..')
-from qgrep.nbo import NPA, NPA_Diff
+path.insert(0, '../../')
+from qgrep.population.nbo import NPA, NPA_Diff
 
 
 class TestNPA(unittest.TestCase):
