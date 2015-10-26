@@ -1,7 +1,9 @@
 """Source for all Löwdin orbital analysis related functions"""
 import re
 import numpy as np
+from copy import deepcopy
 
+am_types = ['s', 'p', 'd', 'f', 'g', 'h']
 
 class ReducedOrbitalPopulation:
     """Löwdin Reduced Orbital Population class (ROP for short)"""
@@ -99,6 +101,19 @@ class ReducedOrbitalPopulation:
         if not isinstance(orbital, MOrbital):
             raise SyntaxError('You may only append Orbitals.')
         self.orb_list.append(orbital)
+
+    def atom_contract(self):
+        orb_list = []
+        for orb in self:
+            orb_list.append(orb.atom_contract())
+        return ReducedOrbitalPopulation(orb_list=orb_list)
+            
+    def am_contract(self):
+        orb_list = []
+        for orb in self:
+            orb_list.append(orb.am_contract())
+        return ReducedOrbitalPopulation(orb_list=orb_list)
+            
 
     def crop(self, max_num=5, min_num=2, cutoff=5):
         """
@@ -234,6 +249,46 @@ class MOrbital:
         ao_contrib_str = '\n'.join([str(ao_contrib) for ao_contrib in self.contributions])
         return '{: >2d} {: > 6.4f} {:>3.2f}\n{}'.format(self.number, self.energy, self.occupation, ao_contrib_str)
 
+    def atom_contract(self):
+        """
+        Contracts all atom AO_Contributions together (i.e. adds)
+        """
+        # Dictionary of contracted ao_contributions
+        atoms = {}
+        for aoc in self.contributions:
+            num, val = aoc.num, aoc.val
+            if num in atoms:
+                atoms[num].val += val
+            else:
+                aoc = deepcopy(aoc)
+                aoc.ao = ''
+                atoms[num] = aoc
+
+        # Sort by atom number
+        contribs = sorted(list(atoms.values()), key=lambda x: x.num)
+        return MOrbital(self.number, self.energy, self.occupation, contribs)
+
+    def am_contract(self):
+        """
+        Contracts all AO_Contributions of the same am together (i.e. adds)
+        """
+        # Dictionary of contracted ao_contributions
+        atoms = {}
+        for aoc in self.contributions:
+            # First character of ao corresponds to am
+            num, am, val = aoc.num, aoc.ao[0], aoc.val
+            if (num, am) in atoms:
+                atoms[(num, am)].val += val
+            else:
+                aoc = deepcopy(aoc)
+                aoc.ao = am
+                atoms[(num, am)] = aoc
+
+        # Sort by atom number and then am_type
+        key = lambda x: (x.num, am_types.index(x.ao[0]))
+        contribs = sorted(list(atoms.values()), key=key)
+        return MOrbital(self.number, self.energy, self.occupation, contribs)
+
     def atom_sum(self, atom):
         """
         Sum over all the contributions from an atom
@@ -256,16 +311,16 @@ class MOrbital:
         """
         Sum over all the contributions from an orbital type on the specified atom
         """
-        if not ao_type in ['s', 'p', 'd', 'f', 'g', 'h']:
-            raise Exception('Invalid ao_type')
+        if not am_type in am_types:
+            raise Exception('Invalid am_type')
         val = 0
         if isinstance(atom, str):
             for ao_contrib in self.contributions:
-                if ao_contrib.atom == atom and ao_contrib.ao[0] == ao_type:
+                if ao_contrib.atom == atom and ao_contrib.ao[0] == am_type:
                     val += ao_contrib.val
         elif isinstance(atom, int):
             for ao_contrib in self.contributions:
-                if ao_contrib.num == atom and ao_contrib.ao[0] == ao_type:
+                if ao_contrib.num == atom and ao_contrib.ao[0] == am_type:
                     val += ao_contrib.val
         else:
             raise SyntaxError('Atom specifiewr must be either an int or str.')
