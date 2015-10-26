@@ -24,11 +24,24 @@ class TestReducedOrbPop(unittest.TestCase):
 
     def test_homo_lumo_somo(self):
         rop = ROP('h2o.dat')
-        self.assertEqual(rop.homo(), 4)
-        self.assertEqual(rop.lumo(), 5)
-        self.assertEqual(rop.somo(), [])
+        self.assertEqual(rop.homo, 4)
+        self.assertEqual(rop.lumo, 5)
+        self.assertEqual(rop.somo, [])
         
+    def test_atom_contract(self):
+        rop = ROP('h2o.dat')
+        atom_contract = rop.atom_contract()
+        self.assertEqual(atom_contract[5].contributions[0].val, 34.1)
+        self.assertEqual(atom_contract[8].contributions[1].val, 11.5)
+        
+    def test_am_contract(self):
+        rop = ROP('h2o.dat')
+        am_contract = rop.am_contract()
+        self.assertEqual(am_contract[5].contributions[0].val, 34.1)
+        self.assertEqual(am_contract[8].contributions[2].val,  9.8)
 
+
+class TestOrbital(unittest.TestCase):
     def test_Orbital(self):
         orb1 = MOrbital()
         orb1_dup = MOrbital()
@@ -48,6 +61,8 @@ class TestReducedOrbPop(unittest.TestCase):
         self.assertEqual(orb2.orbital_type_sum(9, 'p'), 0)
         self.assertEqual(orb2.orbital_type_sum(2, 'f'), 0.7)
 
+
+class TestAO_Contrib(unittest.TestCase):
     def test_AO_Contrib(self):
         ao_contrib1 = AO_Contrib(1, 'Mn', 'px', 0.3)
         ao_contrib1_dup = AO_Contrib(1, 'Mn', 'px', 0.3)
@@ -56,7 +71,6 @@ class TestReducedOrbPop(unittest.TestCase):
         
         self.assertTrue(ao_contrib1 == ao_contrib1_dup)
         self.assertFalse(ao_contrib1 == ao_contrib2)
-
 
 if __name__ == '__main__':
     unittest.main()
