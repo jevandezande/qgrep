@@ -1,6 +1,4 @@
 import numpy as np
-from matplotlib import pyplot as plt
-
 
 
 class Step:
@@ -37,23 +35,28 @@ class Convergence:
         return header + '\n'.join(str(step) for step in self.steps)
 
     def plot(self):
-        f, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3, sharex='col', sharey='row')
-        x = range(len(self.steps))
-        #f.set_title('Convergence')
-        ax1.set_title(r'$\Delta$ Energy')
-        ax1.plot(x, self.delta_e)
-        ax2.set_title('RMS Grad')
-        ax2.plot(x, self.rms_grad)
-        ax3.set_title('RMS Step')
-        ax3.plot(x, self.rms_step)
+        try:
+            from matplotlib import pyplot as plt
 
-        #ax4.set_title('RMS Energy')
-        #ax4.plot(x, self.rms_energy)
-        ax5.set_title('Max Grad')
-        ax5.plot(x, self.max_grad)
-        ax6.set_title('Max Step')
-        ax6.plot(x, self.max_step)
-        plt.show()
+            f, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3, sharex='col', sharey='row')
+            x = range(len(self.steps))
+            #f.set_title('Convergence')
+            ax1.set_title(r'$\Delta$ Energy')
+            ax1.plot(x, self.delta_e)
+            ax2.set_title('RMS Grad')
+            ax2.plot(x, self.rms_grad)
+            ax3.set_title('RMS Step')
+            ax3.plot(x, self.rms_step)
+
+            #ax4.set_title('RMS Energy')
+            #ax4.plot(x, self.rms_energy)
+            ax5.set_title('Max Grad')
+            ax5.plot(x, self.max_grad)
+            ax6.set_title('Max Step')
+            ax6.plot(x, self.max_step)
+            plt.show()
+        except:
+            raise ImportError("No module named 'matplotlib'")
 
     @property
     def delta_e(self):
