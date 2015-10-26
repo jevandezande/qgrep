@@ -11,12 +11,13 @@ from qgrep.helper import read
 from qgrep.population.orbital_pop import ReducedOrbitalPopulation as ROP
 
 
-parser = argparse.ArgumentParser(description='Get the population analysis for specified orbitals')
+parser = argparse.ArgumentParser(description='Get the population analysis for specified orbitals. '\
+                                'When cropping and contracting, the contraction is performed first.')
 parser.add_argument('-i', '--input', help='The file to be read.', type=str,
                     default='output.dat')
 parser.add_argument('-n', '--number', help='The number of orbitals above and '\
                     'below the fermi level to be output.', type=int, default=2)
-parser.add_argument('-c', '--crop', help='Crop the output', type=bool, default=True)
+parser.add_argument('-c', '--crop', help='Crop the output', default=False, action='store_true')
 parser.add_argument('-a', '--atom_contract', help='Contract all ao contributions on the same atom',
                     default=False, action='store_true')
 parser.add_argument('-s', '--am_contract', help='Contract all of the same am contributions',
@@ -29,6 +30,7 @@ rop = ROP(args.input)
 
 low = rop.homo - args.number + 1
 high = rop.lumo + args.number
+# Truncate the orbitals around the Fermi level
 rop = rop.range(low, high)
 
 if args.atom_contract:
@@ -36,6 +38,6 @@ if args.atom_contract:
 elif args.am_contract:
     rop = rop.am_contract()
 if args.crop:
-    rop.crop()
+    rop = rop.crop()
 
 print(rop)
