@@ -3,7 +3,7 @@ from sys import path
 import numpy as np
 from numpy.testing import assert_almost_equal
 path.insert(0, '../../')
-from qgrep.population.orb_pop import ReducedOrbitalPopulation as ROP, MOrbital, AO_Contrib
+from qgrep.population.orbital_pop import ReducedOrbitalPopulation as ROP, MOrbital, AO_Contrib
 
 
 class TestReducedOrbPop(unittest.TestCase):
@@ -22,8 +22,11 @@ class TestReducedOrbPop(unittest.TestCase):
         mo = MOrbital(2, -0.49905, 2, contributions)
         self.assertEqual(rop[2], mo)
 
-    def test_sum(self):
-        pass
+    def test_homo_lumo_somo(self):
+        rop = ROP('h2o.dat')
+        self.assertEqual(rop.homo(), 4)
+        self.assertEqual(rop.lumo(), 5)
+        self.assertEqual(rop.somo(), [])
         
 
     def test_Orbital(self):

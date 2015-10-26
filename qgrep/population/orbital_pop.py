@@ -4,10 +4,15 @@ import numpy as np
 
 
 class ReducedOrbitalPopulation:
-    """Löwdin Reduced Orbital Population class"""
+    """Löwdin Reduced Orbital Population class (ROP for short)"""
 
-    def __init__(self, lines='', method='lowdin'):
-        self.orb_list = self.read(lines)
+    def __init__(self, file_name='', orb_list=None, method='lowdin'):
+        if file_name:
+            self.orb_list = self.read(file_name)
+        elif orb_list is not None:
+            self.orb_list = orb_list
+        else:
+            sel.orb_list = []
     
     def __eq__(self, other):
         return self.orb_list == other.orb_list
@@ -29,6 +34,47 @@ class ReducedOrbitalPopulation:
 
     def __str__(self):
         return '\n\n'.join([str(orb) for orb in self.orb_list])
+
+    @property
+    def homo(self):
+        """
+        Returns the index of the HOMO
+        Does not work for UHF (the HOMO is not well defined)
+
+        WARNING: 0-indexed
+        """
+        for i, orb in enumerate(self):
+            if orb.occupation < 2:
+               return i - 1 
+
+        return None
+
+    @property
+    def lumo(self):
+        """
+        Returns the index of the LUMO
+
+        WARNING: 0-indexed
+        """
+        for i, orb in enumerate(self):
+            if orb.occupation == 0:
+               return i
+
+        return None
+
+    @property
+    def somo(self):
+        """
+        Returns the indeces of the SOMO's
+
+        WARNING: 0-indexed
+        """
+        somos = []
+        for i, orb in enumerate(self):
+            if orb.occupation == 1:
+               somos.append(i)
+
+        return somos
 
     #def __sub__(self, other):
     #    if self.atoms != other.atoms:
@@ -54,6 +100,31 @@ class ReducedOrbitalPopulation:
             raise SyntaxError('You may only append Orbitals.')
         self.orb_list.append(orbital)
 
+    def crop(self, max_num=5, min_num=2, cutoff=5):
+        """
+        Make an ROP that removes the smallest contributors
+        """
+        orb_list = []
+        for mo in self.orb_list:
+            aos = []
+            for ao_contrib in sorted(mo.contributions, key=lambda x: x.val):
+                if ao_contrib.val < cutoff and len(aos) >= min_num:
+                    break
+
+                aos.append(ao_contrib)
+
+                if len(aos) == max_num:
+                    break
+            orb_list.append(MOrbital(mo.number, mo.energy, mo.occupation, aos))
+
+        return ReducedOrbitalPopulation(orb_list=orb_list)
+
+    def range(self, low, high):
+        """
+        Make an ROP with a restricted range of orbitals
+        """
+        return ReducedOrbitalPopulation(orb_list=self.orb_list[low:high])
+            
     @staticmethod
     def read(file_name, program='orca', method='lowdin'):
         """Read the reduced Löwdin orbital populations
@@ -110,7 +181,7 @@ Three blank lines
                 occs = lines[2].split()
                 orbs = []
                 for i in range(len(nums)):
-                    num, orb_e, occ = int(nums[i]), float(orb_es[i]), float(occs[i])
+                    num, orb_e, occ = int(nums[i]), float(orb_es[i]), round(float(occs[i]))
                     # Add orbitals without occupations (added in next section)
                     orbs.append(MOrbital(num, orb_e, occ))
 
