@@ -107,7 +107,7 @@ class ReducedOrbitalPopulation:
         orb_list = []
         for mo in self.orb_list:
             aos = []
-            for ao_contrib in sorted(mo.contributions, key=lambda x: x.val):
+            for ao_contrib in sorted(mo.contributions, key=lambda x: x.val, reverse=True):
                 if ao_contrib.val < cutoff and len(aos) >= min_num:
                     break
 
