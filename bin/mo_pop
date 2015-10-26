@@ -24,7 +24,7 @@ args = parser.parse_args()
 rop = ROP(args.input)
 
 low = rop.homo - args.number + 1
-high = rop.lumo + args.number + 1
+high = rop.lumo + args.number
 
 if args.crop:
     print(rop.range(low, high).crop())
