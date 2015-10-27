@@ -307,9 +307,9 @@ class MOrbital:
         
         return val
 
-    def orbital_type_sum(self, atom, ao_type):
+    def orbital_type_sum(self, atom, am_type):
         """
-        Sum over all the contributions from an orbital type on the specified atom
+        Sum over all the contributions from am_type on the specified atom
         """
         if not am_type in am_types:
             raise Exception('Invalid am_type')
@@ -342,6 +342,8 @@ class AO_Contrib:
         """
         Use np.allclose or almost_equal???
         """
+        if not isinstance(other, AO_Contrib):
+            return False
         if self.num == other.num \
                 and self.atom == other.atom \
                 and self.ao == other.ao \
