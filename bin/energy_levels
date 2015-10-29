@@ -13,6 +13,8 @@ from qgrep.helper import read
 parser = argparse.ArgumentParser(description='Get orbital energies of an output file.')
 parser.add_argument('-i', '--input', help='The file to be read.', type=str,
                     default='output.dat')
+parser.add_argument('-w', '--write', help='Write energy levels to an output file.',
+                    default=False, action='store_true')
 parser.add_argument('-o', '--output', help='File for the orbital energies',
                     type=str, default='energies.dat')
 
@@ -26,10 +28,10 @@ if program:
         mod = importlib.import_module('qgrep.' + program)
         if hasattr(mod, 'energy_levels'):
             levels, info = mod.energy_levels(lines)
-            with open(args.output, 'w') as f:
-                for level in levels:
-                    f.write(level)
-
+            if args.write:
+                with open(args.output, 'w') as f:
+                    for level in levels:
+                        f.write(level)
             for item in info:
                 print('{0}:\t{1}'.format(item, info[item]))
         else:

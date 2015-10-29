@@ -2,6 +2,7 @@
 from qgrep.molecule import Molecule
 from qgrep.convergence import Step, Convergence
 import re
+from collections import OrderedDict
 
 
 def get_geom(lines, geom_type='xyz', units='angstrom'):
@@ -382,7 +383,7 @@ def energy_levels(lines):
         num, occ, hartree, eV = level.split()
         clean.append((int(num), float(occ), float(hartree)))
 
-    info = {}
+    info = OrderedDict()
     for i in range(len(clean)):
         if clean[i][1] == 0:
             info['homo'] = clean[i - 1][2]
