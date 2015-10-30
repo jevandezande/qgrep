@@ -32,7 +32,7 @@ rop = ROP(args.input)
 
 low = rop.homo - args.number + 1
 high = rop.lumo + args.number
-# Truncate the orbitals around the Fermi level
+# Truncates the number of orbitals around the Fermi level
 rop = rop.range(low, high)
 
 # Don't contract twice
@@ -41,11 +41,11 @@ if args.atom_contract:
 elif args.am_contract:
     rop = rop.am_contract()
 
-# am_contract already includes sorting
-if args.sorted and not args.am_contract:
-    rop = rop.sorted()
-
 if args.crop:
     rop = rop.crop()
+# crop and am_contract already include sorting,
+#  but am_contract does not run if atom_contract does
+elif args.sorted and (not args.am_contract or args.atom_contract):
+    rop = rop.sorted()
 
 print(rop)
