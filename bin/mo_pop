@@ -20,7 +20,9 @@ parser.add_argument('-n', '--number', help='The number of orbitals above and '\
 parser.add_argument('-c', '--crop', help='Crop the output', default=False, action='store_true')
 parser.add_argument('-a', '--atom_contract', help='Contract all ao contributions on the same atom',
                     default=False, action='store_true')
-parser.add_argument('-s', '--am_contract', help='Contract all of the same am contributions',
+parser.add_argument('-j', '--am_contract', help='Contract all of the same am contributions.',
+                    default=False, action='store_true')
+parser.add_argument('-s', '--sorted', help='Sort by ao_contribution.',
                     default=False, action='store_true')
 
 args = parser.parse_args()
@@ -33,10 +35,16 @@ high = rop.lumo + args.number
 # Truncate the orbitals around the Fermi level
 rop = rop.range(low, high)
 
+# Don't contract twice
 if args.atom_contract:
     rop = rop.atom_contract()
 elif args.am_contract:
     rop = rop.am_contract()
+
+# am_contract already includes sorting
+if args.sorted and not args.am_contract:
+    rop = rop.sorted()
+
 if args.crop:
     rop = rop.crop()
 
