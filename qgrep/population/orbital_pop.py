@@ -38,7 +38,10 @@ class ReducedOrbitalPopulation:
         return '\n\n'.join([str(orb) for orb in self.orb_list])
 
     def sorted(self, key='contribution'):
-        orb_list = []
+        """
+        Generates a sorted ROP
+        """
+
         if key == 'index':
             sort_key = lambda x: x.index
         elif key == 'atom':
@@ -50,11 +53,12 @@ class ReducedOrbitalPopulation:
         else:
             raise SyntaxError('Invalid key given to sorted.')
 
+        orb_list = []
         for mo in self.orb_list:
             aos = []
             for ao_contrib in sorted(mo.contributions, key=sort_key, reverse=True):
                 aos.append(ao_contrib)
-        orb_list.append(MOrbital(mo.index, mo.energy, mo.occupation, aos))
+            orb_list.append(MOrbital(mo.index, mo.energy, mo.occupation, aos))
 
         return ReducedOrbitalPopulation(orb_list=orb_list)
 
