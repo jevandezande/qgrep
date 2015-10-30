@@ -37,6 +37,27 @@ class ReducedOrbitalPopulation:
     def __str__(self):
         return '\n\n'.join([str(orb) for orb in self.orb_list])
 
+    def sorted(self, key='contribution'):
+        orb_list = []
+        if key == 'index':
+            sort_key = lambda x: x.index
+        elif key == 'atom':
+            sort_key = lambda x: x.atom
+        elif key == 'ao':
+            sort_key = lambda x: x.ao
+        elif key == 'contribution':
+            sort_key = lambda x: x.val
+        else:
+            raise SyntaxError('Invalid key given to sorted.')
+
+        for mo in self.orb_list:
+            aos = []
+            for ao_contrib in sorted(mo.contributions, key=sort_key, reverse=True):
+                aos.append(ao_contrib)
+        orb_list.append(MOrbital(mo.index, mo.energy, mo.occupation, aos))
+
+        return ReducedOrbitalPopulation(orb_list=orb_list)
+
     @property
     def homo(self):
         """
@@ -130,7 +151,7 @@ class ReducedOrbitalPopulation:
 
                 if len(aos) == max_num:
                     break
-            orb_list.append(MOrbital(mo.number, mo.energy, mo.occupation, aos))
+            orb_list.append(MOrbital(mo.index, mo.energy, mo.occupation, aos))
 
         return ReducedOrbitalPopulation(orb_list=orb_list)
 
@@ -191,25 +212,25 @@ Three blank lines
                     first = False
 
                 # Parse out the header
-                nums = lines[0].split()
+                indexes = lines[0].split()
                 orb_es = lines[1].split()
                 occs = lines[2].split()
                 orbs = []
-                for i in range(len(nums)):
-                    num, orb_e, occ = int(nums[i]), float(orb_es[i]), round(float(occs[i]))
+                for i in range(len(indexes)):
+                    index, orb_e, occ = int(indexes[i]), float(orb_es[i]), round(float(occs[i]))
                     # Add orbitals without occupations (added in next section)
-                    orbs.append(MOrbital(num, orb_e, occ))
+                    orbs.append(MOrbital(index, orb_e, occ))
 
                 # Parse out the orbital contributions
                 for line in lines[4:]:
-                    num, atom, ao, *vals = line.split()
-                    num = int(num)
+                    index, atom, ao, *vals = line.split()
+                    index = int(index)
                     for i, val in enumerate(vals):
                         # If there is occupation, this deletes all the appearances of 0.0
                         # Due to rounding, the occupations will not add up to 100
                         val = float(val)
                         if val > 0:
-                            ao_contrib = AO_Contrib(num, atom, ao, val)
+                            ao_contrib = AO_Contrib(index, atom, ao, val)
                             orbs[i].contributions.append(ao_contrib)
 
                 orb_list += orbs
@@ -224,8 +245,8 @@ class MOrbital:
     Simple orbital class that holds the contributions from AOs as well as a
     little more necessary information
     """
-    def __init__(self, number=0, energy=0, occupation=0, contributions=None):
-        self.number = number
+    def __init__(self, index=0, energy=0, occupation=0, contributions=None):
+        self.index = index
         self.energy = energy
         self.occupation = occupation
         self.contributions = []
@@ -236,7 +257,7 @@ class MOrbital:
         """
         Checks if all values are equal
         """
-        if self.number == other.number \
+        if self.index == other.index \
                 and np.isclose(self.energy, other.energy) \
                 and np.isclose(self.occupation, other.occupation):
             for s, o in zip(self.contributions, other.contributions):
@@ -247,7 +268,7 @@ class MOrbital:
 
     def __str__(self):
         ao_contrib_str = '\n'.join([str(ao_contrib) for ao_contrib in self.contributions])
-        return '{: >2d} {: > 6.4f} {:>3.2f}\n{}'.format(self.number, self.energy, self.occupation, ao_contrib_str)
+        return '{: >2d} {: > 6.4f} {:>3.2f}\n{}'.format(self.index, self.energy, self.occupation, ao_contrib_str)
 
     def atom_contract(self):
         """
@@ -256,17 +277,17 @@ class MOrbital:
         # Dictionary of contracted ao_contributions
         atoms = {}
         for aoc in self.contributions:
-            num, val = aoc.num, aoc.val
-            if num in atoms:
-                atoms[num].val += val
+            index, val = aoc.index, aoc.val
+            if index in atoms:
+                atoms[index].val += val
             else:
                 aoc = deepcopy(aoc)
                 aoc.ao = ''
-                atoms[num] = aoc
+                atoms[index] = aoc
 
-        # Sort by atom number
-        contribs = sorted(list(atoms.values()), key=lambda x: x.num)
-        return MOrbital(self.number, self.energy, self.occupation, contribs)
+        # Sort by atom index
+        contribs = sorted(list(atoms.values()), key=lambda x: x.index)
+        return MOrbital(self.index, self.energy, self.occupation, contribs)
 
     def am_contract(self):
         """
@@ -276,18 +297,18 @@ class MOrbital:
         atoms = {}
         for aoc in self.contributions:
             # First character of ao corresponds to am
-            num, am, val = aoc.num, aoc.ao[0], aoc.val
-            if (num, am) in atoms:
-                atoms[(num, am)].val += val
+            index, am, val = aoc.index, aoc.ao[0], aoc.val
+            if (index, am) in atoms:
+                atoms[(index, am)].val += val
             else:
                 aoc = deepcopy(aoc)
                 aoc.ao = am
-                atoms[(num, am)] = aoc
+                atoms[(index, am)] = aoc
 
-        # Sort by atom number and then am_type
-        key = lambda x: (x.num, am_types.index(x.ao[0]))
+        # Sort by atom index and then am_type
+        key = lambda x: (x.index, am_types.index(x.ao[0]))
         contribs = sorted(list(atoms.values()), key=key)
-        return MOrbital(self.number, self.energy, self.occupation, contribs)
+        return MOrbital(self.index, self.energy, self.occupation, contribs)
 
     def atom_sum(self, atom):
         """
@@ -300,7 +321,7 @@ class MOrbital:
                     val += ao_contrib.val
         elif isinstance(atom, int):
             for ao_contrib in self.contributions:
-                if ao_contrib.num == atom:
+                if ao_contrib.index == atom:
                     val += ao_contrib.val
         else:
             raise SyntaxError('Atom specifiewr must be either an int or str.')
@@ -320,7 +341,7 @@ class MOrbital:
                     val += ao_contrib.val
         elif isinstance(atom, int):
             for ao_contrib in self.contributions:
-                if ao_contrib.num == atom and ao_contrib.ao[0] == am_type:
+                if ao_contrib.index == atom and ao_contrib.ao[0] == am_type:
                     val += ao_contrib.val
         else:
             raise SyntaxError('Atom specifiewr must be either an int or str.')
@@ -332,8 +353,8 @@ class AO_Contrib:
     """
     Simple class containing an AO and its contribution to an orbital
     """
-    def __init__(self, num, atom, ao, val):
-        self.num = num
+    def __init__(self, index, atom, ao, val):
+        self.index = index
         self.atom = atom
         self.ao = ao
         self.val = val
@@ -344,7 +365,7 @@ class AO_Contrib:
         """
         if not isinstance(other, AO_Contrib):
             return False
-        if self.num == other.num \
+        if self.index == other.index \
                 and self.atom == other.atom \
                 and self.ao == other.ao \
                 and self.val == other.val:
@@ -352,4 +373,4 @@ class AO_Contrib:
         return False
 
     def __str__(self):
-        return '{:>2d} {:<2s} {:<4s}: {:>4.1f}'.format(self.num, self.atom, self.ao, self.val)
+        return '{:>2d} {:<2s} {:<4s}: {:>4.1f}'.format(self.index, self.atom, self.ao, self.val)
