@@ -24,6 +24,14 @@ parser.add_argument('-j', '--am_contract', help='Contract all of the same am con
                     default=False, action='store_true')
 parser.add_argument('-s', '--sorted', help='Sort by ao_contribution.',
                     default=False, action='store_true')
+parser.add_argument('-l', '--latex', help='Write in latex format',
+                    default=False, action='store_true')
+parser.add_argument('-f', '--format', help='Write in specified format, can use -l for latex',
+                    type=str, default='str')
+parser.add_argument('-o', '--output', help='The file to be read.', type=str,
+                    default='')
+parser.add_argument('-w', '--write', help='Write to an output file',
+                    default=False, action='store_true')
 
 args = parser.parse_args()
 
@@ -48,4 +56,26 @@ if args.crop:
 elif args.sorted and (not args.am_contract or args.atom_contract):
     rop = rop.sorted()
 
-print(rop)
+if args.write or args.output:
+    out_file = args.output
+    if not args.output:
+        if args.latex or args.format == 'latex':
+            out_file = 'mo_pop.tex'
+            format = 'latex'
+        elif args.format == 'csv':
+            out_file = 'mo_pop.csv'
+        elif args.format == 'str':
+            out_file = 'mo_pop.txt'
+
+    format = 'csv'
+    if args.latex:
+        format = 'latex'
+
+    rop.write(out_file, format=format)
+elif args.latex:
+    rop.write('stdout', format='latex')
+elif args.format == 'str':
+    rop.write('stdout', format='csv')
+else:
+    rop.write('stdout', format=args.format)
+

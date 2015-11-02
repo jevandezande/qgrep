@@ -37,6 +37,28 @@ class ReducedOrbitalPopulation:
     def __str__(self):
         return '\n\n'.join([str(orb) for orb in self.orb_list])
 
+    def csv(self):
+        return '\n\n'.join([orb.csv() for orb in self.orb_list])
+
+    def write(self, file_name, format='plain'):
+        """
+        Write to a file
+        """
+        if format == 'plain':
+            out = str(self)
+        elif format == 'csv':
+            out = self.csv()
+        elif format == 'latex':
+            out = '\n\n'.join([str(orb) for orb in self.orb_list])
+        else:
+            raise SyntaxError('Invalid write format.')
+
+        if file_name == 'stdout':
+            print(out)
+        else:
+            with open(file_name, 'w') as f:
+                f.write(out)
+
     def sorted(self, key='contribution'):
         """
         Generates a sorted ROP
@@ -274,6 +296,20 @@ class MOrbital:
         ao_contrib_str = '\n'.join([str(ao_contrib) for ao_contrib in self.contributions])
         return '{: >2d} {: > 6.4f} {:>3.2f}\n{}'.format(self.index, self.energy, self.occupation, ao_contrib_str)
 
+    def csv(self):
+        ao_contrib_str = '\n'.join([ao_contrib.csv() for ao_contrib in self.contributions])
+        return '{: >2d}, {: > 6.4f}, {:>3.2f}\n{}'.format(self.index, self.energy, self.occupation, ao_contrib_str)
+
+    def latex(self):
+        """
+        Make into a latex tabular
+        """
+        aoc_latex = '\\begin{tabular}{r l r r}\n Index & Atom & AO & val \\\\ \\hline\n'
+        for aoc in self.contributions:
+            aoc_latex += '{:>2d} & {:<2s} & {:<4s} & {:>4.1f} \\\n'.format(aoc.index, aoc.atom, aoc.ao, aoc.val)
+        aoc_latex += '\\end{tabular}'
+        return '{: >2d} {: > 6.4f} {:>3.2f}\n{}'.format(self.index, self.energy, self.occupation, ao_contrib_str)
+
     def atom_contract(self):
         """
         Contracts all atom AO_Contributions together (i.e. adds)
@@ -328,7 +364,7 @@ class MOrbital:
                 if ao_contrib.index == atom:
                     val += ao_contrib.val
         else:
-            raise SyntaxError('Atom specifiewr must be either an int or str.')
+            raise SyntaxError('Atom specifier must be either an int or str.')
         
         return val
 
@@ -348,7 +384,7 @@ class MOrbital:
                 if ao_contrib.index == atom and ao_contrib.ao[0] == am_type:
                     val += ao_contrib.val
         else:
-            raise SyntaxError('Atom specifiewr must be either an int or str.')
+            raise SyntaxError('Atom specifier must be either an int or str.')
 
         return val
 
@@ -378,3 +414,6 @@ class AO_Contrib:
 
     def __str__(self):
         return '{:>2d} {:<2s} {:<4s}: {:>4.1f}'.format(self.index, self.atom, self.ao, self.val)
+
+    def csv(self):
+        return '{:>2d}, {:<2s}, {:<4s}, {:>4.1f}'.format(self.index, self.atom, self.ao, self.val)
