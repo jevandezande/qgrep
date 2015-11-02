@@ -2,6 +2,7 @@
 import re
 import numpy as np
 from copy import deepcopy
+from re import search
 
 am_types = ['s', 'p', 'd', 'f', 'g', 'h']
 
@@ -40,11 +41,11 @@ class OrbitalPopulation:
     def csv(self):
         return '\n\n'.join([orb.csv() for orb in self.orb_list])
 
-    def write(self, file_name, format='plain'):
+    def write(self, file_name, format='str'):
         """
         Write to a file
         """
-        if format == 'plain':
+        if format == 'str':
             out = str(self)
         elif format == 'csv':
             out = self.csv()
@@ -188,8 +189,8 @@ class OrbitalPopulation:
         return OrbitalPopulation(orb_list=self.orb_list[low:high])
             
     @staticmethod
-    def read(file_name, program='orca', method='lowdin'):
-        """Read the reduced Löwdin orbital populations
+    def read(file_name, program='orca', method='lowdin', type='reduced'):
+        """Read the Löwdin orbital populations
 ------------------------------------------
 LOEWDIN REDUCED ORBITAL POPULATIONS PER MO
 -------------------------------------------
@@ -336,7 +337,8 @@ class MOrbital:
         # Dictionary of contracted ao_contributions
         atoms = {}
         for aoc in self.contributions:
-            # First character of ao corresponds to am
+            # First non-number corresponds to the am
+
             index, am, val = aoc.index, aoc.ao[0], aoc.val
             if (index, am) in atoms:
                 atoms[(index, am)].val += val
@@ -415,6 +417,10 @@ class AO_Contrib:
     def __str__(self):
         return '{:>2d} {:<2s} {:<4s}: {:>4.1f}'.format(self.index, self.atom, self.ao, self.val)
 
+    @property
+    def am(self):
+        return search('[a-z]', self.ao).group()
+        
     def csv(self):
         return '{:>2d}, {:<2s}, {:<4s}, {:>4.1f}'.format(self.index, self.atom, self.ao, self.val)
 
