@@ -3,13 +3,13 @@ from sys import path
 import numpy as np
 from numpy.testing import assert_almost_equal
 path.insert(0, '../../')
-from qgrep.population.orbital_pop import ReducedOrbitalPopulation as ROP, MOrbital, AO_Contrib, Group_Contrib
+from qgrep.population.orbital_pop import OrbitalPopulation as OP, MOrbital, AO_Contrib, Group_Contrib
 
 
 class TestReducedOrbPop(unittest.TestCase):
 
     def test_read(self):
-        rop = ROP('h2o.dat')
+        rop = OP('h2o.dat')
         ao_contrib = AO_Contrib(1, 'O', 'px', 100.0)
         orb = MOrbital()
         self.assertEqual(rop.orb_list[4].contributions[0], ao_contrib)
@@ -23,19 +23,19 @@ class TestReducedOrbPop(unittest.TestCase):
         self.assertEqual(rop[2], mo)
 
     def test_homo_lumo_somo(self):
-        rop = ROP('h2o.dat')
+        rop = OP('h2o.dat')
         self.assertEqual(rop.homo, 4)
         self.assertEqual(rop.lumo, 5)
         self.assertEqual(rop.somo, [])
         
     def test_atom_contract(self):
-        rop = ROP('h2o.dat')
+        rop = OP('h2o.dat')
         atom_contract = rop.atom_contract()
         self.assertEqual(atom_contract[5].contributions[0].val, 34.1)
         self.assertEqual(atom_contract[8].contributions[1].val, 11.5)
         
     def test_am_contract(self):
-        rop = ROP('h2o.dat')
+        rop = OP('h2o.dat')
         am_contract = rop.am_contract()
         self.assertEqual(am_contract[5].contributions[0].val, 34.1)
         self.assertEqual(am_contract[8].contributions[2].val,  9.8)

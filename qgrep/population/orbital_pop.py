@@ -5,8 +5,8 @@ from copy import deepcopy
 
 am_types = ['s', 'p', 'd', 'f', 'g', 'h']
 
-class ReducedOrbitalPopulation:
-    """Löwdin Reduced Orbital Population class (ROP for short)"""
+class OrbitalPopulation:
+    """Löwdin Orbital Population class (OP for short)"""
 
     def __init__(self, file_name='', orb_list=None, method='lowdin'):
         if file_name:
@@ -82,7 +82,7 @@ class ReducedOrbitalPopulation:
                 contribs.append(contrib)
             orb_list.append(MOrbital(mo.index, mo.energy, mo.occupation, contribs))
 
-        return ReducedOrbitalPopulation(orb_list=orb_list)
+        return OrbitalPopulation(orb_list=orb_list)
 
     @property
     def homo(self):
@@ -153,13 +153,13 @@ class ReducedOrbitalPopulation:
         orb_list = []
         for orb in self:
             orb_list.append(orb.atom_contract())
-        return ReducedOrbitalPopulation(orb_list=orb_list)
+        return OrbitalPopulation(orb_list=orb_list)
             
     def am_contract(self):
         orb_list = []
         for orb in self:
             orb_list.append(orb.am_contract())
-        return ReducedOrbitalPopulation(orb_list=orb_list)
+        return OrbitalPopulation(orb_list=orb_list)
             
 
     def crop(self, max_num=5, min_num=2, cutoff=5):
@@ -179,13 +179,13 @@ class ReducedOrbitalPopulation:
                     break
             orb_list.append(MOrbital(mo.index, mo.energy, mo.occupation, contribs))
 
-        return ReducedOrbitalPopulation(orb_list=orb_list)
+        return OrbitalPopulation(orb_list=orb_list)
 
     def range(self, low, high):
         """
         Make an ROP with a restricted range of orbitals
         """
-        return ReducedOrbitalPopulation(orb_list=self.orb_list[low:high])
+        return OrbitalPopulation(orb_list=self.orb_list[low:high])
             
     @staticmethod
     def read(file_name, program='orca', method='lowdin'):

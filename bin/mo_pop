@@ -8,7 +8,7 @@ import importlib
 import sys
 sys.path.insert(0, '../')
 from qgrep.helper import read
-from qgrep.population.orbital_pop import ReducedOrbitalPopulation as ROP
+from qgrep.population.orbital_pop import OrbitalPopulation as OP
 
 
 parser = argparse.ArgumentParser(description='Get the population analysis for specified orbitals. '\
@@ -36,25 +36,25 @@ parser.add_argument('-w', '--write', help='Write to an output file',
 args = parser.parse_args()
 
 
-rop = ROP(args.input)
+op = OP(args.input)
 
-low = rop.homo - args.number + 1
-high = rop.lumo + args.number
+low = op.homo - args.number + 1
+high = op.lumo + args.number
 # Truncates the number of orbitals around the Fermi level
-rop = rop.range(low, high)
+op = op.range(low, high)
 
 # Don't contract twice
 if args.atom_contract:
-    rop = rop.atom_contract()
+    op = op.atom_contract()
 elif args.am_contract:
-    rop = rop.am_contract()
+    op = op.am_contract()
 
 if args.crop:
-    rop = rop.crop()
+    op = op.crop()
 # crop and am_contract already include sorting,
 #  but am_contract does not run if atom_contract does
 elif args.sorted and (not args.am_contract or args.atom_contract):
-    rop = rop.sorted()
+    op = op.sorted()
 
 if args.write or args.output:
     out_file = args.output
@@ -71,11 +71,11 @@ if args.write or args.output:
     if args.latex:
         format = 'latex'
 
-    rop.write(out_file, format=format)
+    op.write(out_file, format=format)
 elif args.latex:
-    rop.write('stdout', format='latex')
+    op.write('stdout', format='latex')
 elif args.format == 'str':
-    rop.write('stdout', format='csv')
+    op.write('stdout', format='str')
 else:
-    rop.write('stdout', format=args.format)
+    op.write('stdout', format=args.format)
 
