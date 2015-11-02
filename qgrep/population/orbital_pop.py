@@ -77,10 +77,10 @@ class ReducedOrbitalPopulation:
 
         orb_list = []
         for mo in self.orb_list:
-            aos = []
-            for ao_contrib in sorted(mo.contributions, key=sort_key, reverse=True):
-                aos.append(ao_contrib)
-            orb_list.append(MOrbital(mo.index, mo.energy, mo.occupation, aos))
+            contribs = []
+            for contrib in sorted(mo.contributions, key=sort_key, reverse=True):
+                contribs.append(contrib)
+            orb_list.append(MOrbital(mo.index, mo.energy, mo.occupation, contribs))
 
         return ReducedOrbitalPopulation(orb_list=orb_list)
 
@@ -168,16 +168,16 @@ class ReducedOrbitalPopulation:
         """
         orb_list = []
         for mo in self.orb_list:
-            aos = []
-            for ao_contrib in sorted(mo.contributions, key=lambda x: x.val, reverse=True):
-                if ao_contrib.val < cutoff and len(aos) >= min_num:
+            contribs = []
+            for contrib in sorted(mo.contributions, key=lambda x: x.val, reverse=True):
+                if contrib.val < cutoff and len(contribs) >= min_num:
                     break
 
-                aos.append(ao_contrib)
+                contribs.append(contrib)
 
-                if len(aos) == max_num:
+                if len(contribs) == max_num:
                     break
-            orb_list.append(MOrbital(mo.index, mo.energy, mo.occupation, aos))
+            orb_list.append(MOrbital(mo.index, mo.energy, mo.occupation, contribs))
 
         return ReducedOrbitalPopulation(orb_list=orb_list)
 
@@ -293,8 +293,8 @@ class MOrbital:
         return False
 
     def __str__(self):
-        ao_contrib_str = '\n'.join([str(ao_contrib) for ao_contrib in self.contributions])
-        return '{: >2d} {: > 6.4f} {:>3.2f}\n{}'.format(self.index, self.energy, self.occupation, ao_contrib_str)
+        contrib_str = '\n'.join([str(contrib) for contrib in self.contributions])
+        return '{: >2d} {: > 6.4f} {:>3.2f}\n{}'.format(self.index, self.energy, self.occupation, contrib_str)
 
     def csv(self):
         ao_contrib_str = '\n'.join([ao_contrib.csv() for ao_contrib in self.contributions])
@@ -391,7 +391,7 @@ class MOrbital:
 
 class AO_Contrib:
     """
-    Simple class containing an AO and its contribution to an orbital
+    Simple class containing an AO and its contribution to an MOrbital
     """
     def __init__(self, index, atom, ao, val):
         self.index = index
@@ -417,3 +417,27 @@ class AO_Contrib:
 
     def csv(self):
         return '{:>2d}, {:<2s}, {:<4s}, {:>4.1f}'.format(self.index, self.atom, self.ao, self.val)
+
+class Group_Contrib:
+    """
+    Simple class containing a group of atoms and their contribution to a MOrbital
+    """
+    def __init__(self, index, group, val):
+        self.index = index
+        self.group = group
+        self.val = val
+
+    def __eq__(self, other):
+        """
+        Use np.allclose or almost_equal???
+        """
+        if not isinstance(other, Group_Contrib):
+            return False
+        if self.index == other.index \
+                and self.group == other.group \
+                and self.val == other.val:
+            return True
+        return False
+
+    def __str__(self):
+        return '{:>2d} {:<10}: {:>4.1f}'.format(self.index, self.group, self.val)
