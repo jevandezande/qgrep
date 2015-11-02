@@ -3,7 +3,7 @@ from sys import path
 import numpy as np
 from numpy.testing import assert_almost_equal
 path.insert(0, '../../')
-from qgrep.population.orbital_pop import ReducedOrbitalPopulation as ROP, MOrbital, AO_Contrib
+from qgrep.population.orbital_pop import ReducedOrbitalPopulation as ROP, MOrbital, AO_Contrib, Group_Contrib
 
 
 class TestReducedOrbPop(unittest.TestCase):
@@ -71,6 +71,17 @@ class TestAO_Contrib(unittest.TestCase):
         
         self.assertTrue(ao_contrib1 == ao_contrib1_dup)
         self.assertFalse(ao_contrib1 == ao_contrib2)
+
+
+class TestGroup_Contrib(unittest.TestCase):
+    def test_Group_Contrib(self):
+        group_contrib1 = Group_Contrib(1, ['Mn', 'Br'], 0.3)
+        group_contrib1_dup = Group_Contrib(1, ['Mn', 'Br'], 0.3)
+        group_contrib2 = Group_Contrib(2, [], 0.5)
+        group_contrib3 = Group_Contrib(2, ['Mn', 'Cs', 'Mo'], 0.2)
+        
+        self.assertTrue(group_contrib1 == group_contrib1_dup)
+        self.assertFalse(group_contrib1 == group_contrib2)
 
 if __name__ == '__main__':
     unittest.main()
