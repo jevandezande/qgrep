@@ -183,13 +183,22 @@ class OrbitalPopulation:
 
     def range(self, low, high):
         """
-        Make an ROP with a restricted range of orbitals
+        Make an OP with a restricted range of orbitals
         """
         return OrbitalPopulation(orb_list=self.orb_list[low:high])
             
     @staticmethod
-    def read(file_name, program='orca', method='lowdin'):
-        """Read the reduced Löwdin orbital populations
+    def read(file_name, method='lowdin'):
+        """Read the orbital populations"""
+        if file_name.split('.')[-1] == 'csv':
+            return OrbitalPopulation._read_csv(file_name, method=method)
+        else:
+            return OrbitalPopulation._read_orca(file_name, method=method)
+
+    @staticmethod
+    def _read_orca(file_name, method='lowdin'):
+        """Löwdin"""
+        """
 ------------------------------------------
 LOEWDIN REDUCED ORBITAL POPULATIONS PER MO
 -------------------------------------------
@@ -262,6 +271,24 @@ Three blank lines
                 orb_list += orbs
         else:
             raise Exception('Unable to find the start of Reduced Orbital Population analysis')
+        return orb_list
+
+    @staticmethod
+    def _read_csv(file_name, method='lowdin'):
+        """Read the CSV output by the OrbitalPopulation class"""
+        with open(file_name) as f:
+            csv = f.read()
+        orb_list = []
+        for block in csv.split('\n\n'):
+            lines = block.strip().split('\n')
+            mo_index, orb_e, occ = lines[0].split(',')
+            mo_index, orb_e, occ = int(mo_index), float(orb_e), round(float(occ))
+            aocs = []
+            for line in lines[1:]:
+                index, atom, ao, val = line.split(',')
+                index, atom, ao, val = int(index), atom.strip(), ao.strip(), float(val)
+                aocs.append(AO_Contrib(index, atom, ao, val))
+            orb_list.append(MOrbital(mo_index, orb_e, occ, aocs))
 
         return orb_list
 
@@ -294,11 +321,11 @@ class MOrbital:
 
     def __str__(self):
         contrib_str = '\n'.join([str(contrib) for contrib in self.contributions])
-        return '{: >2d} {: > 6.4f} {:>3.2f}\n{}'.format(self.index, self.energy, self.occupation, contrib_str)
+        return '{: >2d} {: > 7.5f} {:>3.2f}\n{}'.format(self.index, self.energy, self.occupation, contrib_str)
 
     def csv(self):
         ao_contrib_str = '\n'.join([ao_contrib.csv() for ao_contrib in self.contributions])
-        return '{: >2d}, {: > 6.4f}, {:>3.2f}\n{}'.format(self.index, self.energy, self.occupation, ao_contrib_str)
+        return '{: >2d}, {: > 7.5f}, {:>3.2f}\n{}'.format(self.index, self.energy, self.occupation, ao_contrib_str)
 
     def latex(self):
         """

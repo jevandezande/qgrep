@@ -1,14 +1,15 @@
 import unittest
 from sys import path
+import os
 import numpy as np
 from numpy.testing import assert_almost_equal
-path.insert(0, '../../')
+path.insert(0, '../../../')
 from qgrep.population.orbital_pop import OrbitalPopulation as OP, MOrbital, AO_Contrib, Group_Contrib
 
 
 class TestReducedOrbPop(unittest.TestCase):
 
-    def test_read(self):
+    def test_read_write(self):
         rop = OP('h2o.dat')
         ao_contrib = AO_Contrib(1, 'O', 'px', 100.0)
         orb = MOrbital()
@@ -21,6 +22,11 @@ class TestReducedOrbPop(unittest.TestCase):
         contributions = [c1, c2, c3, c4]
         mo = MOrbital(2, -0.49905, 2, contributions)
         self.assertEqual(rop[2], mo)
+
+        rop.write('tmp.csv', 'csv')
+        rop_dup = OP('tmp.csv')
+        self.assertEqual(rop, rop_dup)
+        os.remove('tmp.csv')
 
     def test_homo_lumo_somo(self):
         rop = OP('h2o.dat')
