@@ -14,7 +14,7 @@ class OrbitalPopulation:
         elif orb_list is not None:
             self.orb_list = orb_list
         else:
-            sel.orb_list = []
+            self.orb_list = []
     
     def __eq__(self, other):
         return self.orb_list == other.orb_list
@@ -36,6 +36,16 @@ class OrbitalPopulation:
 
     def __str__(self):
         return '\n\n'.join([str(orb) for orb in self.orb_list])
+
+    def __sub__(self, other):
+        # TODO: Fix MOrbital indexing problem
+        if len(self) != len(other):
+            Warning('Differing number of orbitals, output will be truncated')
+    
+        min_len = min(len(self), len(other))
+        orb_list = [s - o for s, o in zip(self[:min_len], other[:min_len][:min_len])]
+
+        return OrbitalPopulation(orb_list=orb_list)
 
     def csv(self):
         return '\n\n'.join([orb.csv() for orb in self.orb_list])
@@ -124,22 +134,6 @@ class OrbitalPopulation:
                somos.append(i)
 
         return somos
-
-    #def __sub__(self, other):
-    #    if self.atoms != other.atoms:
-    #        raise SyntaxError('Atoms do not match')
-    #    npa_diff = NPA_Diff()
-    #    npa_diff.atoms = self.atoms
-    #    npa_diff.charges = self.charges - other.charges
-    #    return npa_diff
-
-    #def __add__(self, other):
-    #    if self.atoms != other.atoms:
-    #        raise SyntaxError('Atoms do not match')
-    #    npa = NPA()
-    #    npa.atoms = self.atoms
-    #    npa.charges = self.charges + other.charges
-    #    return npa
 
     def append(self, orbital):
         """
@@ -312,16 +306,38 @@ class MOrbital:
         """
         if self.index == other.index \
                 and np.isclose(self.energy, other.energy) \
-                and np.isclose(self.occupation, other.occupation):
+                and np.isclose(self.occupation, other.occupation) \
+                and len(self) == len(other):
             for s, o in zip(self.contributions, other.contributions):
                 if not s == o:
                     return False
             return True
         return False
 
+    def __len__(self):
+        return len(self.contributions)
+
     def __str__(self):
         contrib_str = '\n'.join([str(contrib) for contrib in self.contributions])
         return '{: >2d} {: > 7.5f} {:>3.2f}\n{}'.format(self.index, self.energy, self.occupation, contrib_str)
+
+    def __sub__(self, other):
+        if len(self) != len(other):
+            Warning('The MOrbitals are of different lengths.')
+            #raise ValueError('The MOrbitals are of different lengths.')
+        min_len = min(len(self), len(other))
+
+        index  = self.index if self.index  == other.index else 0
+        energy = self.energy - other.energy
+        occupation = self.occupation - other.occupation
+        contributions = []
+        for s, o in zip(self.contributions[:min_len], other.contributions[:min_len]):
+            contributions.append(s - o)
+
+        # Only appends from one list (the other is maxed out and returns an empty list)
+        contributions += self.contributions[min_len:] + other.contributions[min_len:]
+
+        return MOrbital(index, energy, occupation, contributions)
 
     def csv(self):
         ao_contrib_str = '\n'.join([ao_contrib.csv() for ao_contrib in self.contributions])
@@ -442,6 +458,14 @@ class AO_Contrib:
     def __str__(self):
         return '{:>2d} {:<2s} {:<4s}: {:>4.1f}'.format(self.index, self.atom, self.ao, self.val)
 
+    def __sub__(self, other):
+        index = self.index if self.index == other.index else 0
+        atom  = self.atom  if self.atom  == other.atom  else ''
+        ao    = self.ao    if self.ao    == other.ao    else ''
+        val   = self.val - other.val
+
+        return AO_Contrib(index, atom, ao, val)
+
     def csv(self):
         return '{:>2d}, {:<2s}, {:<4s}, {:>4.1f}'.format(self.index, self.atom, self.ao, self.val)
 
@@ -468,3 +492,11 @@ class Group_Contrib:
 
     def __str__(self):
         return '{:>2d} {:<10}: {:>4.1f}'.format(self.index, self.group, self.val)
+
+    def __sub__(self, other):
+        index = self.index if self.index == other.index else 0
+        group  = self.group if self.group  == other.group  else ''
+        val   = self.val - other.val
+
+        return Group_Contrib(index, atom, ao, val)
+
