@@ -1,6 +1,7 @@
 """Source for all gaussian related functions"""
 
 import re
+from qgrep.atom import Atom
 
 def get_geom(lines, geom_type='xyz', units='angstrom'):
     """
@@ -29,6 +30,6 @@ def get_geom(lines, geom_type='xyz', units='angstrom'):
         if line == end:
             break
         idx, an, a_type, x, y, z = line.split()
-        geom.append('{:<2s} {} {} {}'.format(an, x, y, z))
+        geom.append('{:<2s} {} {} {}'.format(Atom.atomic_number(an), x, y, z))
 
     return geom
