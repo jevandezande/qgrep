@@ -5,8 +5,7 @@ path.insert(0, '..')
 from qgrep import helper
 
 
-class TestGamessifier(unittest.TestCase):
-    """Tests the Molecule class"""
+class TestHelper(unittest.TestCase):
 
     def test_convert_energy(self):
         self.assertEqual(627.51, helper.convert_energy(1, 'hartree', 'kcal/mol'))
