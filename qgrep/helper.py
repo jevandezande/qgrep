@@ -33,10 +33,11 @@ def check_program(lines):
         "----- GAMESS execution script 'rungms' -----": 'gamess',
         'N A T U R A L   A T O M I C   O R B I T A L   A N D': 'nbo',
         'Entering Gaussian System, Link 0=g09': 'gaussian',
+        '***  PROGRAM SYSTEM MOLPRO  ***': 'molpro', # Printed after input file
     }
 
     program = None
-    for line in lines[:10]:
+    for line in lines[:200]:
         line = line.strip()
         if line in programs:
             program = programs[line]
