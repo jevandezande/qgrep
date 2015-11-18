@@ -38,6 +38,17 @@ def get_geom(lines, geom_type='xyz', units='bohr'):
     return geom
 
 
+def check_convergence(lines):
+    """Returns all the geometry convergence results"""
+    convergence_result = 'Minimum force:'
+    convergence_list = []
+    for line in lines:
+        if convergence_result in line:
+            convergence_list.append(line.strip())
+
+    return convergence_list
+
+
 def get_ir(lines):
     """ Returns all the frequencies and geometries in xyz format. """
 
