@@ -1,4 +1,6 @@
-
+import os
+import re
+import math
 
 def get_geom(lines, geom_type='xyz', units='bohr'):
     """Takes the lines of an cfour output file and returns its last geometry in
@@ -30,10 +32,10 @@ def get_geom(lines, geom_type='xyz', units='bohr'):
 
     # Remove the atomic number
     geom = []
-    for line in lines[geom_start: geom_end]:
-        atom, an, *xyz = line.split()
-        xyz = list(map(lambda x: float(x) / 1.889725989, xyz))
-        geom.append('{:s}\t{}\t{}\t{}\n'.format(atom, *xyz))
+#   for line in lines[geom_start: geom_end]:
+#       atom, an, *xyz = line.split()
+#       xyz = list(map(lambda x: float(x) / 1.889725989, xyz))
+#       geom.append('{:s}\t{}\t{}\t{}\n'.format(atom, *xyz))
 
     return geom
 
@@ -152,15 +154,60 @@ def get_conv_params(lines):
     return scf_conv, cc_conv, geo_conv, lineq_conv, int_thresh
 
 def get_diagnostics(lines):
-    """ Gets the S^2 and T1 diagnostics. """
-
-    s2 = 0.0 
+    """ Gets the S^2 and T1 and T2 diagnostics. """
+    s2 = maxT2 = t1a = t1b = t1 = 0.0 
+    end = case = caset1 = Nbeta = Nalpha = Ncore = 0
 
     for i in reversed(list(range(len(lines)))):
       if 'The expectation value of S**2 is' in lines[i]:
         s2 = lines[i].split()[6]
-  
-    return s2
+    
+      if 'Largest T2 amplitudes for spin case' in lines[i]:
+        maxT = 0
+        case = case + 1
+        if not case > 3:
+          if 'Largest T2 amplitudes for spin case AB' in lines[i]:
+            for a in range(15):
+              if 'Norm of T2' in lines[i+a]:
+                end = a - 1
+                break
+            for a in range(i+4,i+end):
+                c = b= re.findall(r'\]\s?-?\d.\d*',lines[a])
+                for j in range(3):
+                  c[j] = abs(float(b[j][1:]))
+                  if c[j] > maxT:
+                    maxT = c[j]
+            maxT = maxT
+          else:
+            for a in range(10):
+              if 'Norm of T2' in lines[i+a]:
+                end = a - 1
+                break
+            for a in range(i+3,i+end):
+                c = b= re.findall(r'\]\s?-?\d.\d*',lines[a])
+                for j in range(3):
+                  c[j] = abs(float(b[j][1:]))
+                  if c[j] > maxT:
+                    maxT = c[j]
+          if maxT > maxT2:
+            maxT2 = maxT
+
+      if 'Norm of T1AA' in lines[i]:
+        caset1 = caset1 + 1
+        if not caset1 > 2:
+          t1a = lines[i].split(':')[1][:-2]
+      if 'Norm of T1BB' in lines[i]:
+        caset1 = caset1 + 1
+        if not caset1 > 2:
+          t1b = lines[i].split(':')[1][:-2]
+      if 'total alpha spin electron number: ' in lines[i]:
+        Nalpha = float(lines[i].split(':')[1])
+      if 'total  beta spin electron number: ' in lines[i]:
+        Nbeta = float(lines[i].split(':')[1])
+      if 'frozen-core orbitals' in lines[i]:
+        Ncore = 2*float(lines[i].split()[2])
+    t1 = math.sqrt((pow(float(t1a),2) + pow(float(t1b),2))/(Nalpha + Nbeta - Ncore))
+    return (s2, maxT2, t1)
 
 def get_final_energy(lines):
 
