@@ -350,7 +350,10 @@ class Job:
         state = job_xml.get('state')
         owner = job_xml.find('JB_owner').text
         state2 = job_xml.find('state').text
-        queue = job_xml.find('hard_req_queue').text
+        try:
+            queue = job_xml.find('hard_req_queue').text
+        except AttributeError as e:
+            queue = 'debug.q'
         if (state == 'running' and state2 != 'r') or \
            (state == 'pending' and state2 != 'qw'):
             #logging.warning('States do not agree: job {}, states:{}, {}'.format(jid, state, state2))
