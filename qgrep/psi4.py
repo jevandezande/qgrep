@@ -240,3 +240,11 @@ set basis {1}
 {3}('{4}')
 """
     return template_style.format(geom, basis, other, jobtype, functional)
+
+
+def completed(lines):
+    '''Determine if the program has completed successfully'''
+    if lines[-1] == '*** PSI4 exiting successfully. Buy a developer a beer!\n':
+        return True
+    else:
+        return False
