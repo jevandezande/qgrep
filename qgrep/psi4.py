@@ -11,7 +11,10 @@ def get_geom(lines, geom_type='xyz', units='Angstroms'):
         geom_end = 0
         for i in reversed(list(range(len(lines)))):
             if end == lines[i]:
-                geom_end = i - 2
+                if lines[i-2] == '    Saving final (previous) structure.':
+                    geom_end = i - 3
+                else:
+                    geom_end = i - 2
                 break
         if geom_end == 0:
             return ''
@@ -67,6 +70,8 @@ def plot(lines, geom_type='xyz'):
         if end == lines[i]:
             geoms_end.append(i - 1)
 
+    # Last optimization step has an extra line after it
+    # but it is also a duplicate
     geoms = []
     length = geoms_end[0] - geoms_start[0]
     for i in range(len(geoms_start) - 1):
@@ -81,13 +86,12 @@ def plot(lines, geom_type='xyz'):
 
         geoms.append(geom)
 
-    # Last optimization step has an extra line after it
-    start = geoms_start[-1]
-    end = geoms_end[-1]
-    geom = ''
-    for line in lines[start + 1:end]:
-        geom += '\t'.join(line.split()) + '\n'
-    geoms.append(geom)
+    #start = geoms_start[-1]
+    #end = geoms_end[-1]
+    #geom = str(length) + '\nStep {0}\n'.format(len(geoms_start) - 1)
+    #for line in lines[start:end - 1]:
+    #    geom += '\t'.join(line.split()) + '\n'
+    #geoms.append(geom)
 
     return geoms
 
@@ -225,13 +229,14 @@ def get_energies(lines, energy_type='sp'):
     return energies
 
 
-def template(geom='', jobtype='opt', functional='B3LYP', basis='sto-3g'):
+def template(geom='', jobtype='opt', functional='B3LYP', basis='sto-3g', other=''):
     """Returns a template with the specified geometry and other variables"""
     template_style = """molecule {{
 {0}
 }}
 set basis {1}
+{2}
 
-{2}('{3}')
+{3}('{4}')
 """
-    return template_style.format(geom, basis, jobtype, functional)
+    return template_style.format(geom, basis, other, jobtype, functional)
