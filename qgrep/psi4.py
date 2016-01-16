@@ -12,9 +12,9 @@ def get_geom(lines, geom_type='xyz', units='Angstroms'):
         for i in reversed(list(range(len(lines)))):
             if end == lines[i]:
                 if lines[i-2] == '    Saving final (previous) structure.':
-                    geom_end = i - 3
-                else:
                     geom_end = i - 2
+                else:
+                    geom_end = i - 1
                 break
         if geom_end == 0:
             return ''
@@ -71,27 +71,24 @@ def plot(lines, geom_type='xyz'):
             geoms_end.append(i - 1)
 
     # Last optimization step has an extra line after it
-    # but it is also a duplicate
     geoms = []
     length = geoms_end[0] - geoms_start[0]
-    for i in range(len(geoms_start) - 1):
+    last = False
+    for i in range(len(geoms_start)):
+        if i == len(geoms_start) - 1 and completed(lines):
+            last = True
+
         start = geoms_start[i]
         end = geoms_end[i]
         if end - start != length:
             length = end - start
 
         geom = str(length) + '\nStep {0}\n'.format(i)
-        for line in lines[start:end]:
+
+        for line in lines[start:end - int(last)]:
             geom += '\t'.join(line.split()) + '\n'
 
         geoms.append(geom)
-
-    #start = geoms_start[-1]
-    #end = geoms_end[-1]
-    #geom = str(length) + '\nStep {0}\n'.format(len(geoms_start) - 1)
-    #for line in lines[start:end - 1]:
-    #    geom += '\t'.join(line.split()) + '\n'
-    #geoms.append(geom)
 
     return geoms
 
