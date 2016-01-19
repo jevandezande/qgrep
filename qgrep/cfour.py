@@ -32,10 +32,10 @@ def get_geom(lines, geom_type='xyz', units='bohr'):
 
     # Remove the atomic number
     geom = []
-#   for line in lines[geom_start: geom_end]:
-#       atom, an, *xyz = line.split()
-#       xyz = list(map(lambda x: float(x) / 1.889725989, xyz))
-#       geom.append('{:s}\t{}\t{}\t{}\n'.format(atom, *xyz))
+    for line in lines[geom_start: geom_end]:
+        atom, an, *xyz = line.split()
+        xyz = list(map(lambda x: float(x) / 1.889725989, xyz))
+        geom.append('{:s}\t{}\t{}\t{}\n'.format(atom, *xyz))
 
     return geom
 
