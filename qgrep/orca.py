@@ -470,3 +470,28 @@ def convergence(output_file):
         steps.append(Step(e_val, rg_val, mg_val, rs_val, ms_val))
         
     return Convergence(steps, [])
+
+
+def update_geom(infile='input.dat', outfile='output.dat'):
+    with open(infile) as f:
+        in_lines = f.readlines()
+    start = -1
+    end = -1
+    for i, line in enumerate(in_lines):
+        if line[0] == '*':
+            if len(line.strip()) > 1:
+                geom_type = line[1:].split()[0]
+                start = i + 1
+            else:
+                end = i
+                break
+
+    with open(outfile) as f:
+        out_lines = f.readlines()
+
+    geom = get_geom(out_lines, geom_type=geom_type)
+
+    updated = in_lines[:start] + geom + in_lines[end:]
+
+    with open(infile, 'w') as f:
+        f.writelines(updated)
