@@ -2,23 +2,23 @@
 import numpy as np
 
 
-def read(file):
+def read(file_name):
     """
     Reads the given file and returns its lines and the type of program that uses
     it
     """
-    with open(file, 'r') as f:
+    with open(file_name, 'r') as f:
         lines = f.readlines()
-    program = check_program(lines)
+    program = check_program(file_name)
 
     return lines, program
 
 
-def check_program(lines):
+def check_program(file_name):
     """
-    Takes the lines of an output file and determines what program wrote (or
+    Takes the name of an output file and determines what program wrote (or
     reads) them
-    :param lines: lines of an output file
+    :param file_name: name of the output file
     :return: string of the program or None
     """
     programs = {
@@ -37,11 +37,12 @@ def check_program(lines):
     }
 
     program = None
-    for line in lines[:200]:
-        line = line.strip()
-        if line in programs:
-            program = programs[line]
-            break
+    with open(file_name) as f:
+        for i in range(200):
+            line = f.readline().strip()
+            if line in programs:
+                program = programs[line]
+                break
 
     return program
 
