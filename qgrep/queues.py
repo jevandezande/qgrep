@@ -50,14 +50,14 @@ class Queues:
 
         out = line
 
-        name_form = '{} ({:2d}/{:2d})'
+        name_form = '{} ({:2d}/{:2d}/{:2d})'
         # Print a nice header
         for name in sorted(self.queues.keys()):
             queue = self.queues[name]
             # skip debug and large
             if name == 'debug' or name == 'large':
                 continue
-            out +=  BAR + '{:^28}'.format(name_form.format(name, queue.used, queue.avail))
+            out +=  BAR + '{:^28}'.format(name_form.format(name, queue.used, queue.avail, queue.queued))
         out += BAR + '\n' + line
         header = BAR + '  ID   USER    Job Name   St'
         out += header*q_num + BAR + '\n' + line
@@ -237,8 +237,8 @@ class Queue:
 
     def print_inline(self, max_num):
         """Print jobs inline"""
-        used_avail = '{} ({:2d}/{:2d})'.format(self.name, self.used, self.avail)
-        out = BAR + '{:^28s}'.format(used_avail) + BAR
+        used_avail_queued = '{} ({:2d}/{:2d}/{:2d})'.format(self.name, self.used, self.avail, self.queued)
+        out = BAR + '{:^28}'.format(used_avail_queued) + BAR
         for job in list(self.jobs.values())[:max_num]:
             out += str(job) + BAR
         # Add spaces if only a few queued
