@@ -380,8 +380,11 @@ def energy_levels(lines):
 
     clean = []
     for level in levels:
-        num, occ, hartree, eV = level.split()
-        clean.append((int(num), float(occ), float(hartree)))
+        num, occ, hartree, eV, *sym = level.split()
+        if sym:
+            clean.append((int(num), float(occ), float(hartree)))
+        else:
+            clean.append((int(num), float(occ), float(hartree), sym))
 
     info = OrderedDict()
     for i in range(len(clean)):
