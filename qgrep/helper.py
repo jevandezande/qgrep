@@ -2,23 +2,23 @@
 import numpy as np
 
 
-def read(file):
+def read(file_name):
     """
     Reads the given file and returns its lines and the type of program that uses
     it
     """
-    with open(file, 'r') as f:
+    with open(file_name, 'r') as f:
         lines = f.readlines()
-    program = check_program(lines)
+    program = check_program(file_name)
 
     return lines, program
 
 
-def check_program(lines):
+def check_program(file_name):
     """
-    Takes the lines of an output file and determines what program wrote (or
+    Takes the name of an output file and determines what program wrote (or
     reads) them
-    :param lines: lines of an output file
+    :param file_name: name of the output file
     :return: string of the program or None
     """
     programs = {
@@ -37,11 +37,12 @@ def check_program(lines):
     }
 
     program = None
-    for line in lines[:200]:
-        line = line.strip()
-        if line in programs:
-            program = programs[line]
-            break
+    with open(file_name) as f:
+        for i in range(200):
+            line = f.readline().strip()
+            if line in programs:
+                program = programs[line]
+                break
 
     return program
 
@@ -76,12 +77,13 @@ def find_input_program(in_file):
         
 
 
+# Values from NIST
 energy_conversions = {
-    'hartree': {'hartree': 1, 'kJ/mol': 2625.50, 'kcal/mol': 627.51, 'eV': 27.212, '1/cm': 2.1947e5},
+    'hartree': {'hartree': 1, 'kJ/mol': 2625.49962, 'kcal/mol': 627.509, 'eV': 27.21138602, '1/cm': 2.194746313702e5},
     'kJ/mol': {'hartree': 3.8088e-4, 'kJ/mol': 1, 'kcal/mol': 0.23901, 'eV': 1.0364e-2, '1/cm': 83.593},
     'kcal/mol': {'hartree': 1.5936e-3, 'kJ/mol': 4.1840, 'kcal/mol': 1, 'eV': 4.3363e-2, '1/cm': 349.75},
     'eV': {'hartree': 3.6749e-2, 'kJ/mol': 96.485, 'kcal/mol': 23.061, 'eV': 1, '1/cm': 8065.5},
-    '1/cm': {'hartree': 4.5563e-6, 'kJ/mol': 1.1963e-2, 'kcal/mol': 2.8591e-3, 'eV': 1.2398e-4, '1/cm': 1}
+    '1/cm': {'hartree': 4.556335252767e-6, 'kJ/mol': 1.1963e-2, 'kcal/mol': 2.8591e-3, 'eV': 1.2398e-4, '1/cm': 1}
 }
 
 

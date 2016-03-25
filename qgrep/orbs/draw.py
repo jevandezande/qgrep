@@ -46,7 +46,7 @@ def ray_trace(file_name):
     """
     subprocess.call("/usr/local/bin/povray {}".format(file_name), shell=True)
 
-def draw_folder(folder, options, files='*.molden'):
+def draw_folder(options, folder, files='*.molden'):
     """
     Draw all of the files in a folder
 
@@ -81,5 +81,26 @@ def draw_folder(folder, options, files='*.molden'):
             os.chdir(draw_dir)
             for orb in range(options['start'], options['end']):
                 print("Ray-tracing orbital: {}\n\n".format(orb))
+                make_ini('{}.{}'.format(name, orb), options)
                 ray_trace("{}.{}.pov.ini".format(name, orb))
             os.chdir(start_dir)
+
+def make_ini(name, options):
+    ini = '''Input_File_Name={0}.pov
+Output_to_File=true
+Output_File_Type=N
+Output_File_Name={0}.png
+Width=2032
+Height=2004
+Antialias=true
+Antialias_Threshold=0.01
+Antialias_Depth=4
+Display=true
+Pause_When_Done=true
+Quality=11
+Sampling_Method=1
+Warning_Level=5
+Verbose=false
+'''
+    open(name + '.pov.ini', 'w').write(ini.format(name))
+
