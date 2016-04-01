@@ -47,8 +47,8 @@ class Contraction:
 
     def __eq__(self, other):
         """Check if the two contractions are the same"""
-        return self.func_type == other.func_type and (
-            self.values == other.values).all()
+        return self.func_type == other.func_type and \
+            np.isclose(self.values, other.values).all()
 
     @staticmethod
     def check_exps(exps):
