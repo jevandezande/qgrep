@@ -234,7 +234,8 @@ class BasisSet:
         else:
             raise SyntaxError(
                 "Only gaussian94 style basis sets are currently supported.")
-        basis_set_str = open(in_file).read().strip()
+        with open(in_file) as f:
+            basis_set_str = f.read().strip()
         # Split into atoms
         for chunk in basis_set_str.split(atom_separator):
             if len(chunk) == 0:

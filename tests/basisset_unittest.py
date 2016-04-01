@@ -173,9 +173,11 @@ class TestBasisSet(unittest.TestCase):
     def test_readprint_basis(self):
         """Test read_basis and print_basis"""
         test_file = 'basis.gbs.tmp'
-        open(test_file, 'w').write(self.basis_set.print('gaussian94'))
+        with open(test_file, 'w') as f:
+            f.write(self.basis_set.print('gaussian94'))
         self.basis_set.read_basis_set(test_file, 'gaussian94')
-        open(test_file, 'w').write(self.basis_set.print('gamess'))
+        with open(test_file, 'w') as f:
+            f.write(self.basis_set.print('gamess'))
         self.basis_set.read_basis_set(test_file, 'gamess')
         os.remove(test_file)
         self.assertRaises(SyntaxError, self.basis_set.print, 'turbomole')
