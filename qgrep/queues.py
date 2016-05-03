@@ -91,11 +91,13 @@ class Queues:
             out += BAR + '\n'
         out += line
 
-        out += self.queues['large'].print_inline(q_num - 1) + '\n'
-        out += line
-        out += self.queues['debug'].print_inline(q_num - 1) + '\n'
+        if 'large' in self.queues:
+            out += self.queues['large'].print_inline(q_num - 1) + '\n' + line
+        if 'debug' in self.queues:
+            out += self.queues['debug'].print_inline(q_num - 1) + '\n' + line
+
         # Remove newline
-        out += line[:-1]
+        out = out[:-1]
 
         return out
         
