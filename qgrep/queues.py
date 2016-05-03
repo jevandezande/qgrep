@@ -326,9 +326,9 @@ class Job:
         
         # Bold the user's jobs
         if self.owner == getpass.getuser():
-            owner = colors.bold + self.owner[:5] + colors.normal
+            owner = colors.bold + '{:5.5s}'.format(self.owner) + colors.normal
         else:
-            owner = self.owner[:5]
+            owner = '{:5.5s}'.format(self.owner)
 
         return job_form.format(int(self.id), owner, self.name[:12],
                                job_colors[self.state], self.state[:2])
