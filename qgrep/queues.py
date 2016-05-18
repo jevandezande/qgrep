@@ -8,7 +8,7 @@ import getpass
 #import logging
 from qgrep.helper import colors
 
-SIZES = {'debug': 1, 'gen3': 12, 'gen4': 45, 'gen5': 4, 'large': 1}
+SIZES = {'debug': 1, 'gen3': 12, 'gen4': 45, 'gen5': 4, 'gen6': 19, 'large': 1}
 BAR = colors.purple + '|' + colors.normal
 #logging.basicConfig(filename='.qgrep.log',level=logging.CRITICAL)
 
@@ -78,7 +78,7 @@ class Queues:
                 # Add how many more jobs are running in each queue
                 for queue in job_list:
                     if len(queue) > numjobs:
-                        out += BAR + '         \033[1m{: >+3} jobs\033[0m           '.format(len(queue) - numjobs)
+                        out += BAR + '        \033[1m{: >+5} jobs\033[0m          '.format(len(queue) - numjobs)
                     else:
                         out += blank
                 out += BAR + '\n'
