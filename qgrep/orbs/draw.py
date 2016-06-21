@@ -46,6 +46,7 @@ def ray_trace(file_name):
     """
     subprocess.call("/usr/local/bin/povray {}".format(file_name), shell=True)
 
+
 def draw_folder(options, folder, files='*.molden'):
     """
     Draw all of the files in a folder
@@ -85,6 +86,7 @@ def draw_folder(options, folder, files='*.molden'):
                 ray_trace("{}.{}.pov.ini".format(name, orb))
             os.chdir(start_dir)
 
+
 def make_ini(name, options):
     ini = '''Input_File_Name={0}.pov
 Output_to_File=true
@@ -104,3 +106,26 @@ Verbose=false
 '''
     open(name + '.pov.ini', 'w').write(ini.format(name))
 
+
+mol_script_form = """background white
+write {pic_format} @{{"orbs/{name}." + i + ".{ext}"}}
+"""
+
+def draw_mol(file_name, options):
+    """
+    Make the molecule files
+    :file_name: name of the molden file
+    :options: rendering options dictionary
+
+    Note: if using POVRay this only produces the pov files,
+          ray_trace must be run separately
+    """
+    name = file_name.split('.')[0]
+    script = mol_script_form.format(name=name, **options)
+    open("orbs.jmol", "w").write(script)
+
+    # Run
+    jmol_jar = '/home/jevandezande/bin/Jmol/build/Jmol.jar'
+    # -g controls window size, jmol adds 8x1 to the window (no idea why)
+    jmol = "java -jar {} {} -iLs orbs.jmol -g 492x499"
+    subprocess.call(jmol.format(jmol_jar, file_name), shell=True)
