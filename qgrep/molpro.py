@@ -1,7 +1,6 @@
 """Molpro functions"""
 
-import re
-from qgrep.atom import Atom
+import helper
 
 def get_geom(lines, geom_type='xyz', units='angstrom'):
     """
@@ -28,8 +27,9 @@ def get_geom(lines, geom_type='xyz', units='angstrom'):
     for line in lines[geom_start:]:
         if line == end:
             break
-        idx, atom, charge, x, y, z = line.split()
-        geom.append('{:<2s} {} {} {}'.format(atom, x, y, z))
+        idx, atom, charge, *xyz = line.split()
+        xyz = (q*helper.BOHR_TO_ANGSTROM for q in xyz)
+        geom.append('{:<2s} {} {} {}'.format(atom, *xyz))
 
     return geom
 

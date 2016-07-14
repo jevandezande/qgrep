@@ -1,6 +1,7 @@
 """A repository for various helper functions"""
 import numpy as np
 
+BOHR_TO_ANGSTROM=0.52917721067
 
 def read(file_name):
     """
