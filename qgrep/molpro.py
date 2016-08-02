@@ -33,9 +33,26 @@ def get_geom(lines, geom_type='xyz', units='angstrom'):
 
     return geom
 
-def get_energy(lines):
+def get_energy(lines, energy_type=''):
     """Get the energy"""
     # The energy will always be on the third line from the end, zeroth element
     energy = lines[-3].split()[0]
 
     return energy
+
+def check_convergence(lines):
+    """
+    Check the convergence
+    """
+    starts = []
+    for i, line in enumerate(lines):
+        if line[:19] == ' Optimization point':
+            starts.append(i)
+
+    convs = []
+    for start in starts:
+        for line in lines[:start]:
+            if line[:12] == ' Convergence':
+                n, grad, hessian = line.split()[-3:]
+                convs.append('{}  {}'.format(n, grad))
+    return convs
