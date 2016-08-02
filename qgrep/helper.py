@@ -35,6 +35,7 @@ def check_program(file_name):
         'N A T U R A L   A T O M I C   O R B I T A L   A N D': 'nbo',
         'Entering Gaussian System, Link 0=g09': 'gaussian',
         '***  PROGRAM SYSTEM MOLPRO  ***': 'molpro', # Printed after input file
+        'BAGEL - Freshly leavened quantum chemistry': 'bagel',
     }
 
     program = None
