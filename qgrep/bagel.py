@@ -1,6 +1,7 @@
 """Source for all orca related functions"""
 from qgrep.molecule import Molecule
 from operator import itemgetter
+from qgrep.helper import BOHR_TO_ANGSTROM
 
 import numpy as np
 
@@ -25,11 +26,18 @@ def get_geom(lines, type='xyz', units='angstrom'):
     if geom_end == -1:
         raise Exception('Could not find end of geometry')
 
+    scale = 1
+    if units == 'angstrom':
+        scale = BOHR_TO_ANGSTROM
+    elif units != 'bohr':
+        raise Exception('Invalid Units')
+
     geom = []
     line_form = '{:s} {} {} {}\n'
     for line in lines[geom_start: geom_end]:
-        atom, x, y, z = [q.strip('",') for q in itemgetter(3, 7, 8, 9)(line.split())]
-        geom.append(line_form.format(atom, x, y, z))
+        atom, *xyz = [q.strip('",') for q in itemgetter(3, 7, 8, 9)(line.split())]
+        xyz = [scale*float(q) for q in xyz]
+        geom.append(line_form.format(atom, *xyz))
 
     return geom
 
