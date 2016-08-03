@@ -26,7 +26,7 @@ def get_geom(lines, type='xyz', units='angstrom'):
         raise Exception('Could not find end of geometry')
 
     geom = []
-    line_form = '{:s} {} {} {}'
+    line_form = '{:s} {} {} {}\n'
     for line in lines[geom_start: geom_end]:
         atom, x, y, z = [q.strip('",') for q in itemgetter(3, 7, 8, 9)(line.split())]
         geom.append(line_form.format(atom, x, y, z))
@@ -83,3 +83,20 @@ def get_molecule(lines):
     Make a molecule object from the last geometry
     """
     return mol
+
+
+def convert_to_bagel_geom(geom_str):
+    """
+    Converts to a bagel formatted geometry (json format)
+    """
+    bagel_geom = ''
+    geom_form1 = '{{"atom" : "{:s}",  "xyz" : [{:>15.10f},{:>15.10f},{:>15.10f}] }},\n'
+    geom_form2 = '{{"atom" : "{:s}", "xyz" : [{:>15.10f},{:>15.10f},{:>15.10f}] }},\n'
+    for line in geom_str.strip().split('\n'):
+        atom, *xyz = line.split()
+        form = geom_form1
+        if len(atom) == 2:
+            form = geom_form2
+        bagel_geom += form.format(atom, *map(float, xyz))
+
+    return bagel_geom[:-2]
