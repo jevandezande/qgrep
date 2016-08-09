@@ -42,6 +42,13 @@ class Contraction:
             raise ValueError("All exponents must be greater than 0")
         self.values[item] = value
 
+    def __repr__(self):
+        """Make a nice represenation of the Contraction"""
+        mult_str = ''
+        if self.c2:
+            mult_str = 'x2'
+        return "<Contraction {:s} {:d}{}>".format(self.func_type, len(self.exps), mult_str)
+
     def __str__(self):
         """Return a string of the contraction"""
         return self.print()
@@ -146,6 +153,10 @@ class Basis:
                 return False
         return True
 
+    def __iter__(self):
+        for c in self.cons:
+            yield c
+
     def print(self, style='gaussian94', print_name=True):
         """Print all contractions in the specified format"""
         out = ''
@@ -157,7 +168,7 @@ class Basis:
                 out += '{}\n'.format(self.atom, len(self))
         else:
             raise SyntaxError('Only gaussian94 and gamess currently supported')
-        return out + ''.join([c.print(style, self.atom) for c in self.cons])
+        return out + ''.join([c.print(style, self.atom) for c in self])
 
 
 class BasisSet:

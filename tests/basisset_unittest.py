@@ -51,7 +51,7 @@ class TestContraction(unittest.TestCase):
         self.assertEqual([0.3, 0.4, 0.3], list(self.conp.coeffs))
         self.assertEqual([0.4, 0.6], list(self.cond.coeffs2))
 
-    def test_print(self):
+    def test_reprprint(self):
         """Test print"""
         s_gamess = '''S     2
   1         1.0000000   0.5000000
@@ -67,6 +67,9 @@ class TestContraction(unittest.TestCase):
         0.4000000   0.3000000   0.3000000
         3.0000000   0.5000000   0.6000000
 '''
+        self.assertEqual('<Contraction S 2>', repr(self.cons))
+        self.assertEqual('<Contraction P 3>', repr(self.conp))
+        self.assertEqual('<Contraction SP 3x2>', repr(self.consp))
         self.assertEqual(s_gamess, self.cons.print('gamess'))
         self.assertEqual(p_gaussian94, self.conp.print())
         #print(self.consp.print())
