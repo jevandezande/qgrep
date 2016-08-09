@@ -203,6 +203,10 @@ class BasisSet:
         """Print the basis in gaussian94 style"""
         return self.print(style='gaussian94')
 
+    def __iter__(self):
+        for basis in self.atoms.values():
+            yield basis
+
     @staticmethod
     def check_basis_set(atoms):
         """Check a BasisSet"""
@@ -269,7 +273,8 @@ class BasisSet:
         if style == 'bagel':
             out = OrderedDict()
             for atom in self.values:
-                pass
+                for contraction in atom:
+                    pass
             out = json.dumps(out)
             pass
         elif style in ['gaussian94', 'gamess']:
@@ -280,7 +285,7 @@ class BasisSet:
                 separator = '\n'
             # TODO: sort according to periodic table
             out += separator.join(
-                [basis.print(style) for basis in self.atoms.values()])
+                [basis.print(style) for basis in self])
 
             return out + separator
         else:
@@ -288,5 +293,5 @@ class BasisSet:
 
     def values(self):
         """Returns a list of list of np.array(exp, coeff, *coeff2)"""
-        vals = [[con.values for con in basis] for basis in self.atoms.values()]
+        vals = [[con.values for con in basis] for basis in self]
         return vals

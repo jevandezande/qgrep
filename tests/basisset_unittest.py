@@ -131,12 +131,12 @@ class TestBasisSet(unittest.TestCase):
     def setUp(self):
         cons = Contraction('S', [1, 2], [0.5, 0.5])
         conp = Contraction('P', [0.01, 0.2, 1], [0.3, 0.4, 0.3])
-        h = Basis('H', [cons, conp])
+        self.h = Basis('H', [cons, conp])
         cons = Contraction('S', [0.1, 0.4], [0.6, 0.4])
         consp = Contraction('SP', [0.1, 0.4, 3], [0.2, 0.3, 0.5], [0.1, 0.3, 0.6])
         self.c = Basis('C', [cons, consp])
 
-        atoms = OrderedDict([('H', h), ('C', self.c)])
+        atoms = OrderedDict([('H', self.h), ('C', self.c)])
         self.basis_set = BasisSet(atoms)
 
     def test_getsetdeleq(self):
@@ -157,6 +157,11 @@ class TestBasisSet(unittest.TestCase):
         atoms = OrderedDict([('H', h), ('C', c)])
         basis_set2 = BasisSet(atoms)
         self.assertEqual(basis_set2, self.basis_set)
+
+    def test_iter(self):
+        bs_it = iter(self.basis_set)
+        self.assertEqual(self.h, next(bs_it))
+        self.assertEqual(self.c, next(bs_it))
 
     def test_check_basis_set(self):
         """Test check_basis_set"""
