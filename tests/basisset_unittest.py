@@ -179,15 +179,18 @@ class TestBasisSet(unittest.TestCase):
         bad_bs = OrderedDict([('H', 1)])
         self.assertRaises(SyntaxError, self.basis_set.change_basis_set, (bad_bs,))
 
-    def test_readprint_basis(self):
-        """Test read_basis and print_basis"""
-        test_file = 'basis.gbs.tmp'
+    def test_reprreadprint(self):
+        """Test read and print"""
+        test_file = 'my_basis.gbs.tmp'
         with open(test_file, 'w') as f:
             f.write(self.basis_set.print('gaussian94'))
-        bs1 = BasisSet.read_basis_set(test_file, 'gaussian94')
+        bs1 = BasisSet.read(test_file, 'gaussian94')
+        self.assertEqual('<BasisSet my_basis>', repr(bs1))
         with open(test_file, 'w') as f:
             f.write(bs1.print('gamess'))
-        bs2 = BasisSet.read_basis_set(test_file, 'gamess')
+        bs2 = BasisSet.read(test_file, 'gamess')
+
+        self.assertEqual(bs1, bs2)
         os.remove(test_file)
         self.assertRaises(SyntaxError, bs2.print, 'turbomole')
 

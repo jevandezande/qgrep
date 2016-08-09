@@ -180,12 +180,15 @@ class Basis:
 class BasisSet:
     """A BasisSet, which consists of the basis for multiple atoms"""
 
-    def __init__(self, atoms=OrderedDict()):
+    def __init__(self, atoms=None, name=''):
         """Atoms is a dictionary of atom:Basis"""
-        if isinstance(atoms, OrderedDict):
+        self.am = 'spherical'
+        self.name = name
+        if atoms is None:
+            self.atoms = OrderedDict()
+        elif isinstance(atoms, OrderedDict):
             BasisSet.check_basis_set(atoms)
             self.atoms = atoms
-            self.am = 'spherical'
         else:
             raise SyntaxError("Invalid input basis set, must use an OrderedDict")
 
@@ -216,6 +219,9 @@ class BasisSet:
         """Check if the item (atom) is in atoms"""
         return item in self.atoms
 
+    def __repr__(self):
+        return '<BasisSet {:s}>'.format(self.name)
+
     def __str__(self):
         """Print the basis in gaussian94 style"""
         return self.print(style='gaussian94')
@@ -241,12 +247,10 @@ class BasisSet:
         self.atoms = basis_set
 
     @staticmethod
-    def read_basis_set(in_file="basis.gbs", style='gaussian94'):
+    def read(in_file="basis.gbs", style='gaussian94'):
         """Read a gaussian94 style basis set"""
         # assume spherical
-        bs = BasisSet()
-        bs.am = 'spherical'
-        bs.atoms = OrderedDict()
+        bs = BasisSet(name=in_file.split('.')[0])
         num_skip = 0
         if style == 'gaussian94':
             atom_separator = '****'
