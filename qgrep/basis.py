@@ -169,10 +169,8 @@ class BasisSet:
             BasisSet.check_basis_set(atoms)
             self.atoms = atoms
             self.am = 'spherical'
-        elif isinstance(atoms, str):
-            self.read_basis(atoms)
         else:
-            raise SyntaxError("Invalid input basis set")
+            raise SyntaxError("Invalid input basis set, must use an OrderedDict")
 
     def __getitem__(self, item):
         """Return the basis for the specified atom"""
