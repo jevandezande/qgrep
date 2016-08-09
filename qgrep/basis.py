@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import numpy as np
 
+SUPPORTED = ['guassian94', 'gamess', 'bagel']
 
 class Contraction:
     """A contraction of basis functions"""
@@ -220,11 +221,13 @@ class BasisSet:
         BasisSet.check_basis_set(basis_set)
         self.atoms = basis_set
 
-    def read_basis_set(self, in_file="basis.gbs", style='gaussian94'):
+    @staticmethod
+    def read_basis_set(in_file="basis.gbs", style='gaussian94'):
         """Read a gaussian94 style basis set"""
         # assume spherical
-        self.am = 'spherical'
-        self.atoms = OrderedDict()
+        bs = BasisSet()
+        bs.am = 'spherical'
+        bs.atoms = OrderedDict()
         num_skip = 0
         if style == 'gaussian94':
             atom_separator = '****'
@@ -258,23 +261,32 @@ class BasisSet:
                     coeffs2 = coeffs2[0]
                 con_list.append(Contraction(am, exps, coeffs, coeffs2))
                 i += num + 1
-            self.atoms[name] = Basis(name, con_list)
+            bs.atoms[name] = Basis(name, con_list)
+
+        return bs
 
     def print(self, style='gaussian94'):
         """Print the basis to a string"""
         out = ''
-        if style == 'gaussian94':
-            separator = '****\n'
-            out = separator
-        elif style == 'gamess':
-            separator = '\n'
-        else:
-            raise SyntaxError('Only gaussian94 and gamess currently supported')
-        # Ideally would be sorted according to periodic table
-        out += separator.join(
-            [basis.print(style) for basis in self.atoms.values()])
+        if style == 'bagel':
+            out = OrderedDict()
+            for atom in self.values:
+                pass
+            out = json.dumps(out)
+            pass
+        elif style in ['gaussian94', 'gamess']:
+            if style == 'gaussian94':
+                separator = '****\n'
+                out = separator
+            elif style == 'gamess':
+                separator = '\n'
+            # TODO: sort according to periodic table
+            out += separator.join(
+                [basis.print(style) for basis in self.atoms.values()])
 
-        return out + separator
+            return out + separator
+        else:
+            raise SyntaxError('Only {} currently supported'.format(', '.join(SUPPORTED)))
 
     def values(self):
         """Returns a list of list of np.array(exp, coeff, *coeff2)"""

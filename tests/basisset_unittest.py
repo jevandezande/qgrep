@@ -175,12 +175,12 @@ class TestBasisSet(unittest.TestCase):
         test_file = 'basis.gbs.tmp'
         with open(test_file, 'w') as f:
             f.write(self.basis_set.print('gaussian94'))
-        self.basis_set.read_basis_set(test_file, 'gaussian94')
+        bs1 = BasisSet.read_basis_set(test_file, 'gaussian94')
         with open(test_file, 'w') as f:
-            f.write(self.basis_set.print('gamess'))
-        self.basis_set.read_basis_set(test_file, 'gamess')
+            f.write(bs1.print('gamess'))
+        bs2 = BasisSet.read_basis_set(test_file, 'gamess')
         os.remove(test_file)
-        self.assertRaises(SyntaxError, self.basis_set.print, 'turbomole')
+        self.assertRaises(SyntaxError, bs2.print, 'turbomole')
 
     def test_values(self):
         """Test values"""
