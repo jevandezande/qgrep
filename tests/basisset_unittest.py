@@ -97,7 +97,7 @@ class TestBasis(unittest.TestCase):
         basis2 = Basis('C', [self.consp])
         self.assertEqual(basis, basis2)
 
-    def test_print(self):
+    def test_reprstrprint(self):
         """Test print"""
         c_gamess = '''C
 S     2
@@ -125,7 +125,8 @@ SP    3
         0.4000000   0.3000000   0.3000000
         3.0000000   0.5000000   0.6000000
 '''
-        self.assertEqual(c_gaussian94, self.basis.print())
+        self.assertEqual('<Basis C 3>', repr(self.basis))
+        self.assertEqual(c_gaussian94, str(self.basis))
         self.assertEqual(c_gamess, self.basis.print('gamess'))
 
 

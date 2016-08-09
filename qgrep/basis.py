@@ -157,6 +157,12 @@ class Basis:
         for c in self.cons:
             yield c
 
+    def __repr__(self):
+        return "<Basis {:s} {:d}>".format(self.atom, len(self.cons))
+
+    def __str__(self):
+        return self.print()
+
     def print(self, style='gaussian94', print_name=True):
         """Print all contractions in the specified format"""
         out = ''
