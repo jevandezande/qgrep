@@ -8,7 +8,7 @@ import getpass
 #import logging
 from qgrep.helper import colors
 
-SIZES = {'debug': 1, 'gen3': 12, 'gen4': 45, 'gen5': 4, 'gen6': 19, 'large': 1}
+SIZES = {'debug': 1, 'gen4': 45, 'gen5': 4, 'gen6': 19, 'large': 1}
 BAR = colors.purple + '|' + colors.normal
 #logging.basicConfig(filename='.qgrep.log',level=logging.CRITICAL)
 
@@ -163,6 +163,9 @@ class Queues:
                     #<Queue-List>
                     #   <name>gen3.q@v10.cl.ccqc.uga.edu</name>
                     name = node.find('name').text.split('.')[0]
+                    # If we don't want to display the queue
+                    if not name in SIZES:
+                        continue
                     if not name in self.queues:
                         self.queues[name] = Queue(SIZES[name], name)
 
