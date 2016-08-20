@@ -28,7 +28,7 @@ if program:
     try:
         mod = importlib.import_module('qgrep.' + program)
         if hasattr(mod, 'get_geom'):
-            geom_str = '\n'.join(mod.get_geom(lines, 'xyz', args.units))
+            geom_str = ''.join(mod.get_geom(lines, 'xyz', args.units))
             out = convert_to_bagel_geom(geom_str)
             open(args.output, 'w').write(out)
         else:
