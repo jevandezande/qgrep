@@ -95,8 +95,7 @@ def get_molecule(lines):
 
 def template(geom='', jobtype='optimize', functional='B3LYP', basis='svp'):
     """Returns a template with the specified geometry and other variables"""
-    template_style = """
-{{ "bagel" : [
+    template_style = """{{ "bagel" : [
 
 {{
   "title" : "molecule",
