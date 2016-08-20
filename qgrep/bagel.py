@@ -93,6 +93,36 @@ def get_molecule(lines):
     return mol
 
 
+def template(geom='', jobtype='optimize', functional='B3LYP', basis='svp'):
+    """Returns a template with the specified geometry and other variables"""
+    template_style = """
+{{ "bagel" : [
+
+{{
+  "title" : "molecule",
+  "symmetry" : "C1",
+  "basis" : "{1}",
+  "df_basis" : "svp-jkfit",
+  "angstrom" : false,
+  "geometry" : [
+  {2}
+  ]
+}},
+
+{{
+  "title" : "{0}",
+  "method" : [ {{
+    "title" : "rohf",
+    "nact" : 0,
+    "thresh" : 1.0e-10
+  }} ]
+}}
+
+]}}
+"""
+    return template_style.format(jobtype, basis, geom)
+
+
 def convert_to_bagel_geom(geom_str):
     """
     Converts to a bagel formatted geometry (json format)
