@@ -34,7 +34,10 @@ if program:
         mod = importlib.import_module('qgrep.' + program)
         if hasattr(mod, 'template'):
             temp = mod.template(geom, args.jobtype, args.functional, args.basis)
-            with open('input.dat', 'w') as f:
+            input_file = 'input.dat'
+            if args.program == 'bagel':
+                input_file = 'input.json'
+            with open(input_file, 'w') as f:
                 f.write(temp)
         else:
             print(program + ' does not yet have template implemented.')
