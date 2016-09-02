@@ -3,8 +3,8 @@ import numpy as np
 
 SUPPORTED = ['guassian94', 'gamess', 'bagel']
 
-class Contraction:
-    """A contraction of basis functions"""
+class BasisFunction:
+    """A  primitive or a contraction of primitives"""
 
     def __init__(self, func_type, exps, coeffs, c2=None):
         if not c2:
@@ -15,14 +15,14 @@ class Contraction:
         if self.func_type == 'SP':
             if len(c2) == 0:
                 raise SyntaxError('Expected second set of coefficients for '
-                                  'combined contraction.')
+                                  'combined BasisFunction.')
 
 
         if len(exps) == 0 or len(exps) != len(coeffs):
             raise SyntaxError(('Need coefficients and exponents of the same'
                               'length, got: \n{}\n{}').format(exps, coeffs))
-        Contraction.check_exps(exps)
-        Contraction.check_coeffs(coeffs)
+        BasisFunction.check_exps(exps)
+        BasisFunction.check_coeffs(coeffs)
         if len(c2) > 0 and len(c2) != len(coeffs):
             raise SyntaxError('Second set of coefficients must have the same'
                               'number as the first set')
@@ -48,18 +48,18 @@ class Contraction:
         self.values[item] = value
 
     def __repr__(self):
-        """Make a nice represenation of the Contraction"""
+        """Make a nice represenation of the BasisFunction"""
         mult_str = ''
         if self.c2:
             mult_str = 'x2'
-        return "<Contraction {:s} {:d}{}>".format(self.func_type, len(self.exps), mult_str)
+        return "<BasisFunction {:s} {:d}{}>".format(self.func_type, len(self.exps), mult_str)
 
     def __str__(self):
-        """Return a string of the contraction"""
+        """Return a string of the BasisFunction"""
         return self.print()
 
     def __eq__(self, other):
-        """Check if the two contractions are the same"""
+        """Check if the two BasisFunctions are the same"""
         return self.func_type == other.func_type and \
             np.isclose(self.values, other.values).all()
 
@@ -81,7 +81,7 @@ class Contraction:
 
     @exps.setter
     def exps(self, values):
-        Contraction.check_exps(values)
+        BasisFunction.check_exps(values)
         self.values[:, 0] = values
 
     @property
@@ -102,22 +102,22 @@ class Contraction:
 
     def decontracted(self):
         """
-        Creates individual contractions with only a single gaussian
-        :yield: Contractions with a single element
+        Creates individual BasisFunctions with only a single gaussian
+        :yield: BasisFunctions with a single element
         """
         func_type, exps, coeffs = self.func_type, self.exps, self.coeffs
 
         if func_type == 'SP':
             coeffs2 = self.coeffs2
-            yield from Contraction('S', np.array(exps), np.array(coeffs)).decontracted()
-            yield from Contraction('P', np.array(exps), np.array(coeffs2)).decontracted()
+            yield from BasisFunction('S', np.array(exps), np.array(coeffs)).decontracted()
+            yield from BasisFunction('P', np.array(exps), np.array(coeffs2)).decontracted()
         else:
-            # Note: Does not decontract coeffs2, as it would generate the same contractions
+            # Note: Does not decontract coeffs2, as it would generate the same BasisFunctions
             for exp, coeff in zip(exps, coeffs):
-                yield Contraction(func_type, [exp], [1])
+                yield BasisFunction(func_type, [exp], [1])
 
     def print(self, style='gaussian94', atom=''):
-        """Print the contraction to a string"""
+        """Print the BasisFunction to a string"""
         num_coeffs = 1 + int(self.c2)
         form = '{:>17.7f}' + ' {:> 11.7f}' * num_coeffs
         out = '{:<2}    {}\n'.format(self.func_type, len(self))
@@ -146,68 +146,68 @@ class Contraction:
 class Basis:
     """A basis for an atom"""
 
-    def __init__(self, atom='', contractions=None):
-        if contractions is None:
-            contractions = []
+    def __init__(self, atom='', basis_functions=None):
+        if basis_functions is None:
+            basis_functions = []
         self.atom = atom
-        if not isinstance(contractions, list) or not all(
-                map(lambda x: isinstance(x, Contraction), contractions)):
-            raise SyntaxError("Expected a list of contractions")
-        self.cons = contractions
+        if not isinstance(basis_functions, list) or not all(
+                map(lambda x: isinstance(x, BasisFunction), basis_functions)):
+            raise SyntaxError("Expected a list of BasisFunctions")
+        self.basis_functions = basis_functions
 
     def __len__(self):
-        """Return the number of contractions"""
-        return len(self.cons)
+        """Return the number of BasisFunctions"""
+        return len(self.basis_functions)
 
     def __getitem__(self, i):
-        """Return the ith contraction"""
-        return self.cons[i]
+        """Return the ith BasisFunction"""
+        return self.basis_functions[i]
 
     def __setitem__(self, i, value):
-        """Sets the ith contraction"""
-        if not isinstance(value, Contraction):
+        """Sets the ith BasisFunction"""
+        if not isinstance(value, BasisFunction):
             raise SyntaxError(
-                "Expecting a Contraction object, instead got: {}".format(
+                "Expecting a BasisFunction object, instead got: {}".format(
                     type(value)))
-        self.cons[i] = value
+        self.basis_functions[i] = value
 
     def __delitem__(self, key):
         """Delete the selected key"""
-        del self.cons[key]
+        del self.basis_functions[key]
 
     def __eq__(self, other):
         """Check if the two basis are equivalent"""
-        if not len(self.cons) == len(other.cons):
+        if not len(self.basis_functions) == len(other.basis_functions):
             return False
-        for s, o in zip(self.cons, other.cons):
+        for s, o in zip(self.basis_functions, other.basis_functions):
             if not s == o:
                 return False
         return True
 
     def __iter__(self):
-        for c in self.cons:
+        for c in self.basis_functions:
             yield c
 
     def __repr__(self):
-        return "<Basis {:s} {:d}>".format(self.atom, len(self.cons))
+        return "<Basis {:s} {:d}>".format(self.atom, len(self.basis_functions))
 
     def __str__(self):
         return self.print()
 
     def decontracted(self):
         """
-        Generates a decontracted Basis. See Contration.decontracted()
-        :return: Basis with all Contractions decontracted
+        Generates a decontracted Basis. See BasisFunction.decontracted()
+        :return: Basis with all BasisFunctions decontracted
         """
-        cons = []
-        for con in self.cons:
-            cons += con.decontracted()
-        basis = Basis(self.atom, cons)
+        basis_functions = []
+        for con in self.basis_functions:
+            basis_functions += con.decontracted()
+        basis = Basis(self.atom, basis_functions)
 
         return basis
 
     def print(self, style='gaussian94', print_name=True):
-        """Print all contractions in the specified format"""
+        """Print all BasisFunctions in the specified format"""
         out = ''
         if style == 'gaussian94':
             if print_name:
@@ -321,7 +321,7 @@ class BasisSet:
             i = 0
             con_list = []
             while i < len(basis_chunk):
-                # Split into contractions
+                # Split into basis functions
                 am, num = basis_chunk[i].split()[:2]
                 num = int(num)
                 con = []
@@ -332,7 +332,7 @@ class BasisSet:
                 if coeffs2:
                     # Remove extra list
                     coeffs2 = coeffs2[0]
-                con_list.append(Contraction(am, exps, coeffs, coeffs2))
+                con_list.append(BasisFunction(am, exps, coeffs, coeffs2))
                 i += num + 1
             bs.atoms[name] = Basis(name, con_list)
 
@@ -340,8 +340,8 @@ class BasisSet:
 
     def decontracted(self):
         """
-        Generates a decontracted BasisSet. See Contration.decontracted()
-        :return: BasisSet with all Contractions decontracted
+        Generates a decontracted BasisSet. See BasisFunction.decontracted()
+        :return: BasisSet with all BasisFunctions decontracted
         """
         atoms = OrderedDict()
         for atom, basis in self.atoms.items():

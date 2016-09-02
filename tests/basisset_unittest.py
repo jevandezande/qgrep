@@ -1,55 +1,55 @@
 import unittest
 from sys import path
 path.insert(0, '..')
-from qgrep.basis import Contraction, Basis, BasisSet
+from qgrep.basis import BasisFunction, Basis, BasisSet
 import numpy as np
 from collections import OrderedDict
 import os
 
 
-class TestContraction(unittest.TestCase):
-    """Tests a basis contraction"""
+class TestBasisFunction(unittest.TestCase):
+    """Tests a BasisFunction"""
     def setUp(self):
-        self.cons = Contraction('S', [1, 2], [0.5, 0.5])
-        self.conp = Contraction('P', [0.01, 0.2, 1], [0.3, 0.4, 0.3])
-        self.cond = Contraction('D', [1, 2], [0.3, 0.7], [0.4, 0.6])
-        self.consp = Contraction('SP', [0.1, 0.4, 3], [0.2, 0.3, 0.5], [0.1, 0.3, 0.6])
+        self.bfs = BasisFunction('S', [1, 2], [0.5, 0.5])
+        self.bfp = BasisFunction('P', [0.01, 0.2, 1], [0.3, 0.4, 0.3])
+        self.bfd = BasisFunction('D', [1, 2], [0.3, 0.7], [0.4, 0.6])
+        self.bfsp = BasisFunction('SP', [0.1, 0.4, 3], [0.2, 0.3, 0.5], [0.1, 0.3, 0.6])
 
     def test_len(self):
         """Test __len__"""
-        self.assertEqual(2, len(self.cons))
-        self.assertEqual(3, len(self.conp))
-        self.assertEqual(2, len(self.cond))
-        self.assertEqual(3, len(self.consp))
+        self.assertEqual(2, len(self.bfs))
+        self.assertEqual(3, len(self.bfp))
+        self.assertEqual(2, len(self.bfd))
+        self.assertEqual(3, len(self.bfsp))
 
     def test_getseteq(self):
         """Test __getitem__ and __setitem__"""
         # Convert np.array to list to prevent error in case.py as the truth value of an array is ambiguous
-        self.assertEqual([1.0, 0.5], list(self.cons[0]))
+        self.assertEqual([1.0, 0.5], list(self.bfs[0]))
         # Convert to a list of lists
-        self.assertEqual([[0.01, 0.3], [1.0, 0.3]], list(map(list, self.conp[::2])))
+        self.assertEqual([[0.01, 0.3], [1.0, 0.3]], list(map(list, self.bfp[::2])))
 
-        self.cons[0] = [1, 2]
-        self.assertEqual([1.0, 2], list(self.cons[0]))
-        self.assertRaises(ValueError, self.cons.__setitem__, 1, [1, 2, 4])
-        self.cond[0] = [1, 0.2, 0.3]
-        self.assertEqual([1.0, 0.2, 0.3], list(self.cond[0]))
-        self.consp[0] = [1, 2, 4]
-        self.assertEqual([1, 2, 4], list(self.consp[0]))
-        self.assertRaises(ValueError, self.consp.__setitem__, 1, [1, 2])
+        self.bfs[0] = [1, 2]
+        self.assertEqual([1.0, 2], list(self.bfs[0]))
+        self.assertRaises(ValueError, self.bfs.__setitem__, 1, [1, 2, 4])
+        self.bfd[0] = [1, 0.2, 0.3]
+        self.assertEqual([1.0, 0.2, 0.3], list(self.bfd[0]))
+        self.bfsp[0] = [1, 2, 4]
+        self.assertEqual([1, 2, 4], list(self.bfsp[0]))
+        self.assertRaises(ValueError, self.bfsp.__setitem__, 1, [1, 2])
 
-        self.assertEqual(self.cons, self.cons)
+        self.assertEqual(self.bfs, self.bfs)
 
     def test_check_exps(self):
         """Test check_exps"""
-        Contraction.check_exps([1, 2])
-        self.assertRaises(ValueError, Contraction.check_exps, [1, 2, -3])
+        BasisFunction.check_exps([1, 2])
+        self.assertRaises(ValueError, BasisFunction.check_exps, [1, 2, -3])
 
     def test_exps_coeffs_coeffs2(self):
         """Test exps, coeffs, and coeffs2"""
-        self.assertEqual([1, 2], list(self.cons.exps))
-        self.assertEqual([0.3, 0.4, 0.3], list(self.conp.coeffs))
-        self.assertEqual([0.4, 0.6], list(self.cond.coeffs2))
+        self.assertEqual([1, 2], list(self.bfs.exps))
+        self.assertEqual([0.3, 0.4, 0.3], list(self.bfp.coeffs))
+        self.assertEqual([0.4, 0.6], list(self.bfd.coeffs2))
 
     def test_reprprint(self):
         """Test print"""
@@ -67,56 +67,56 @@ class TestContraction(unittest.TestCase):
         0.4000000   0.3000000   0.3000000
         3.0000000   0.5000000   0.6000000
 '''
-        self.assertEqual('<Contraction S 2>', repr(self.cons))
-        self.assertEqual('<Contraction P 3>', repr(self.conp))
-        self.assertEqual('<Contraction SP 3x2>', repr(self.consp))
-        self.assertEqual(s_gamess, self.cons.print('gamess'))
-        self.assertEqual(p_gaussian94, self.conp.print())
-        #print(self.consp.print())
-        self.assertEqual(sp_gaussian94, self.consp.print())
+        self.assertEqual('<BasisFunction S 2>', repr(self.bfs))
+        self.assertEqual('<BasisFunction P 3>', repr(self.bfp))
+        self.assertEqual('<BasisFunction SP 3x2>', repr(self.bfsp))
+        self.assertEqual(s_gamess, self.bfs.print('gamess'))
+        self.assertEqual(p_gaussian94, self.bfp.print())
+        #print(self.bfsp.print())
+        self.assertEqual(sp_gaussian94, self.bfsp.print())
 
     def test_decontracted(self):
         """Tests decontraction of basis function"""
-        con1 = Contraction('S', [1], [1])
-        con2 = Contraction('S', [2], [1])
-        decon1 = list(self.cons.decontracted())
-        self.assertEqual(decon1[0], con1)
-        self.assertEqual(decon1[1], con2)
+        bf1 = BasisFunction('S', [1], [1])
+        bf2 = BasisFunction('S', [2], [1])
+        decon1 = list(self.bfs.decontracted())
+        self.assertEqual(decon1[0], bf1)
+        self.assertEqual(decon1[1], bf2)
 
-        cons1 = Contraction('S', [0.1], [1])
-        cons2 = Contraction('S', [0.4], [1])
-        cons3 = Contraction('S', [3  ], [1])
-        conp1 = Contraction('P', [0.1], [1])
-        conp2 = Contraction('P', [0.4], [1])
-        conp3 = Contraction('P', [3  ], [1])
-        decon2 = list(self.consp.decontracted())
-        self.assertEqual(decon2[0], cons1)
-        self.assertEqual(decon2[1], cons2)
-        self.assertEqual(decon2[2], cons3)
-        self.assertEqual(decon2[3], conp1)
-        self.assertEqual(decon2[4], conp2)
-        self.assertEqual(decon2[5], conp3)
+        bfs1 = BasisFunction('S', [0.1], [1])
+        bfs2 = BasisFunction('S', [0.4], [1])
+        bfs3 = BasisFunction('S', [3  ], [1])
+        bfp1 = BasisFunction('P', [0.1], [1])
+        bfp2 = BasisFunction('P', [0.4], [1])
+        bfp3 = BasisFunction('P', [3  ], [1])
+        decon2 = list(self.bfsp.decontracted())
+        self.assertEqual(decon2[0], bfs1)
+        self.assertEqual(decon2[1], bfs2)
+        self.assertEqual(decon2[2], bfs3)
+        self.assertEqual(decon2[3], bfp1)
+        self.assertEqual(decon2[4], bfp2)
+        self.assertEqual(decon2[5], bfp3)
 
 
 class TestBasis(unittest.TestCase):
-    """Tests a basis, which contains basis contractions"""
+    """Tests a basis, which contains BasisFunctions"""
     def setUp(self):
-        self.cons = Contraction('S', [1, 2], [0.5, 0.5])
-        self.conp = Contraction('P', [0.01, 0.2, 1], [0.3, 0.4, 0.3])
-        self.consp = Contraction('SP', [0.1, 0.4, 3], [0.2, 0.3, 0.5], [0.1, 0.3, 0.6])
-        self.basis = Basis('C', [self.cons, self.conp, self.consp])
+        self.bfs = BasisFunction('S', [1, 2], [0.5, 0.5])
+        self.bfp = BasisFunction('P', [0.01, 0.2, 1], [0.3, 0.4, 0.3])
+        self.bfsp = BasisFunction('SP', [0.1, 0.4, 3], [0.2, 0.3, 0.5], [0.1, 0.3, 0.6])
+        self.basis = Basis('C', [self.bfs, self.bfp, self.bfsp])
 
     def test_lengetsetdeleq(self):
         """Test __len__, __getitem__ and __setitem__, __delitem__, __eq__"""
         self.assertEqual(3, len(self.basis))
-        con = Contraction('F', [4, 9], [0.1, 0.9])
-        self.basis[0] = con
-        self.assertEqual(con, self.basis[0])
+        bf = BasisFunction('F', [4, 9], [0.1, 0.9])
+        self.basis[0] = bf
+        self.assertEqual(bf, self.basis[0])
         self.assertRaises(SyntaxError, self.basis.__setitem__, 0, 1)
         del self.basis[2]
         self.assertRaises(IndexError, self.basis.__getitem__, 2)
-        basis = Basis('C', [self.consp])
-        basis2 = Basis('C', [self.consp])
+        basis = Basis('C', [self.bfsp])
+        basis2 = Basis('C', [self.bfsp])
         self.assertEqual(basis, basis2)
 
     def test_reprstrprint(self):
@@ -155,31 +155,31 @@ SP    3
 class TestBasisSet(unittest.TestCase):
     """Test the BasisSet class"""
     def setUp(self):
-        cons = Contraction('S', [1, 2], [0.5, 0.5])
-        conp = Contraction('P', [0.01, 0.2, 1], [0.3, 0.4, 0.3])
-        self.h = Basis('H', [cons, conp])
-        cons = Contraction('S', [0.1, 0.4], [0.6, 0.4])
-        consp = Contraction('SP', [0.1, 0.4, 3], [0.2, 0.3, 0.5], [0.1, 0.3, 0.6])
-        self.c = Basis('C', [cons, consp])
+        bfs = BasisFunction('S', [1, 2], [0.5, 0.5])
+        bfp = BasisFunction('P', [0.01, 0.2, 1], [0.3, 0.4, 0.3])
+        self.h = Basis('H', [bfs, bfp])
+        bfs = BasisFunction('S', [0.1, 0.4], [0.6, 0.4])
+        bfsp = BasisFunction('SP', [0.1, 0.4, 3], [0.2, 0.3, 0.5], [0.1, 0.3, 0.6])
+        self.c = Basis('C', [bfs, bfsp])
 
         atoms = OrderedDict([('H', self.h), ('C', self.c)])
         self.basis_set = BasisSet(atoms)
 
     def test_getsetdeleq(self):
         """Test __getitem__, __setitem__, __delitem__, and __eq__"""
-        cons = Contraction('S', [0.2, 0.4], [0.3, 0.7])
-        b = Basis('B', [cons])
+        bfs = BasisFunction('S', [0.2, 0.4], [0.3, 0.7])
+        b = Basis('B', [bfs])
         self.basis_set['B'] = b
         self.assertEqual(self.c, self.basis_set['C'])
         self.assertEqual(b, self.basis_set['B'])
         del self.basis_set['B']
         self.assertRaises(KeyError, self.basis_set.__getitem__, 'B')
-        cons = Contraction('S', [1, 2], [0.5, 0.5])
-        conp = Contraction('P', [0.01, 0.2, 1], [0.3, 0.4, 0.3])
-        h = Basis('H', [cons, conp])
-        cons = Contraction('S', [0.1, 0.4], [0.6, 0.4])
-        consp = Contraction('SP', [0.1, 0.4, 3], [0.2, 0.3, 0.5], [0.1, 0.3, 0.6])
-        c = Basis('C', [cons, consp])
+        bfs = BasisFunction('S', [1, 2], [0.5, 0.5])
+        bfp = BasisFunction('P', [0.01, 0.2, 1], [0.3, 0.4, 0.3])
+        h = Basis('H', [bfs, bfp])
+        bfs = BasisFunction('S', [0.1, 0.4], [0.6, 0.4])
+        bfsp = BasisFunction('SP', [0.1, 0.4, 3], [0.2, 0.3, 0.5], [0.1, 0.3, 0.6])
+        c = Basis('C', [bfs, bfsp])
         atoms = OrderedDict([('H', h), ('C', c)])
         basis_set2 = BasisSet(atoms)
         self.assertEqual(basis_set2, self.basis_set)
@@ -196,7 +196,7 @@ class TestBasisSet(unittest.TestCase):
 
     def test_change_basis_set(self):
         """Test change_basis_set"""
-        atoms = OrderedDict([('C', Basis('C', [Contraction('S', [1], [1])]))])
+        atoms = OrderedDict([('C', Basis('C', [BasisFunction('S', [1], [1])]))])
         self.basis_set.change_basis_set(atoms)
         bad_bs = OrderedDict([('H', 1)])
         self.assertRaises(SyntaxError, self.basis_set.change_basis_set, (bad_bs,))
