@@ -12,6 +12,11 @@ class Contraction:
         self.func_type = func_type.upper()
         if not self.func_type in 'SPDFGHIKLMN':
             raise SyntaxError("Invalid angular momentum.")
+        if self.func_type == 'SP':
+            if len(c2) == 0:
+                raise SyntaxError('Expected second set of coefficients for '
+                                  'combined contraction.')
+
 
         if len(exps) == 0 or len(exps) != len(coeffs):
             raise SyntaxError(('Need coefficients and exponents of the same'
@@ -95,6 +100,22 @@ class Contraction:
     def coeffs2(self, value):
         self.values[:, 2] = value
 
+    def decontracted(self):
+        """
+        Creates individual contractions with only a single gaussian
+        :yield: Contractions with a single element
+        """
+        func_type, exps, coeffs = self.func_type, self.exps, self.coeffs
+
+        if func_type == 'SP':
+            coeffs2 = self.coeffs2
+            yield from Contraction('S', np.array(exps), np.array(coeffs)).decontracted()
+            yield from Contraction('P', np.array(exps), np.array(coeffs2)).decontracted()
+        else:
+            # Note: Does not decontract coeffs2, as it would generate the same contractions
+            for exp, coeff in zip(exps, coeffs):
+                yield Contraction(func_type, [exp], [1])
+
     def print(self, style='gaussian94', atom=''):
         """Print the contraction to a string"""
         num_coeffs = 1 + int(self.c2)
@@ -172,6 +193,18 @@ class Basis:
 
     def __str__(self):
         return self.print()
+
+    def decontracted(self):
+        """
+        Generates a decontracted Basis. See Contration.decontracted()
+        :return: Basis with all Contractions decontracted
+        """
+        cons = []
+        for con in self.cons:
+            cons += con.decontracted()
+        basis = Basis(self.atom, cons)
+
+        return basis
 
     def print(self, style='gaussian94', print_name=True):
         """Print all contractions in the specified format"""
@@ -304,6 +337,17 @@ class BasisSet:
             bs.atoms[name] = Basis(name, con_list)
 
         return bs
+
+    def decontracted(self):
+        """
+        Generates a decontracted BasisSet. See Contration.decontracted()
+        :return: BasisSet with all Contractions decontracted
+        """
+        atoms = OrderedDict()
+        for atom, basis in self.atoms.items():
+            atoms[atom] = basis.decontracted()
+
+        return BasisSet(atoms, self.name)
 
     def print(self, style='gaussian94'):
         """Print the basis to a string"""

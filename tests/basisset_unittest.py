@@ -75,6 +75,28 @@ class TestContraction(unittest.TestCase):
         #print(self.consp.print())
         self.assertEqual(sp_gaussian94, self.consp.print())
 
+    def test_decontracted(self):
+        """Tests decontraction of basis function"""
+        con1 = Contraction('S', [1], [1])
+        con2 = Contraction('S', [2], [1])
+        decon1 = list(self.cons.decontracted())
+        self.assertEqual(decon1[0], con1)
+        self.assertEqual(decon1[1], con2)
+
+        cons1 = Contraction('S', [0.1], [1])
+        cons2 = Contraction('S', [0.4], [1])
+        cons3 = Contraction('S', [3  ], [1])
+        conp1 = Contraction('P', [0.1], [1])
+        conp2 = Contraction('P', [0.4], [1])
+        conp3 = Contraction('P', [3  ], [1])
+        decon2 = list(self.consp.decontracted())
+        self.assertEqual(decon2[0], cons1)
+        self.assertEqual(decon2[1], cons2)
+        self.assertEqual(decon2[2], cons3)
+        self.assertEqual(decon2[3], conp1)
+        self.assertEqual(decon2[4], conp2)
+        self.assertEqual(decon2[5], conp3)
+
 
 class TestBasis(unittest.TestCase):
     """Tests a basis, which contains basis contractions"""
@@ -202,6 +224,7 @@ class TestBasisSet(unittest.TestCase):
                  np.array([[0.1, 0.2], [0.4, 0.3], [3.0, 0.5]])]]
         self.assertEqual(vals[0][0][0][1], self.basis_set.values()[0][0][0][1])
         self.assertEqual(vals[0][1][1][0], self.basis_set.values()[0][1][1][0])
+
 
 if __name__ == '__main__':
     unittest.main()
