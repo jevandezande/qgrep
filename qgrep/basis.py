@@ -106,6 +106,16 @@ class Contraction:
             form = ' {:>2} ' + form
             out += '\n'.join([form.format(i, *group) for i, group in
                               enumerate(self.values, start=1)])
+        elif style == 'bagel':
+            form = '{{"angular" : {:s}, \n "prim" : [{:s}],\n' + ' "cont": [' + '[{:s}],'*int(self.c2) + '[{:s}]]\n}}'
+            exps_form = ','.join(['{:15.8f}'.format(i)for i in self.exps.tolist()])
+            coeffs_form = ','.join(['{:15.8f}'.format(i)for i in self.coeffs.tolist()])
+            if int(self.c2) == 0:
+                bagel_out = form.format(self.func_type.lower(), str(exps_form), str(coeffs_form))
+            else:
+                coeffs2_form = ','.join(['{:15.8f}'.format(i)for i in self.coeffs2.tolist()])
+                bagel_out = form.format(self.func_type.lower(),str(exps_form), str(coeffs_form), str(coeffs2_form))
+            return bagel_out
         else:
             raise SyntaxError(
                 'Only gaussian94 and gamess are currently supported.')
@@ -172,9 +182,15 @@ class Basis:
         elif style == 'gamess':
             if print_name:
                 out += '{}\n'.format(self.atom, len(self))
+        elif style == 'bagel':
+            if print_name:
+                out += '{:s} : [ \n'.format(self.atom)
         else:
             raise SyntaxError('Only gaussian94 and gamess currently supported')
-        return out + ''.join([c.print(style, self.atom) for c in self])
+        if style == 'bagel':
+            return out + ','.join([c.print(style, self.atom) for c in self]) + ']'
+        else:
+            return out + ''.join([c.print(style, self.atom) for c in self])
 
 
 class BasisSet:
@@ -252,6 +268,7 @@ class BasisSet:
         # assume spherical
         bs = BasisSet(name=in_file.split('.')[0])
         num_skip = 0
+
         if style == 'gaussian94':
             atom_separator = '****'
         elif style == 'gamess':
@@ -272,7 +289,7 @@ class BasisSet:
             con_list = []
             while i < len(basis_chunk):
                 # Split into contractions
-                am, num = basis_chunk[i].split()
+                am, num = basis_chunk[i].split()[:2]
                 num = int(num)
                 con = []
                 for line in basis_chunk[i + 1:i + num + 1]:
@@ -292,12 +309,9 @@ class BasisSet:
         """Print the basis to a string"""
         out = ''
         if style == 'bagel':
-            out = OrderedDict()
-            for atom in self.values:
-                for contraction in atom:
-                    pass
-            out = json.dumps(out)
-            pass
+            separator = ',\n'
+            out += separator.join([basis.print(style) for basis in self])
+            return '{' + out + '}'
         elif style in ['gaussian94', 'gamess']:
             if style == 'gaussian94':
                 separator = '****\n'
@@ -307,7 +321,6 @@ class BasisSet:
             # TODO: sort according to periodic table
             out += separator.join(
                 [basis.print(style) for basis in self])
-
             return out + separator
         else:
             raise SyntaxError('Only {} currently supported'.format(', '.join(SUPPORTED)))
