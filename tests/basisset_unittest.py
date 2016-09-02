@@ -204,16 +204,20 @@ class TestBasisSet(unittest.TestCase):
     def test_reprreadprint(self):
         """Test read and print"""
         test_file = 'my_basis.gbs.tmp'
+        test_file_bagel = 'my_basis.json.tmp'
         with open(test_file, 'w') as f:
             f.write(self.basis_set.print('gaussian94'))
         bs1 = BasisSet.read(test_file, 'gaussian94')
         self.assertEqual('<BasisSet my_basis>', repr(bs1))
         with open(test_file, 'w') as f:
             f.write(bs1.print('gamess'))
+        with open(test_file_bagel, 'w') as f:
+            f.write(bs1.print('bagel'))
         bs2 = BasisSet.read(test_file, 'gamess')
 
         self.assertEqual(bs1, bs2)
         os.remove(test_file)
+        os.remove(test_file_bagel)
         self.assertRaises(SyntaxError, bs2.print, 'turbomole')
 
     def test_values(self):

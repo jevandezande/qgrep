@@ -128,15 +128,13 @@ class BasisFunction:
             out += '\n'.join([form.format(i, *group) for i, group in
                               enumerate(self.values, start=1)])
         elif style == 'bagel':
-            form = '{{"angular" : {:s}, \n "prim" : [{:s}],\n' + ' "cont": [' + '[{:s}],'*int(self.c2) + '[{:s}]]\n}}'
-            exps_form = ','.join(['{:15.8f}'.format(i)for i in self.exps.tolist()])
-            coeffs_form = ','.join(['{:15.8f}'.format(i)for i in self.coeffs.tolist()])
-            if int(self.c2) == 0:
-                bagel_out = form.format(self.func_type.lower(), str(exps_form), str(coeffs_form))
+            vals_form = ','.join(['{:15.8f}']*len(self))
+            c_form = vals_form + ('], [' + vals_form if self.c2 else '')
+            bagel_form = '{{\n    "angular" : "{:s}", \n       "prim" :  [' + vals_form + '],\n       "cont" : [[' + c_form + ']]\n}}'
+            if self.c2:
+                return bagel_form.format(self.func_type, *self.exps, *self.coeffs, *self.coeffs2)
             else:
-                coeffs2_form = ','.join(['{:15.8f}'.format(i)for i in self.coeffs2.tolist()])
-                bagel_out = form.format(self.func_type.lower(),str(exps_form), str(coeffs_form), str(coeffs2_form))
-            return bagel_out
+                return bagel_form.format(self.func_type, *self.exps, *self.coeffs)
         else:
             raise SyntaxError(
                 'Only gaussian94 and gamess are currently supported.')
@@ -209,19 +207,17 @@ class Basis:
     def print(self, style='gaussian94', print_name=True):
         """Print all BasisFunctions in the specified format"""
         out = ''
-        if style == 'gaussian94':
-            if print_name:
+        if print_name:
+            if style == 'gaussian94':
                 out += '{}    0\n'.format(self.atom)
-        elif style == 'gamess':
-            if print_name:
+            elif style == 'gamess':
                 out += '{}\n'.format(self.atom, len(self))
-        elif style == 'bagel':
-            if print_name:
-                out += '{:s} : [ \n'.format(self.atom)
+            elif style == 'bagel':
+                out += '"{:s}" : ['.format(self.atom)
         else:
             raise SyntaxError('Only gaussian94 and gamess currently supported')
         if style == 'bagel':
-            return out + ','.join([c.print(style, self.atom) for c in self]) + ']'
+            return out + ',\n'.join([c.print(style, self.atom) for c in self]) + ']'
         else:
             return out + ''.join([c.print(style, self.atom) for c in self])
 
@@ -353,9 +349,8 @@ class BasisSet:
         """Print the basis to a string"""
         out = ''
         if style == 'bagel':
-            separator = ',\n'
-            out += separator.join([basis.print(style) for basis in self])
-            return '{' + out + '}'
+            out += ',\n\n'.join([basis.print('bagel').replace('\n', '\n    ') for basis in self])
+            return '{\n' + out + '\n}'
         elif style in ['gaussian94', 'gamess']:
             if style == 'gaussian94':
                 separator = '****\n'
