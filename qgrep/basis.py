@@ -132,9 +132,9 @@ class BasisFunction:
             c_form = vals_form + ('], [' + vals_form if self.c2 else '')
             bagel_form = '{{\n    "angular" : "{:s}", \n       "prim" :  [' + vals_form + '],\n       "cont" : [[' + c_form + ']]\n}}'
             if self.c2:
-                return bagel_form.format(self.func_type, *self.exps, *self.coeffs, *self.coeffs2)
+                return bagel_form.format(self.func_type.lower(), *self.exps, *self.coeffs, *self.coeffs2)
             else:
-                return bagel_form.format(self.func_type, *self.exps, *self.coeffs)
+                return bagel_form.format(self.func_type.lower(), *self.exps, *self.coeffs)
         else:
             raise SyntaxError(
                 'Only gaussian94 and gamess are currently supported.')
