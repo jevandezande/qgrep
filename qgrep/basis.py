@@ -136,8 +136,7 @@ class BasisFunction:
             else:
                 return bagel_form.format(self.func_type.lower(), *self.exps, *self.coeffs)
         else:
-            raise SyntaxError(
-                'Only gaussian94 and gamess are currently supported.')
+            raise SyntaxError('Only {} currently supported'.format(', '.join(SUPPORTED)))
         return out + '\n'
 
 
@@ -214,8 +213,8 @@ class Basis:
                 out += '{}\n'.format(self.atom, len(self))
             elif style == 'bagel':
                 out += '"{:s}" : ['.format(self.atom)
-        else:
-            raise SyntaxError('Only gaussian94 and gamess currently supported')
+            else:
+                raise SyntaxError('Only {} currently supported'.format(', '.join(SUPPORTED)))
         if style == 'bagel':
             return out + ',\n'.join([c.print(style, self.atom) for c in self]) + ']'
         else:
@@ -304,8 +303,7 @@ class BasisSet:
             num_skip = 1
             atom_separator = '\n\n'
         else:
-            raise SyntaxError(
-                "Only gaussian94 style basis sets are currently supported.")
+            raise SyntaxError("Only gaussian94 and Gamess style basis sets are currently supported.")
         with open(in_file) as f:
             basis_set_str = f.read().strip()
         # Split into atoms

@@ -66,9 +66,9 @@ class Atom:
             return numbers_atomic[int(name)]
 
         if name in short_to_long_names:
-            return atomic_numbers[Atom.convert_name(name)]
-        elif name in long_to_short_names:
             return atomic_numbers[name]
+        elif name in long_to_short_names:
+            return atomic_numbers[Atom.convert_name(name)]
         else:
             raise SyntaxError('Invalid atom name')
 

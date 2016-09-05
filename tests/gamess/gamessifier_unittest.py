@@ -4,7 +4,7 @@ from sys import path
 path.insert(0, '../..')
 from qgrep.gamess import Gamessifier
 from qgrep.molecule import Molecule
-from qgrep.basis import Contraction, Basis, BasisSet
+from qgrep.basis import BasisFunction, Basis, BasisSet
 import os
 
 
@@ -27,9 +27,9 @@ class TestGamessifier(unittest.TestCase):
 
     def test_read_basis_set(self):
         """Test reading a basis from a file"""
-        tmp_basis_file = 'basis.gbs.tmp'
+        tmp_basis_file = 'basis.gbs.tmp1'
         basis_set = BasisSet()
-        basis_set['B'] = Basis('B', [Contraction('S', [0.2, 0.4], [0.3, 0.7])])
+        basis_set['B'] = Basis('B', [BasisFunction('S', [0.2, 0.4], [0.3, 0.7])])
         open(tmp_basis_file, 'w').write(basis_set.print('gamess'))
         self.g.read_basis_set(tmp_basis_file)
         self.assertEqual(basis_set, self.g.basis_set)
@@ -93,9 +93,9 @@ O-ECP NONE"""
         """Test writing an input to a basis file"""
         tmp_basis_file = 'basis.gbs.tmp'
         basis_set = BasisSet()
-        basis_set['H'] = Basis('H', [Contraction('S', [1], [1])])
-        basis_set['O'] = Basis('O', [Contraction('S', [1], [1]), Contraction('S', [2], [1])])
-        basis_set['C'] = Basis('C', [Contraction('S', [1], [1]), Contraction('SP', [1, 2], [0.4, 0.6], [0.1, 0.9])])
+        basis_set['H'] = Basis('H', [BasisFunction('S', [1], [1])])
+        basis_set['O'] = Basis('O', [BasisFunction('S', [1], [1]), BasisFunction('S', [2], [1])])
+        basis_set['C'] = Basis('C', [BasisFunction('S', [1], [1]), BasisFunction('SP', [1, 2], [0.4, 0.6], [0.1, 0.9])])
         open(tmp_basis_file, 'w').write(basis_set.print('gamess'))
         tmp_geom_file = 'geom.xyz.tmp'
         self.formaldehyde_xyz.write(tmp_geom_file)

@@ -1,9 +1,9 @@
 import os
 import re
 from collections import OrderedDict
-from qgrep.molecule import Molecule
-from qgrep.helper import atomic_number
+from qgrep.atom import Atom
 from qgrep.basis import BasisSet
+from qgrep.molecule import Molecule
 
 
 def check_convergence(lines):
@@ -125,13 +125,10 @@ class Gamessifier():
         atom:basis_functions
         """
         self.basis_set = BasisSet()
-        if not basis_file:
-            return
-        if not os.path.isfile(basis_file):
-            print("Couldn't find basis file: " + basis_file)
-            return
+        if not basis_file or not os.path.isfile(basis_file):
+            raise Exception("Couldn't find basis file: " + basis_file)
 
-        self.basis_set.read_basis_set(basis_file, style='gamess')
+        self.basis_set = BasisSet.read(basis_file, style='gamess')
 
     def read_ecp(self, ecp_file='ecp.dat'):
         """Reads an ecp file and makes a dictionary with the form atom:ecp"""
@@ -276,7 +273,7 @@ class Gamessifier():
         for name, x, y, z in self.mol:
             if len(name) > 1:
                 name = name[0].upper() + name[1:].lower()
-            an = atomic_number(name)
+            an = Atom.atomic_number(name)
             atom_basis = self.basis_set[name].print(style='gamess',
                                                     print_name=False)
             data += '{} {}     {}  {}  {}\n{}\n'.format(name, an, x, y, z,
