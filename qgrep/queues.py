@@ -8,15 +8,16 @@ import getpass
 #import logging
 from qgrep.helper import colors
 
-SIZES = {'debug': 1, 'gen4': 45, 'gen5': 4, 'gen6': 19, 'large': 1}
+
 BAR = colors.purple + '|' + colors.normal
 #logging.basicConfig(filename='.qgrep.log',level=logging.CRITICAL)
 
 class Queues:
-    def __init__(self):
+    def __init__(self, omit=[]):
         self.queues = {}
         self.tree = self.qxml()
-        self.parse_tree()
+        self.find_sizes()
+        self.parse_tree(omit=omit)
     
     def __str__(self):
         """
@@ -151,7 +152,7 @@ class Queues:
         except FileNotFoundError as e:
             raise Exception("Could not find qstat")
 
-    def parse_tree(self):
+    def parse_tree(self, omit=[]):
         """
         Parse the xml tree from qxml
         """
@@ -162,12 +163,12 @@ class Queues:
                 for node in child:
                     #<Queue-List>
                     #   <name>gen3.q@v10.cl.ccqc.uga.edu</name>
-                    name = node.find('name').text.split('.')[0]
+                    name = node.find('name').text.split('@')[0]
                     # If we don't want to display the queue
-                    if not name in SIZES:
+                    if name in omit:
                         continue
                     if not name in self.queues:
-                        self.queues[name] = Queue(SIZES[name], name)
+                        self.queues[name] =  Queue(self.sizes[name], name)
 
                     for job_xml in node.iterfind('job_list'):
                         job = Job(job_xml)
@@ -177,11 +178,41 @@ class Queues:
             elif child.tag == 'job_info':
                 for job_xml in child:
                     job = Job(job_xml)
-                    name = job.queue.split('.')[0]
+                    name = job.queue.split('@')[0]
+                    if name in omit:
+                        continue
+
                     if not name in self.queues:
-                        self.queues[name] = Queue(SIZES[name], name)
+                        self.queues[name] = Queue(self.sizes[name], name)
 
                     self.queues[name].queueing[job.id] = job
+
+
+    def find_sizes(self):
+        """
+        Find the sizes of the queues
+
+        Sample output from 'qstat -g c':
+        CLUSTER QUEUE                   CQLOAD   USED    RES  AVAIL  TOTAL aoACDS  cdsuE
+        --------------------------------------------------------------------------------
+        all.q                             -NA-      0      0      0      0      0      0
+        gen3.q                            0.00      0      0      0     16      0     16
+        gen4.q                            0.26     31      0     13     48      0      4
+        gen5.q                            0.50      4      0      0      4      0      0
+        gen6.q                            0.39     19      0      0     19      0      1
+        """
+        self.sizes = {}
+        qstat_xml_cmd = "qstat -g c"
+        try:
+            out = subprocess.check_output(qstat_xml_cmd, shell=True)
+            for line in out.splitlines()[2:]:
+                line = line.decode('UTF-8')
+                if 'all.q' == line[:5]:
+                    continue
+                queue, cqload, used, res, avail, total, aoacds, cdsue = line.split()
+                self.sizes[queue] = int(total)
+        except FileNotFoundError as e:
+            raise Exception("Could not find qstat")
 
 
 class Queue:
