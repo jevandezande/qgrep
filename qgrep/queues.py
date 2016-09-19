@@ -210,7 +210,7 @@ class Queues:
                 if 'all.q' == line[:5]:
                     continue
                 queue, cqload, used, res, avail, total, aoacds, cdsue = line.split()
-                self.sizes[queue] = int(total)
+                self.sizes[queue] = int(used) + int(avail)
         except FileNotFoundError as e:
             raise Exception("Could not find qstat")
 
