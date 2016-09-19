@@ -9,6 +9,7 @@ import getpass
 from qgrep.helper import colors
 
 
+SMALL = 3
 BAR = colors.purple + '|' + colors.normal
 #logging.basicConfig(filename='.qgrep.log',level=logging.CRITICAL)
 
@@ -18,7 +19,7 @@ class Queues:
         self.tree = self.qxml()
         self.find_sizes()
         self.parse_tree(omit=omit)
-    
+
     def __str__(self):
         """
         Make the tree into a printable form
@@ -40,38 +41,40 @@ class Queues:
         return not self == other
 
     # noinspection PyPep8
-    def print(self, numjobs=50, user=None):
+    def print(self, numjobs=50, person=None):
         """
         Print the queues in a nice table
         """
-        # Form header (without debug and large queue)
-        q_num = len(self.queues) - int('debug' in self.queues) - int('large' in self.queues)
+        # Form header (without small queues)
+        large_num = sum([size > SMALL for size in self.sizes.values()])
         # Horizontal line
-        line = '\033[95m' + '-'*(29*q_num + 1)+ '\033[0m\n'
+        line = '\033[95m' + '-'*(29*large_num + 1)+ '\033[0m\n'
 
         out = line
 
         name_form = '{} ({:2d}/{:2d}/{:2d})'
         # Print a nice header
-        for name in sorted(self.queues.keys()):
-            queue = self.queues[name]
-            # skip debug and large
-            if name == 'debug' or name == 'large':
+        for name, queue in sorted(self.queues.items()):
+            # Print small queues near the end
+            if queue.size <= SMALL:
                 continue
             out +=  BAR + '{:^28}'.format(name_form.format(name, queue.used, queue.avail, queue.queued))
         out += BAR + '\n' + line
         header = BAR + '  ID   USER    Job Name   St'
-        out += header*q_num + BAR + '\n' + line
-        
-        if user is True:
-            user = getpass.getuser()
-        
-        # Remove debug and large
+        out += header*large_num + BAR + '\n' + line
+
+        if person is True:
+            person = getpass.getuser()
+
+        # Remove small queues
         job_list = []
+        small_queues = []
         for name, queue in sorted(self.queues.items()):
-            if name in ['debug', 'large']:
+            if queue.size <= SMALL:
+                if queue.size > 0:
+                    small_queues.append(queue)
                 continue
-            job_list.append(queue.person_jobs(user).values())
+            job_list.append(queue.person_jobs(person).values())
 
         blank = BAR + ' '*28
         for i, job_row in enumerate(zip_longest(*job_list)):
@@ -85,30 +88,25 @@ class Queues:
                 out += BAR + '\n'
                 break
             for job in job_row:
-                if job is None:
-                    out += blank
-                else:
-                    out += BAR + str(job) 
+                out += BAR + str(job) if job else blank
             out += BAR + '\n'
         out += line
 
-        if 'large' in self.queues:
-            out += self.queues['large'].print_inline(q_num - 1) + '\n' + line
-        if 'debug' in self.queues:
-            out += self.queues['debug'].print_inline(q_num - 1) + '\n' + line
+        for queue in small_queues:
+            out += queue.print_inline(large_num, None, person) + '\n' + line
 
         # Remove newline
         out = out[:-1]
 
         return out
-        
+
     @staticmethod
     def qxml():
         """
         Produce an xml ElementTree object containing all the queued jobs
 
         Sample output
-        
+
     <?xml version='1.0'?>
     <job_info  xmlns:xsd="http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qstat/qstat.xsd?revision=1.11">
     <queue_info>
@@ -222,7 +220,7 @@ class Queue:
     def __init__(self, size, name='', running=None, queueing=None):
         """
         Initialize a queue with it's jobs
-        
+
         :param running: an OrderedDict of Jobs that are running
         :param queueing: an OrderedDict of Jobs that are queueing
         """
@@ -236,7 +234,7 @@ class Queue:
             self.queueing = OrderedDict()
         else:
             self.queueing = queueing
-    
+
     def __eq__(self, other):
         if len(self) != len(other):
             return False
@@ -271,15 +269,25 @@ class Queue:
 
         return out
 
-    def print_inline(self, max_num):
+    def print_inline(self, width, max_num=None, person=False):
         """Print jobs inline"""
+        if person:
+            jobs = self.person_jobs(person)
+        else:
+            jobs = self.jobs
+
         used_avail_queued = '{} ({:2d}/{:2d}/{:2d})'.format(self.name, self.used, self.avail, self.queued)
         out = BAR + '{:^28}'.format(used_avail_queued) + BAR
-        for job in list(self.jobs.values())[:max_num]:
+        for i, job in enumerate(jobs.values()):
+            if not (max_num is None) and i >= max_num:
+                break
+            if not (i + 1) % width:
+                out += '\n' + BAR
             out += str(job) + BAR
-        # Add spaces if only a few queued
-        if len(self.jobs) < max_num:
-            out += (' '*29*(max_num - len(self.jobs)))[:-1] + BAR
+
+        # Add blank spots to fill out to end
+        if (len(jobs) + 1) % width:
+            out += (' '*29*(width - (len(jobs) + 1) % width))[:-1] + BAR
         return out
 
     def set(self, job_id, job, position):
@@ -293,7 +301,7 @@ class Queue:
         else:
             raise Exception("Invalid position, must be either running or"
                             "queueing.")
-    
+
     @property
     def used(self):
         return len(self.running)
@@ -329,7 +337,7 @@ class Queue:
             if job.owner == person:
                 ret[job.id] = job
         return ret
-        
+
 
 class Job:
     """
@@ -347,7 +355,7 @@ class Job:
             self.queue == other.queue:
             return True
         return False
-    
+
     def __ne__(self, other):
         return not self == other
 
@@ -357,8 +365,8 @@ class Job:
 
         # Color queue status by type, use red if unrecognized
         job_colors = defaultdict(lambda: colors.red, {'r': colors.green, 'qw': colors.blue})
-        
-        # Bold the user's jobs
+
+        # Bold the person's jobs
         if self.owner == getpass.getuser():
             owner = colors.bold + '{:5.5s}'.format(self.owner) + colors.normal
         else:
