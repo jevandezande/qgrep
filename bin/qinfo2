@@ -22,13 +22,10 @@ parser.add_argument('-w', '--watch', help='Update when jobs change',
 args = parser.parse_args()
 
 queues = Queues()
-if args.person:
-    out = queues.print(numjobs=args.number, person=args.person)
-else:
-    out = queues.print(numjobs=args.number, person=args.user)
+person = args.person if args.person else args.user
+out = queues.print(numjobs=args.number, person=person)
 print(out)
 
-# Watch for 1 hour
 if args.watch:
     for i in range(3600):
         # Check every second
@@ -36,4 +33,4 @@ if args.watch:
         new_queues = Queues()
         if queues != new_queues:
             queues = new_queues
-            print(queues.print(numjobs=args.number, user=args.user))
+            print(queues.print(numjobs=args.number, person=person))
