@@ -1,6 +1,6 @@
-import os
 import re
 import math
+from qgrep.helper import BOHR_TO_ANGSTROM
 
 def get_geom(lines, geom_type='xyz', units='bohr'):
     """Takes the lines of an cfour output file and returns its last geometry in
@@ -38,6 +38,36 @@ def get_geom(lines, geom_type='xyz', units='bohr'):
         geom.append('{:s}\t{}\t{}\t{}\n'.format(atom, *xyz))
 
     return geom
+
+def plot(lines, geom_type='xyz', units='angstrom'):
+    """
+    """
+    if geom_type == 'xyz' and units in ['bohr', 'angstrom']:
+        start = ' Z-matrix   Atomic            Coordinates (in bohr)\n'
+    else:
+        print("Invalid format")
+        return ''
+    end = ' ----------------------------------------------------------------\n'
+
+    geoms = []
+    step = 0
+    for i, line in enumerate(lines):
+        if line == start:
+            step += 1
+            geom = ''
+            geom_start = i+3
+            for j, line2 in enumerate(lines[geom_start:], start=geom_start):
+                if line2 == end:
+                    geoms.append('{}\nStep {}\n'.format(j - geom_start, step) + geom)
+                    break
+                atom, an, x, y, z = line2.split()
+                if units == 'angstrom':
+                    x, y, z = float(x)*BOHR_TO_ANGSTROM, float(y)*BOHR_TO_ANGSTROM, float(z)*BOHR_TO_ANGSTROM
+                    geom += '{:<2s} {:> 15.8f} {:> 15.8f} {:> 15.8f}\n'.format(atom, x, y, z)
+                else:
+                    geom += '{:<2s} {:>11} {:>11s} {:>11s}\n'.format(atom, x, y, z)
+    return geoms
+
 
 
 def check_convergence(lines):
