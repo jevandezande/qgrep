@@ -8,7 +8,8 @@ import getpass
 #import logging
 from qgrep.helper import colors
 
-
+JOB_ID_LENGTH = 7
+COLUMN_WIDTH = 23 + JOB_ID_LENGTH
 SMALL = 3
 BAR = colors.purple + '|' + colors.normal
 #logging.basicConfig(filename='.qgrep.log',level=logging.CRITICAL)
@@ -48,7 +49,7 @@ class Queues:
         # Form header (without small queues)
         large_num = sum([size > SMALL for size in self.sizes.values()])
         # Horizontal line
-        line = '\033[95m' + '-'*(29*large_num + 1)+ '\033[0m\n'
+        line = '\033[95m' + '-'*(COLUMN_WIDTH*large_num + 1)+ '\033[0m\n'
 
         out = line
 
@@ -58,9 +59,9 @@ class Queues:
             # Print small queues near the end
             if queue.size <= SMALL:
                 continue
-            out +=  BAR + '{:^28}'.format(name_form.format(name, queue.used, queue.avail, queue.queued))
+            out +=  BAR + ('{:^' + str(COLUMN_WIDTH-1) + '}').format(name_form.format(name, queue.used, queue.avail, queue.queued))
         out += BAR + '\n' + line
-        header = BAR + '  ID   USER    Job Name   St'
+        header = BAR + '  ID   USER    Job Name   St'.rjust(COLUMN_WIDTH-1)
         out += header*large_num + BAR + '\n' + line
 
         if person is True:
@@ -76,13 +77,13 @@ class Queues:
                 continue
             job_list.append(queue.person_jobs(person).values())
 
-        blank = BAR + ' '*28
+        blank = BAR + ' '*(COLUMN_WIDTH-1)
         for i, job_row in enumerate(zip_longest(*job_list)):
             if i >= numjobs:
                 # Add how many more jobs are running in each queue
                 for queue in job_list:
                     if len(queue) > numjobs:
-                        out += BAR + '        \033[1m{: >+5} jobs\033[0m          '.format(len(queue) - numjobs)
+                        out += BAR + ('{:^' + str(COLUMN_WIDTH + 7) + '}').format('\033[1m{: >+5} jobs\033[0m'.format(len(queue) - numjobs))
                     else:
                         out += blank
                 out += BAR + '\n'
@@ -277,7 +278,7 @@ class Queue:
             jobs = self.jobs
 
         used_avail_queued = '{} ({:2d}/{:2d}/{:2d})'.format(self.name, self.used, self.avail, self.queued)
-        out = BAR + '{:^28}'.format(used_avail_queued) + BAR
+        out = BAR + '{:^' + str(COLUMN_WIDTH-1) + '}'.format(used_avail_queued) + BAR
         for i, job in enumerate(jobs.values()):
             if not (max_num is None) and i >= max_num:
                 break
@@ -287,7 +288,7 @@ class Queue:
 
         # Add blank spots to fill out to end
         if (len(jobs) + 1) % width:
-            out += (' '*29*(width - (len(jobs) + 1) % width))[:-1] + BAR
+            out += (' '*COLUMN_WIDTH*(width - (len(jobs) + 1) % width))[:-1] + BAR
         return out
 
     def set(self, job_id, job, position):
@@ -361,7 +362,7 @@ class Job:
 
     def __str__(self):
         """Print a short description of the job, with color"""
-        job_form = '{:>6d} {:<5s} {:<12s} {}{:2s}' + colors.normal
+        job_form = '{:>' + str(JOB_ID_LENGTH) + 'd} {:<5s} {:<12s} {}{:2s}' + colors.normal
 
         # Color queue status by type, use red if unrecognized
         job_colors = defaultdict(lambda: colors.red, {'r': colors.green, 'qw': colors.blue})
