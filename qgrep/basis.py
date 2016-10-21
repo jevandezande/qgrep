@@ -2,9 +2,10 @@ from collections import OrderedDict
 import numpy as np
 
 SUPPORTED = ['guassian94', 'gamess', 'bagel']
+AM = 'SPDFGHIKLMN'
 
 class BasisFunction:
-    """A  primitive or a contraction of primitives"""
+    """A primitive or a contraction of primitives"""
 
     def __init__(self, func_type, exps, coeffs, c2=None):
         if not c2:
@@ -140,17 +141,65 @@ class BasisFunction:
         return out + '\n'
 
 
+class GenConBasisFunction:
+    """
+    A collection of basis functions, all sharing the same exponents
+
+    TODO: Make this a subclass of BasisFunction
+    """
+
+    def __init__(self, basisFunctions):
+        self.bfs = basisFunctions
+        self.values = np.array(list(zip(self.bfs[0].exps, *[x.coeffs for x in self.bfs])))
+        self.func_type = self.bfs[0].func_type
+
+    def __len__(self):
+        return len(self.exps)
+
+    def __str__(self):
+        return self.print()
+
+    @property
+    def exps(self):
+        return self.values[:, 0]
+
+    @property
+    def coeffs(self):
+        return self.values[:, 1:]
+
+    def print(self, style='gaussian94'):
+        """Print the GenConBasisFunction to a string"""
+        num_coeffs = len(self.bfs)
+        form = '{:>17.7f}' + ' {:> 11.7f}' * num_coeffs
+        out = '{:<2}    {}\n'.format(self.func_type, len(self))
+        if style == 'gaussian94':
+            out += '\n'.join([form.format(*group) for group in self.values])
+        elif style == 'gamess':
+            form = ' {:>2} ' + form
+            out += '\n'.join([form.format(i, *group) for i, group in
+                              enumerate(self.values, start=1)])
+        elif style == 'bagel':
+            vals_form = ','.join(['{:>15.8f}']*len(self))
+            c_form = ', '.join(['[' + vals_form  + ']']*len(self.bfs))
+            bagel_form = '{{\n    "angular" : "{:s}",\n       "prim" :  [' + vals_form + '],\n       "cont" : [[' + c_form + ']]\n}}'
+            return bagel_form.format(self.func_type.lower(), *self.exps, *self.coeffs.flatten())
+        else:
+            raise SyntaxError('Only {} currently supported'.format(', '.join(SUPPORTED)))
+        return out + '\n'
+
+
 class Basis:
     """A basis for an atom"""
 
-    def __init__(self, atom='', basis_functions=None):
+    def __init__(self, atom='', basis_functions=None, name=''):
         if basis_functions is None:
             basis_functions = []
         self.atom = atom
         if not isinstance(basis_functions, list) or not all(
-                map(lambda x: isinstance(x, BasisFunction), basis_functions)):
+                map(lambda x: isinstance(x, (BasisFunction, GenConBasisFunction)), basis_functions)):
             raise SyntaxError("Expected a list of BasisFunctions")
         self.basis_functions = basis_functions
+        self.name = name
 
     def __len__(self):
         """Return the number of BasisFunctions"""
@@ -199,7 +248,7 @@ class Basis:
         basis_functions = []
         for con in self.basis_functions:
             basis_functions += con.decontracted()
-        basis = Basis(self.atom, basis_functions)
+        basis = Basis(self.atom, basis_functions, self.name)
 
         return basis
 
@@ -297,38 +346,70 @@ class BasisSet:
         bs = BasisSet(name=in_file.split('.')[0])
         num_skip = 0
 
-        if style == 'gaussian94':
-            atom_separator = '****'
-        elif style == 'gamess':
-            num_skip = 1
-            atom_separator = '\n\n'
-        else:
-            raise SyntaxError("Only gaussian94 and Gamess style basis sets are currently supported.")
-        with open(in_file) as f:
-            basis_set_str = f.read().strip()
-        # Split into atoms
-        for chunk in basis_set_str.split(atom_separator):
-            if len(chunk) == 0:
-                continue
-            name, *basis_chunk = chunk.strip().split('\n')
-            name = name.split()[0]
+        if style == 'cfour':
+            with open(in_file) as f:
+                lines = f.readlines()
             i = 0
-            con_list = []
-            while i < len(basis_chunk):
-                # Split into basis functions
-                am, num = basis_chunk[i].split()[:2]
-                num = int(num)
-                con = []
-                for line in basis_chunk[i + 1:i + num + 1]:
-                    con.append([float(x) for x in line.split()[num_skip:]])
-                # Makes an empty list if no elements for coeffs2
-                exps, coeffs, *coeffs2 = zip(*con)
-                if coeffs2:
-                    # Remove extra list
-                    coeffs2 = coeffs2[0]
-                con_list.append(BasisFunction(am, exps, coeffs, coeffs2))
-                i += num + 1
-            bs.atoms[name] = Basis(name, con_list)
+            block_starts = [i for i, line in enumerate(lines) if ':' in line]
+            for start in block_starts:
+                """Numbering section
+                nsections
+                ncontractions ncontractions ncontractions ncontractions 
+                    nexp        nexp            nexp        nexp
+                """
+                atom, basis_name = lines[start].strip().split(':')
+                num_parts = lines[start + 3].strip()
+                ams
+                con_lengths = lines[start + 5].split()
+                exp_lengths = lines[start + 6].split()
+                j = i + 8
+                for am, con_length, exp_length in zip(ams, con_lengths, exp_lengths):
+                    # Read exponents
+                    exp_end = j + exp_length%5
+                    exps = [float(x) for xs in lines[j:exp_end + 1] for x in xs]
+                    # Read contractions
+                    con_start = exp_end + 2
+                    con_end = con_start + con_length
+                    contractions = np.array([[float(c) for c in line] for line in lines[con_start:con_end + 1]]).T
+                    if con_length > 1:
+                        bfs = [BasisFunction(AM[am], exps, c) for c in coeffs]
+                        GenConBasisFunction(bfs)
+                    else:
+                        BasisFunction(AM[am], exps, coeffs)
+
+        else:
+            if style == 'gaussian94':
+                atom_separator = '****'
+            elif style == 'gamess':
+                num_skip = 1
+                atom_separator = '\n\n'
+            else:
+                raise SyntaxError("Only gaussian94 and Gamess style basis sets are currently supported.")
+            with open(in_file) as f:
+                basis_set_str = f.read().strip()
+            # Split into atoms
+            for chunk in basis_set_str.split(atom_separator):
+                if len(chunk) == 0:
+                    continue
+                atom, *basis_chunk = chunk.strip().split('\n')
+                atom = atom.split()[0]
+                i = 0
+                con_list = []
+                while i < len(basis_chunk):
+                    # Split into basis functions
+                    am, num = basis_chunk[i].split()[:2]
+                    num = int(num)
+                    con = []
+                    for line in basis_chunk[i + 1:i + num + 1]:
+                        con.append([float(x) for x in line.split()[num_skip:]])
+                    # Makes an empty list if no elements for coeffs2
+                    exps, coeffs, *coeffs2 = zip(*con)
+                    if coeffs2:
+                        # Remove extra list
+                        coeffs2 = coeffs2[0]
+                    con_list.append(BasisFunction(am, exps, coeffs, coeffs2))
+                    i += num + 1
+                bs.atoms[atom] = Basis(atom, con_list)
 
         return bs
 

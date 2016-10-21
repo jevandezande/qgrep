@@ -1,7 +1,7 @@
 import unittest
 from sys import path
 path.insert(0, '..')
-from qgrep.basis import BasisFunction, Basis, BasisSet
+from qgrep.basis import BasisFunction, GenConBasisFunction, Basis, BasisSet
 import numpy as np
 from collections import OrderedDict
 import os
@@ -96,6 +96,32 @@ class TestBasisFunction(unittest.TestCase):
         self.assertEqual(decon2[3], bfp1)
         self.assertEqual(decon2[4], bfp2)
         self.assertEqual(decon2[5], bfp3)
+
+class TestGenConBasisFunction(unittest.TestCase):
+    """Tests a generally contracted Basis Function (GenConBasisFunction)"""
+    def setUp(self):
+        self.bf1 = BasisFunction('S', [1, 2], [0.5, 0.5])
+        self.bf2 = BasisFunction('S', [1, 2], [0.3, 0.4])
+        self.bf3 = BasisFunction('S', [1, 2], [1.0, 0.0])
+        self.gc = GenConBasisFunction([self.bf1, self.bf2, self.bf3])
+
+    def teststrprint(self):
+        gaussian94 = """S     2
+        1.0000000   0.5000000   0.3000000   1.0000000
+        2.0000000   0.5000000   0.4000000   0.0000000
+"""
+        gamess = """S     2
+  1         1.0000000   0.5000000   0.3000000   1.0000000
+  2         2.0000000   0.5000000   0.4000000   0.0000000
+"""
+        bagel = """{
+    "angular" : "s",
+       "prim" :  [     1.00000000,     2.00000000],
+       "cont" : [[[     0.50000000,     0.30000000], [     1.00000000,     0.50000000], [     0.40000000,     0.00000000]]]
+}"""
+        self.assertEqual(self.gc.print('gaussian94'), gaussian94)
+        self.assertEqual(self.gc.print('gamess'), gamess)
+        self.assertEqual(self.gc.print('bagel'), bagel)
 
 
 class TestBasis(unittest.TestCase):
