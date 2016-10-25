@@ -349,7 +349,6 @@ class BasisSet:
         if style == 'cfour':
             with open(in_file) as f:
                 lines = f.readlines()
-            i = 0
             block_starts = [i for i, line in enumerate(lines) if ':' in line]
             for start in block_starts:
                 """Numbering section
@@ -359,23 +358,36 @@ class BasisSet:
                 """
                 atom, basis_name = lines[start].strip().split(':')
                 num_parts = lines[start + 3].strip()
-                ams
+                ams = lines[start + 4].split()
                 con_lengths = lines[start + 5].split()
                 exp_lengths = lines[start + 6].split()
-                j = i + 8
+                j = start + 8
                 for am, con_length, exp_length in zip(ams, con_lengths, exp_lengths):
+                    am, con_length, exp_length = int(am), int(con_length), int(exp_length)
                     # Read exponents
-                    exp_end = j + exp_length%5
-                    exps = [float(x) for xs in lines[j:exp_end + 1] for x in xs]
-                    # Read contractions
+                    exp_end = j + (exp_length - 1)//5
+                    exps = [float(x) for xs in lines[j:exp_end + 1] for x in xs.split()]
                     con_start = exp_end + 2
-                    con_end = con_start + con_length
-                    contractions = np.array([[float(c) for c in line] for line in lines[con_start:con_end + 1]]).T
+                    con_end = con_start + exp_length
+                    coeffs = []
+                    if con_length > 6:
+                        break
+                        pass
+                        #raise Exception('Cannot currently read CFour GenConBasisFunctions with more than 6 coefficients')
+                    # Read contractions
+                    for line in lines[con_start:con_end]:
+                        coeffs.append([float(c) for c in line.split()])
+                    coeffs = np.array(coeffs).T
+                    if len(coeffs) != con_length:
+                        raise Exception('The number of contractions ({}) read does not match the number of contractions at the start of basis ({}).'.format(len(coeffs), con_length))
+                    if len(coeffs.T) != exp_length:
+                        raise Exception('The number of coefficients ({}) read does not match the number of exponents at the start of basis ({}).'.format(len(coeffs.T), exp_length))
                     if con_length > 1:
                         bfs = [BasisFunction(AM[am], exps, c) for c in coeffs]
                         GenConBasisFunction(bfs)
                     else:
-                        BasisFunction(AM[am], exps, coeffs)
+                        BasisFunction(AM[am], exps, coeffs[0])
+                    j = con_end + 1
         elif style == 'bagel':
             raise SyntaxError('Bagel is only partially supported, writing but no reading.')
         else:

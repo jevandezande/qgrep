@@ -250,6 +250,13 @@ class TestBasisSet(unittest.TestCase):
         #bs3 = BasisSet.read(test_file_bagel, 'bagel')
         #self.assertEqual(bs, bs3)
 
+        test_file_cfour = 'GENBAS'
+        #with open(test_file_cfour, 'w') as f:
+        #    f.write(bs.print('cfour'))
+        bs4 = BasisSet.read(test_file_cfour, 'cfour')
+        #self.assertEqual(bs, bs4)
+
+
         for tmp_file in glob('*.tmp'):
             os.remove(tmp_file)
         self.assertRaises(SyntaxError, self.basis_set.print, 'turbomole')
