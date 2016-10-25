@@ -5,6 +5,7 @@ from qgrep.basis import BasisFunction, GenConBasisFunction, Basis, BasisSet
 import numpy as np
 from collections import OrderedDict
 import os
+from glob import glob
 
 
 class TestBasisFunction(unittest.TestCase):
@@ -229,22 +230,29 @@ class TestBasisSet(unittest.TestCase):
 
     def test_reprreadprint(self):
         """Test read and print"""
-        test_file = 'my_basis.gbs.tmp'
-        test_file_bagel = 'my_basis.json.tmp'
-        with open(test_file, 'w') as f:
-            f.write(self.basis_set.print('gaussian94'))
-        bs1 = BasisSet.read(test_file, 'gaussian94')
-        self.assertEqual('<BasisSet my_basis>', repr(bs1))
-        with open(test_file, 'w') as f:
-            f.write(bs1.print('gamess'))
-        with open(test_file_bagel, 'w') as f:
-            f.write(bs1.print('bagel'))
-        bs2 = BasisSet.read(test_file, 'gamess')
+        bs = self.basis_set
+        test_file_gaussian = 'my_basis_gaussian.gbs.tmp'
+        with open(test_file_gaussian, 'w') as f:
+            f.write(bs.print('gaussian94'))
+        bs1 = BasisSet.read(test_file_gaussian, 'gaussian94')
+        self.assertEqual('<BasisSet my_basis_gaussian>', repr(bs1))
+        self.assertEqual(bs, bs1)
 
-        self.assertEqual(bs1, bs2)
-        os.remove(test_file)
-        os.remove(test_file_bagel)
-        self.assertRaises(SyntaxError, bs2.print, 'turbomole')
+        test_file_gamess = 'my_basis_gamess.gbs.tmp'
+        with open(test_file_gamess, 'w') as f:
+            f.write(bs.print('gamess'))
+        bs2 = BasisSet.read(test_file_gamess, 'gamess')
+        self.assertEqual(bs, bs2)
+
+        test_file_bagel = 'my_basis_bagel.json.tmp'
+        with open(test_file_bagel, 'w') as f:
+            f.write(bs.print('bagel'))
+        #bs3 = BasisSet.read(test_file_bagel, 'bagel')
+        #self.assertEqual(bs, bs3)
+
+        for tmp_file in glob('*.tmp'):
+            os.remove(tmp_file)
+        self.assertRaises(SyntaxError, self.basis_set.print, 'turbomole')
 
     def test_values(self):
         """Test values"""

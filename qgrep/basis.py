@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import numpy as np
 
-SUPPORTED = ['guassian94', 'gamess', 'bagel']
+SUPPORTED = ['gaussian94', 'gamess', 'bagel']
 AM = 'SPDFGHIKLMN'
 
 class BasisFunction:
@@ -137,7 +137,7 @@ class BasisFunction:
             else:
                 return bagel_form.format(self.func_type.lower(), *self.exps, *self.coeffs)
         else:
-            raise SyntaxError('Only {} currently supported'.format(', '.join(SUPPORTED)))
+            raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
         return out + '\n'
 
 
@@ -184,7 +184,7 @@ class GenConBasisFunction:
             bagel_form = '{{\n    "angular" : "{:s}",\n       "prim" :  [' + vals_form + '],\n       "cont" : [[' + c_form + ']]\n}}'
             return bagel_form.format(self.func_type.lower(), *self.exps, *self.coeffs.flatten())
         else:
-            raise SyntaxError('Only {} currently supported'.format(', '.join(SUPPORTED)))
+            raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
         return out + '\n'
 
 
@@ -263,7 +263,7 @@ class Basis:
             elif style == 'bagel':
                 out += '"{:s}" : ['.format(self.atom)
             else:
-                raise SyntaxError('Only {} currently supported'.format(', '.join(SUPPORTED)))
+                raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
         if style == 'bagel':
             return out + ',\n'.join([c.print(style, self.atom) for c in self]) + ']'
         else:
@@ -376,7 +376,8 @@ class BasisSet:
                         GenConBasisFunction(bfs)
                     else:
                         BasisFunction(AM[am], exps, coeffs)
-
+        elif style == 'bagel':
+            raise SyntaxError('Bagel is only partially supported, writing but no reading.')
         else:
             if style == 'gaussian94':
                 atom_separator = '****'
@@ -384,7 +385,7 @@ class BasisSet:
                 num_skip = 1
                 atom_separator = '\n\n'
             else:
-                raise SyntaxError("Only gaussian94 and Gamess style basis sets are currently supported.")
+                raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
             with open(in_file) as f:
                 basis_set_str = f.read().strip()
             # Split into atoms
@@ -441,7 +442,7 @@ class BasisSet:
                 [basis.print(style) for basis in self])
             return out + separator
         else:
-            raise SyntaxError('Only {} currently supported'.format(', '.join(SUPPORTED)))
+            raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
 
     def values(self):
         """Returns a list of list of np.array(exp, coeff, *coeff2)"""
