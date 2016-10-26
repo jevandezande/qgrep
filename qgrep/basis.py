@@ -351,6 +351,9 @@ class BasisSet:
                 lines = f.readlines()
             block_starts = [i for i, line in enumerate(lines) if ':' in line]
             for start in block_starts:
+                # Ignore comments
+                if lines[start][0] == '!':
+                    continue
                 """Numbering section
                 nsections
                 ncontractions ncontractions ncontractions ncontractions 
@@ -379,7 +382,10 @@ class BasisSet:
                         coeffs.append([float(c) for c in line.split()])
                     coeffs = np.array(coeffs).T
                     if len(coeffs) != con_length:
-                        raise Exception('The number of contractions ({}) read does not match the number of contractions at the start of basis ({}).'.format(len(coeffs), con_length))
+                        if len(coeffs) > con_length and not coeffs[con_length:].any():
+                            coeffs = coeffs[:con_length]
+                        else:
+                            raise Exception('The number of contractions ({}) read does not match the number of contractions at the start of basis ({}).'.format(len(coeffs), con_length))
                     if len(coeffs.T) != exp_length:
                         raise Exception('The number of coefficients ({}) read does not match the number of exponents at the start of basis ({}).'.format(len(coeffs.T), exp_length))
                     if con_length > 1:
