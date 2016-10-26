@@ -184,10 +184,10 @@ class TestBasisSet(unittest.TestCase):
     def setUp(self):
         bfs = BasisFunction('S', [1, 2], [0.5, 0.5])
         bfp = BasisFunction('P', [0.01, 0.2, 1], [0.3, 0.4, 0.3])
-        self.h = Basis('H', [bfs, bfp])
+        self.h = Basis('H', [bfs, bfp], 'simple')
         bfs = BasisFunction('S', [0.1, 0.4], [0.6, 0.4])
         bfsp = BasisFunction('SP', [0.1, 0.4, 3], [0.2, 0.3, 0.5], [0.1, 0.3, 0.6])
-        self.c = Basis('C', [bfs, bfsp])
+        self.c = Basis('C', [bfs, bfsp], 'simple')
 
         atoms = OrderedDict([('H', self.h), ('C', self.c)])
         self.basis_set = BasisSet(atoms)
@@ -251,10 +251,11 @@ class TestBasisSet(unittest.TestCase):
         #self.assertEqual(bs, bs3)
 
         test_file_cfour = 'GENBAS'
-        #with open(test_file_cfour, 'w') as f:
-        #    f.write(bs.print('cfour'))
+        with open(test_file_cfour, 'w') as f:
+            f.write(bs.print('cfour'))
         bs4 = BasisSet.read(test_file_cfour, 'cfour')
-        #self.assertEqual(bs, bs4)
+        print(bs4)
+        self.assertEqual(bs, bs4)
 
 
         for tmp_file in glob('*.tmp'):

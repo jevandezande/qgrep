@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import numpy as np
 
-SUPPORTED = ['gaussian94', 'gamess', 'bagel']
+SUPPORTED = ['gaussian94', 'gamess', 'bagel', 'cfour']
 AM = 'SPDFGHIKLMN'
 
 class BasisFunction:
@@ -100,6 +100,13 @@ class BasisFunction:
     @coeffs2.setter
     def coeffs2(self, value):
         self.values[:, 2] = value
+
+    @property
+    def am(self):
+        if self.func_type != 'L' and self.func_type != 'SP':
+            return AM.index(self.func_type)
+        else:
+            return -1
 
     def decontracted(self):
         """
@@ -255,6 +262,8 @@ class Basis:
     def print(self, style='gaussian94', print_name=True):
         """Print all BasisFunctions in the specified format"""
         out = ''
+        if style not in SUPPORTED:
+            raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
         if print_name:
             if style == 'gaussian94':
                 out += '{}    0\n'.format(self.atom)
@@ -262,12 +271,42 @@ class Basis:
                 out += '{}\n'.format(self.atom, len(self))
             elif style == 'bagel':
                 out += '"{:s}" : ['.format(self.atom)
+            elif style == 'cfour':
+                out += '{:s}:{:s}\nComment Line\n\n'.format(self.atom, self.name)
             else:
                 raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
         if style == 'bagel':
-            return out + ',\n'.join([c.print(style, self.atom) for c in self]) + ']'
+            out += ',\n'.join([c.print(style, self.atom) for c in self]) + ']'
+        elif style == 'cfour':
+            out += ' {:>2d}\n'.format(len(self))
+            # Find values for header
+            vals = []
+            for bf in self:
+                shape = bf.coeffs.shape
+                con_length = shape[1] if len(shape) == 2 else 1
+                exp_length = shape[0]
+                vals.append([bf.am, con_length, exp_length])
+            vals = np.array(vals).T
+            # Make header
+            for xs in vals:
+                out += (' {:>2d}'*len(vals.T)).format(*xs) + '\n'
+            # Print basis functions
+            for bf in self:
+                # Print exponents
+                for i, exp in enumerate(bf.exps):
+                    if not i % 6:
+                        out += '\n'
+                    out += ' {:>12.7g}'.format(exp)
+                out += '\n\n'
+                # Print coefficients
+                if len(bf.coeffs.shape) == 1:
+                    out += (' {:>12.7g}\n'*len(bf.coeffs)).format(*bf.coeffs)
+                else:
+                    for c_line in bf.coeffs:
+                        out += (' {:>12.7g}'*len(bf.coeffs)).format(*c_line) + '\n'
         else:
-            return out + ''.join([c.print(style, self.atom) for c in self])
+            out += ''.join([c.print(style, self.atom) for c in self])
+        return out
 
 
 class BasisSet:
@@ -449,11 +488,11 @@ class BasisSet:
         if style == 'bagel':
             out += ',\n\n'.join([basis.print('bagel').replace('\n', '\n    ') for basis in self])
             return '{\n' + out + '\n}'
-        elif style in ['gaussian94', 'gamess']:
+        elif style in ['gaussian94', 'gamess', 'cfour']:
             if style == 'gaussian94':
                 separator = '****\n'
                 out = separator
-            elif style == 'gamess':
+            elif style in ['gamess', 'cfour']:
                 separator = '\n'
             # TODO: sort according to periodic table
             out += separator.join(
