@@ -1,18 +1,16 @@
-#!/usr/bin/env python3
-
 import subprocess
 from xml.etree import ElementTree
 from collections import OrderedDict, defaultdict
 from itertools import zip_longest, filterfalse
 import getpass
-#import logging
 from qgrep.helper import colors
+
 
 JOB_ID_LENGTH = 7
 COLUMN_WIDTH = 23 + JOB_ID_LENGTH
 SMALL = 3
 BAR = colors.purple + '|' + colors.normal
-#logging.basicConfig(filename='.qgrep.log',level=logging.CRITICAL)
+
 
 class Queues:
     def __init__(self, omit=[]):
@@ -59,7 +57,7 @@ class Queues:
             # Print small queues near the end
             if queue.size <= SMALL:
                 continue
-            out +=  BAR + ('{:^' + str(COLUMN_WIDTH-1) + '}').format(name_form.format(name, queue.used, queue.avail, queue.queued))
+            out += BAR + ('{:^' + str(COLUMN_WIDTH-1) + '}').format(name_form.format(name, queue.used, queue.avail, queue.queued))
         out += BAR + '\n' + line
         header = BAR + '  ID   USER    Job Name   St'.rjust(COLUMN_WIDTH-1)
         out += header*large_num + BAR + '\n' + line
@@ -166,8 +164,8 @@ class Queues:
                     # If we don't want to display the queue
                     if name in omit:
                         continue
-                    if not name in self.queues:
-                        self.queues[name] =  Queue(self.sizes[name], name)
+                    if name not in self.queues:
+                        self.queues[name] = Queue(self.sizes[name], name)
 
                     for job_xml in node.iterfind('job_list'):
                         job = Job(job_xml)
@@ -181,11 +179,10 @@ class Queues:
                     if name in omit:
                         continue
 
-                    if not name in self.queues:
+                    if name not in self.queues:
                         self.queues[name] = Queue(self.sizes[name], name)
 
                     self.queues[name].queueing[job.id] = job
-
 
     def find_sizes(self):
         """
@@ -401,6 +398,5 @@ class Job:
             queue = 'debug.q'
         if (state == 'running' and state2 != 'r') or \
            (state == 'pending' and state2 != 'qw'):
-            #logging.warning('States do not agree: job {}, states:{}, {}'.format(jid, state, state2))
             pass
         return jid, name, state2, owner, queue
