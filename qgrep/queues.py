@@ -275,7 +275,7 @@ class Queue:
             jobs = self.jobs
 
         used_avail_queued = '{} ({:2d}/{:2d}/{:2d})'.format(self.name, self.used, self.avail, self.queued)
-        out = BAR + '{:^' + str(COLUMN_WIDTH-1) + '}'.format(used_avail_queued) + BAR
+        out = BAR + ('{:^' + str(COLUMN_WIDTH-1) + '}').format(used_avail_queued) + BAR
         for i, job in enumerate(jobs.values()):
             if not (max_num is None) and i >= max_num:
                 break
