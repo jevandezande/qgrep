@@ -126,15 +126,17 @@ class BasisFunction:
 
     def print(self, style='gaussian94', atom=''):
         """Print the BasisFunction to a string"""
+        out = ''
         num_coeffs = 1 + int(self.c2)
         form = '{:>17.7f}' + ' {:> 11.7f}' * num_coeffs
-        out = '{:<2}    {}\n'.format(self.func_type, len(self))
         if style == 'gaussian94':
-            out += '\n'.join([form.format(*group) for group in self.values])
+            out = '{:<2}    {}\n'.format(self.func_type, len(self))
+            out += '\n'.join([form.format(*group) for group in self.values]) + '\n'
         elif style == 'gamess':
+            out = '{:<2}    {}\n'.format(self.func_type, len(self))
             form = ' {:>2} ' + form
             out += '\n'.join([form.format(i, *group) for i, group in
-                              enumerate(self.values, start=1)])
+                              enumerate(self.values, start=1)]) + '\n'
         elif style == 'bagel':
             vals_form = ','.join(['{:15.8f}']*len(self))
             c_form = vals_form + ('], [' + vals_form if self.c2 else '')
@@ -143,9 +145,22 @@ class BasisFunction:
                 return bagel_form.format(self.func_type.lower(), *self.exps, *self.coeffs, *self.coeffs2)
             else:
                 return bagel_form.format(self.func_type.lower(), *self.exps, *self.coeffs)
+        elif style == 'cfour':
+            # Print exponents
+            for i, exp in enumerate(self.exps):
+                if not i % 6:
+                    out += '\n'
+                out += ' {:>12.7g}'.format(exp)
+            out += '\n\n'
+            # Print coefficients
+            if len(self.coeffs.shape) == 1:
+                out += (' {:>12.7g}\n'*len(self.coeffs)).format(*self.coeffs)
+            else:
+                for c_line in self.coeffs:
+                    out += (' {:>12.7g}'*len(self.coeffs)).format(*c_line) + '\n'
         else:
             raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
-        return out + '\n'
+        return out
 
 
 class GenConBasisFunction:
@@ -176,12 +191,14 @@ class GenConBasisFunction:
 
     def print(self, style='gaussian94'):
         """Print the GenConBasisFunction to a string"""
+        out = ''
         num_coeffs = len(self.bfs)
         form = '{:>17.7f}' + ' {:> 11.7f}' * num_coeffs
-        out = '{:<2}    {}\n'.format(self.func_type, len(self))
         if style == 'gaussian94':
+            out += '{:<2}    {}\n'.format(self.func_type, len(self))
             out += '\n'.join([form.format(*group) for group in self.values])
         elif style == 'gamess':
+            out += '{:<2}    {}\n'.format(self.func_type, len(self))
             form = ' {:>2} ' + form
             out += '\n'.join([form.format(i, *group) for i, group in
                               enumerate(self.values, start=1)])
@@ -189,7 +206,17 @@ class GenConBasisFunction:
             vals_form = ','.join(['{:>15.8f}']*len(self))
             c_form = ', '.join(['[' + vals_form  + ']']*len(self.bfs))
             bagel_form = '{{\n    "angular" : "{:s}",\n       "prim" :  [' + vals_form + '],\n       "cont" : [[' + c_form + ']]\n}}'
-            return bagel_form.format(self.func_type.lower(), *self.exps, *self.coeffs.flatten())
+            out += bagel_form.format(self.func_type.lower(), *self.exps, *self.coeffs.flatten())
+        elif style == 'cfour':
+            # Print exponents
+            for i, exp in enumerate(self.exps):
+                if not i % 6:
+                    out += '\n'
+                out += ' {:>12.7g}'.format(exp)
+            out += '\n\n'
+            # Print coefficients
+            for c_line in self.coeffs:
+                out += (' {:>12.7g}'*len(self.coeffs)).format(*c_line) + '\n'
         else:
             raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
         return out + '\n'
@@ -287,23 +314,13 @@ class Basis:
                 exp_length = shape[0]
                 vals.append([bf.am, con_length, exp_length])
             vals = np.array(vals).T
+            print(vals)
             # Make header
             for xs in vals:
                 out += (' {:>2d}'*len(vals.T)).format(*xs) + '\n'
             # Print basis functions
             for bf in self:
-                # Print exponents
-                for i, exp in enumerate(bf.exps):
-                    if not i % 6:
-                        out += '\n'
-                    out += ' {:>12.7g}'.format(exp)
-                out += '\n\n'
-                # Print coefficients
-                if len(bf.coeffs.shape) == 1:
-                    out += (' {:>12.7g}\n'*len(bf.coeffs)).format(*bf.coeffs)
-                else:
-                    for c_line in bf.coeffs:
-                        out += (' {:>12.7g}'*len(bf.coeffs)).format(*c_line) + '\n'
+                out += bf.print(style)
         else:
             out += ''.join([c.print(style, self.atom) for c in self])
         return out
@@ -382,7 +399,7 @@ class BasisSet:
     def read(in_file="basis.gbs", style='gaussian94'):
         """Read a gaussian94 style basis set"""
         # assume spherical
-        bs = BasisSet(name=in_file.split('.')[0])
+        bs = BasisSet(name=in_file.split('/')[-1].split('.')[0])
         num_skip = 0
 
         if style == 'cfour':
@@ -393,8 +410,9 @@ class BasisSet:
                 # Ignore comments
                 if lines[start][0] == '!':
                     continue
-                """Numbering section
+                """ Read Numbering section, i.e.
                 nsections
+                    am          am              am          am
                 ncontractions ncontractions ncontractions ncontractions 
                     nexp        nexp            nexp        nexp
                 """
@@ -404,6 +422,7 @@ class BasisSet:
                 con_lengths = lines[start + 5].split()
                 exp_lengths = lines[start + 6].split()
                 j = start + 8
+                bfs = []
                 for am, con_length, exp_length in zip(ams, con_lengths, exp_lengths):
                     am, con_length, exp_length = int(am), int(con_length), int(exp_length)
                     # Read exponents
@@ -428,11 +447,12 @@ class BasisSet:
                     if len(coeffs.T) != exp_length:
                         raise Exception('The number of coefficients ({}) read does not match the number of exponents at the start of basis ({}).'.format(len(coeffs.T), exp_length))
                     if con_length > 1:
-                        bfs = [BasisFunction(AM[am], exps, c) for c in coeffs]
-                        GenConBasisFunction(bfs)
+                        bfs += [BasisFunction(AM[am], exps, c) for c in coeffs]
+                        #bfs.append(GenConBasisFunction(bf_list))
                     else:
-                        BasisFunction(AM[am], exps, coeffs[0])
+                        bfs.append(BasisFunction(AM[am], exps, coeffs[0]))
                     j = con_end + 1
+                bs.atoms[atom] = Basis(atom, bfs, basis_name)
         elif style == 'bagel':
             raise SyntaxError('Bagel is only partially supported, writing but no reading.')
         else:
@@ -483,7 +503,7 @@ class BasisSet:
         return BasisSet(atoms, self.name)
 
     def print(self, style='gaussian94'):
-        """Print the basis to a string"""
+        """Print the Basis to a string"""
         out = ''
         if style == 'bagel':
             out += ',\n\n'.join([basis.print('bagel').replace('\n', '\n    ') for basis in self])

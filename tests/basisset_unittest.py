@@ -119,7 +119,8 @@ class TestGenConBasisFunction(unittest.TestCase):
     "angular" : "s",
        "prim" :  [     1.00000000,     2.00000000],
        "cont" : [[[     0.50000000,     0.30000000], [     1.00000000,     0.50000000], [     0.40000000,     0.00000000]]]
-}"""
+}
+"""
         self.assertEqual(self.gc.print('gaussian94'), gaussian94)
         self.assertEqual(self.gc.print('gamess'), gamess)
         self.assertEqual(self.gc.print('bagel'), bagel)
@@ -186,8 +187,8 @@ class TestBasisSet(unittest.TestCase):
         bfp = BasisFunction('P', [0.01, 0.2, 1], [0.3, 0.4, 0.3])
         self.h = Basis('H', [bfs, bfp], 'simple')
         bfs = BasisFunction('S', [0.1, 0.4], [0.6, 0.4])
-        bfsp = BasisFunction('SP', [0.1, 0.4, 3], [0.2, 0.3, 0.5], [0.1, 0.3, 0.6])
-        self.c = Basis('C', [bfs, bfsp], 'simple')
+        bfp = BasisFunction('P', [0.1, 0.4, 3], [0.2, 0.3, 0.5])
+        self.c = Basis('C', [bfs, bfp], 'simple')
 
         atoms = OrderedDict([('H', self.h), ('C', self.c)])
         self.basis_set = BasisSet(atoms)
@@ -205,9 +206,10 @@ class TestBasisSet(unittest.TestCase):
         bfp = BasisFunction('P', [0.01, 0.2, 1], [0.3, 0.4, 0.3])
         h = Basis('H', [bfs, bfp])
         bfs = BasisFunction('S', [0.1, 0.4], [0.6, 0.4])
-        bfsp = BasisFunction('SP', [0.1, 0.4, 3], [0.2, 0.3, 0.5], [0.1, 0.3, 0.6])
-        c = Basis('C', [bfs, bfsp])
+        bfp = BasisFunction('P', [0.1, 0.4, 3], [0.2, 0.3, 0.5], [0.1, 0.3, 0.6])
+        c = Basis('C', [bfs, bfp])
         atoms = OrderedDict([('H', h), ('C', c)])
+        atoms = OrderedDict([('H', h)])
         basis_set2 = BasisSet(atoms)
         self.assertEqual(basis_set2, self.basis_set)
 
@@ -229,7 +231,7 @@ class TestBasisSet(unittest.TestCase):
         self.assertRaises(SyntaxError, self.basis_set.change_basis_set, (bad_bs,))
 
     def test_reprreadprint(self):
-        """Test read and print"""
+        """Test read and print of BasisSet"""
         bs = self.basis_set
         test_file_gaussian = 'my_basis_gaussian.gbs.tmp'
         with open(test_file_gaussian, 'w') as f:
@@ -250,17 +252,19 @@ class TestBasisSet(unittest.TestCase):
         #bs3 = BasisSet.read(test_file_bagel, 'bagel')
         #self.assertEqual(bs, bs3)
 
-        test_file_cfour = 'GENBAS'
+        test_file_cfour = 'my_basis_cfour.GENBAS.tmp'
         with open(test_file_cfour, 'w') as f:
             f.write(bs.print('cfour'))
         bs4 = BasisSet.read(test_file_cfour, 'cfour')
+        print(bs)
         print(bs4)
+        print(bs4.atoms['C'])
         self.assertEqual(bs, bs4)
 
+        self.assertRaises(SyntaxError, self.basis_set.print, 'turbomole')
 
         for tmp_file in glob('*.tmp'):
             os.remove(tmp_file)
-        self.assertRaises(SyntaxError, self.basis_set.print, 'turbomole')
 
     def test_values(self):
         """Test values"""
