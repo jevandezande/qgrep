@@ -314,7 +314,6 @@ class Basis:
                 exp_length = shape[0]
                 vals.append([bf.am, con_length, exp_length])
             vals = np.array(vals).T
-            print(vals)
             # Make header
             for xs in vals:
                 out += (' {:>2d}'*len(vals.T)).format(*xs) + '\n'

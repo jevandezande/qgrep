@@ -256,9 +256,6 @@ class TestBasisSet(unittest.TestCase):
         with open(test_file_cfour, 'w') as f:
             f.write(bs.print('cfour'))
         bs4 = BasisSet.read(test_file_cfour, 'cfour')
-        print(bs)
-        print(bs4)
-        print(bs4.atoms['C'])
         self.assertEqual(bs, bs4)
 
         self.assertRaises(SyntaxError, self.basis_set.print, 'turbomole')
