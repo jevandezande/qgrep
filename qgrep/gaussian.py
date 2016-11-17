@@ -1,7 +1,7 @@
 """Source for all gaussian related functions"""
 
 import re
-from qgrep.atom import Atom
+from .atom import Atom
 
 def get_geom(lines, geom_type='xyz', units='angstrom'):
     """

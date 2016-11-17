@@ -3,7 +3,7 @@ from xml.etree import ElementTree
 from collections import OrderedDict, defaultdict
 from itertools import zip_longest, filterfalse
 import getpass
-from qgrep.helper import colors
+from .helper import colors
 
 
 JOB_ID_LENGTH = 7

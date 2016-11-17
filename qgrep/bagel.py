@@ -1,7 +1,7 @@
 """Source for all orca related functions"""
-from qgrep.molecule import Molecule
+from .molecule import Molecule
 from operator import itemgetter
-from qgrep.helper import BOHR_TO_ANGSTROM
+from .helper import BOHR_TO_ANGSTROM
 
 import numpy as np
 

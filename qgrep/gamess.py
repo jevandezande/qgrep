@@ -1,9 +1,9 @@
 import os
 import re
 from collections import OrderedDict
-from qgrep.atom import Atom
-from qgrep.basis import BasisSet
-from qgrep.molecule import Molecule
+from .atom import Atom
+from .basis import BasisSet
+from .molecule import Molecule
 
 
 def check_convergence(lines):

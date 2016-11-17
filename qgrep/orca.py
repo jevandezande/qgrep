@@ -1,6 +1,6 @@
 """Source for all orca related functions"""
-from qgrep.molecule import Molecule
-from qgrep.convergence import Step, Convergence
+from .molecule import Molecule
+from .convergence import Step, Convergence
 import re
 from collections import OrderedDict
 

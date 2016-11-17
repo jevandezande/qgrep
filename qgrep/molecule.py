@@ -1,4 +1,4 @@
-from qgrep import helper
+from . import helper
 import importlib
 
 

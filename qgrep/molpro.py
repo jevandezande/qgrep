@@ -1,6 +1,6 @@
 """Molpro functions"""
 
-from qgrep.helper import BOHR_TO_ANGSTROM
+from .helper import BOHR_TO_ANGSTROM
 
 def get_geom(lines, geom_type='xyz', units='angstrom'):
     """

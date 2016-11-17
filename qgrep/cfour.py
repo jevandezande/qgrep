@@ -1,6 +1,6 @@
 import re
 import math
-from qgrep.helper import BOHR_TO_ANGSTROM
+from .helper import BOHR_TO_ANGSTROM
 
 def get_geom(lines, geom_type='xyz', units='bohr'):
     """Takes the lines of an cfour output file and returns its last geometry in

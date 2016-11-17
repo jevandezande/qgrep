@@ -1,6 +1,6 @@
 """Source for all qchem related functions"""
 
-import os.path as path
+from os import path
 
 
 # noinspection PyPep8
