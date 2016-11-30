@@ -395,7 +395,7 @@ class BasisSet:
         self.atoms = basis_set
 
     @staticmethod
-    def read(in_file="basis.gbs", style='gaussian94'):
+    def read(in_file="basis.gbs", style='gaussian94', debug=False):
         """Read a gaussian94 style basis set"""
         # assume spherical
         bs = BasisSet(name=in_file.split('/')[-1].split('.')[0])
@@ -415,42 +415,51 @@ class BasisSet:
                 ncontractions ncontractions ncontractions ncontractions 
                     nexp        nexp            nexp        nexp
                 """
-                atom, basis_name = lines[start].strip().split(':')
-                num_parts = lines[start + 3].strip()
-                ams = lines[start + 4].split()
-                con_lengths = lines[start + 5].split()
-                exp_lengths = lines[start + 6].split()
-                j = start + 8
-                bfs = []
-                for am, con_length, exp_length in zip(ams, con_lengths, exp_lengths):
-                    am, con_length, exp_length = int(am), int(con_length), int(exp_length)
-                    # Read exponents
-                    exp_end = j + (exp_length - 1)//5
-                    exps = [float(x) for xs in lines[j:exp_end + 1] for x in xs.split()]
-                    con_start = exp_end + 2
-                    con_end = con_start + exp_length
-                    coeffs = []
-                    if con_length > 6:
-                        break
-                        pass
-                        #raise Exception('Cannot currently read CFour GenConBasisFunctions with more than 6 coefficients')
-                    # Read contractions
-                    for line in lines[con_start:con_end]:
-                        coeffs.append([float(c) for c in line.split()])
-                    coeffs = np.array(coeffs).T
-                    if len(coeffs) != con_length:
-                        if len(coeffs) > con_length and not coeffs[con_length:].any():
-                            coeffs = coeffs[:con_length]
+                try:
+                    atom, basis_name = lines[start].strip().split(':')
+                    num_parts = lines[start + 3].strip()
+                    ams = lines[start + 4].split()
+                    con_lengths = lines[start + 5].split()
+                    exp_lengths = lines[start + 6].split()
+                    j = start + 8
+                    bfs = []
+                    for am, con_length, exp_length in zip(ams, con_lengths, exp_lengths):
+                        am, con_length, exp_length = int(am), int(con_length), int(exp_length)
+                        # Read exponents
+                        exp_end = j + (exp_length - 1)//5
+                        exps = [float(x) for xs in lines[j:exp_end + 1] for x in xs.split()]
+                        con_start = exp_end + 2
+                        con_end = con_start + exp_length
+                        coeffs = []
+                        if con_length > 6:
+                            break
+                            pass
+                            #raise Exception('Cannot currently read CFour GenConBasisFunctions with more than 6 coefficients')
+                        # Read contractions
+                        for line in lines[con_start:con_end]:
+                            coeffs.append([float(c) for c in line.split()])
+                        coeffs = np.array(coeffs).T
+                        if len(coeffs) != con_length:
+                            if len(coeffs) > con_length and not coeffs[con_length:].any():
+                                coeffs = coeffs[:con_length]
+                            else:
+                                if debug:
+                                    print('Line {} -- {}:{} section -- {},{},{}'.format(start, atom, basis_name, am, con_length, exp_length))
+                                raise Exception('The number of contractions ({}) read does not match the number of contractions at the start of basis ({}).'.format(len(coeffs), con_length))
+                        if len(coeffs.T) != exp_length:
+                            if debug:
+                                print('Line {} -- {}:{} section -- {},{},{}'.format(start, atom, basis_name, am, con_length, exp_length))
+                            raise Exception('The number of coefficients ({}) read does not match the number of exponents at the start of basis ({}).'.format(len(coeffs.T), exp_length))
+                        if con_length > 1:
+                            bfs += [BasisFunction(AM[am], exps, c) for c in coeffs]
+                            #bfs.append(GenConBasisFunction(bf_list))
                         else:
-                            raise Exception('The number of contractions ({}) read does not match the number of contractions at the start of basis ({}).'.format(len(coeffs), con_length))
-                    if len(coeffs.T) != exp_length:
-                        raise Exception('The number of coefficients ({}) read does not match the number of exponents at the start of basis ({}).'.format(len(coeffs.T), exp_length))
-                    if con_length > 1:
-                        bfs += [BasisFunction(AM[am], exps, c) for c in coeffs]
-                        #bfs.append(GenConBasisFunction(bf_list))
-                    else:
-                        bfs.append(BasisFunction(AM[am], exps, coeffs[0]))
-                    j = con_end + 1
+                            bfs.append(BasisFunction(AM[am], exps, coeffs[0]))
+                        j = con_end + 1
+                except:
+                    if debug:
+                        print('Failed to parse section starting on line {}.'.format(start))
+                    raise
                 bs.atoms[atom] = Basis(atom, bfs, basis_name)
         elif style == 'bagel':
             raise SyntaxError('Bagel is only partially supported, writing but no reading.')
@@ -468,25 +477,30 @@ class BasisSet:
             for chunk in basis_set_str.split(atom_separator):
                 if len(chunk) == 0:
                     continue
-                atom, *basis_chunk = chunk.strip().split('\n')
-                atom = atom.split()[0]
-                i = 0
-                con_list = []
-                while i < len(basis_chunk):
-                    # Split into basis functions
-                    am, num = basis_chunk[i].split()[:2]
-                    num = int(num)
-                    con = []
-                    for line in basis_chunk[i + 1:i + num + 1]:
-                        con.append([float(x) for x in line.split()[num_skip:]])
-                    # Makes an empty list if no elements for coeffs2
-                    exps, coeffs, *coeffs2 = zip(*con)
-                    if coeffs2:
-                        # Remove extra list
-                        coeffs2 = coeffs2[0]
-                    con_list.append(BasisFunction(am, exps, coeffs, coeffs2))
-                    i += num + 1
-                bs.atoms[atom] = Basis(atom, con_list)
+                try:
+                    atom, *basis_chunk = chunk.strip().split('\n')
+                    atom = atom.split()[0]
+                    i = 0
+                    con_list = []
+                    while i < len(basis_chunk):
+                        # Split into basis functions
+                        am, num = basis_chunk[i].split()[:2]
+                        num = int(num)
+                        con = []
+                        for line in basis_chunk[i + 1:i + num + 1]:
+                            con.append([float(x) for x in line.split()[num_skip:]])
+                        # Makes an empty list if no elements for coeffs2
+                        exps, coeffs, *coeffs2 = zip(*con)
+                        if coeffs2:
+                            # Remove extra list
+                            coeffs2 = coeffs2[0]
+                        con_list.append(BasisFunction(am, exps, coeffs, coeffs2))
+                        i += num + 1
+                    bs.atoms[atom] = Basis(atom, con_list)
+                except:
+                    if debug:
+                        print('Failed to parse section starting with\n{}'.format('\n'.join(chunk.splitlines()[:5])))
+                    raise
 
         return bs
 
