@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+
+import argparse
+from qgrep.basis import BasisSet
+
+
+parser = argparse.ArgumentParser(description='Converts a basis set from one style to another')
+parser.add_argument('-i', '--input', help='The file to be read.', type=str,
+                    default='')
+parser.add_argument('-o', '--output', help='Where to output the geometry.',
+                    type=str, default='{inputname}.{outstyle}')
+parser.add_argument('-j', '--istyle', help='The input basisset style', type=str,
+                    default='gaussian94')
+parser.add_argument('-p', '--ostyle', help='The output basis set style', type=str,
+                    default='bagel')
+args = parser.parse_args()
+
+
+# Generate the output file name if not specified
+if args.output == '{inputname}.{outstyle}':
+    name = '.'.join(args.input.split('.')[:-1])
+    args.output = name + '.out'
+    if args.ostyle == 'bagel':
+        args.output = name + '.json'
+    elif args.ostyle == 'cfour':
+        args.output = GENBAS
+    elif args.ostyle == 'gamess':
+        args.output = name + '.gamess'
+    elif args.ostyle == 'gaussian':
+        args.output = name + '.gbs'
+
+
+bs = BasisSet.read(args.input, style=args.istyle, debug=True)
+
+with open(args.output, 'w') as f:
+    f.write(bs.print(style=args.ostyle))
