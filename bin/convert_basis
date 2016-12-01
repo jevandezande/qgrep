@@ -11,8 +11,10 @@ parser.add_argument('-o', '--output', help='Where to output the geometry.',
                     type=str, default='{inputname}.{outstyle}')
 parser.add_argument('-j', '--istyle', help='The input basisset style', type=str,
                     default='gaussian94')
-parser.add_argument('-p', '--ostyle', help='The output basis set style', type=str,
+parser.add_argument('-p', '--ostyle', help='The output basis set style.', type=str,
                     default='bagel')
+parser.add_argument('-d', '--decontract', help='Decontract the basis set.',
+                    action='store_true', default=False)
 args = parser.parse_args()
 
 
@@ -31,6 +33,9 @@ if args.output == '{inputname}.{outstyle}':
 
 
 bs = BasisSet.read(args.input, style=args.istyle, debug=True)
+
+if args.decontract:
+    bs = bs.decontracted()
 
 with open(args.output, 'w') as f:
     f.write(bs.print(style=args.ostyle))
