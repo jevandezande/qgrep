@@ -425,31 +425,48 @@ class BasisSet:
                     bfs = []
                     for am, con_length, exp_length in zip(ams, con_lengths, exp_lengths):
                         am, con_length, exp_length = int(am), int(con_length), int(exp_length)
-                        # Read exponents
+                        # Read exponents, 5 per line in official format
                         exp_end = j + (exp_length - 1)//5
-                        exps = [float(x) for xs in lines[j:exp_end + 1] for x in xs.split()]
+                        exps = []
+                        good_exp_num = True
+                        for k, line in enumerate(lines[j:exp_end + 1], start=j):
+                            if not line.strip():
+                                good_exp_num = False
+                                exp_end = k - 1
+                                break
+
+                            xs = line.split()
+                            exps += list(map(float, xs))
+                            if len(xs) > 5:
+                                good_exp_num = False
+
+                        if not good_exp_num:
+                            print('Incorrectly formatted GENBAS exponent section: proceed with caution (section starting on line {})'.format(start))
+
+                        if len(exps) != exp_length:
+                            raise Exception('The number of exponenets in the header ({}) does not match the number of exponents read ({}).'.format(exp_length, len(exps)))
+
                         con_start = exp_end + 2
                         con_end = con_start + exp_length
                         coeffs = []
                         if con_length > 6:
-                            break
-                            pass
-                            #raise Exception('Cannot currently read CFour GenConBasisFunctions with more than 6 coefficients')
+                            print('CFour format does not allow more than 6 contracted coefficients: proceed with caution.')
                         # Read contractions
                         for line in lines[con_start:con_end]:
                             coeffs.append([float(c) for c in line.split()])
                         coeffs = np.array(coeffs).T
-                        if len(coeffs) != con_length:
+                        if len(coeffs) != con_length: 
+                            print(coeffs)
                             if len(coeffs) > con_length and not coeffs[con_length:].any():
                                 coeffs = coeffs[:con_length]
                             else:
                                 if debug:
                                     print('Line {} -- {}:{} section -- {},{},{}'.format(start, atom, basis_name, am, con_length, exp_length))
-                                raise Exception('The number of contractions ({}) read does not match the number of contractions at the start of basis ({}).'.format(len(coeffs), con_length))
+                                raise Exception('The number of contractions in the header ({}) does not match the number of contractions read ({}).'.format(con_length, len(coeffs)))
                         if len(coeffs.T) != exp_length:
                             if debug:
                                 print('Line {} -- {}:{} section -- {},{},{}'.format(start, atom, basis_name, am, con_length, exp_length))
-                            raise Exception('The number of coefficients ({}) read does not match the number of exponents at the start of basis ({}).'.format(len(coeffs.T), exp_length))
+                            raise Exception('The number of coefficients in the header ({}) does not match the number of exponents read ({}).'.format(exp_length, len(coeffs.T)))
                         if con_length > 1:
                             bfs += [BasisFunction(AM[am], exps, c) for c in coeffs]
                             #bfs.append(GenConBasisFunction(bf_list))
