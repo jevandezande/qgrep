@@ -418,6 +418,15 @@ def get_molecule(lines):
     return mol
 
 
+def get_charge(lines):
+    """
+    Returns the charge of the molecule in the computations
+    """
+    for line in reversed(lines):
+        if line[:13] == ' Total Charge':
+            return int(line.split()[-1])
+    return None
+
 def get_multiplicity(lines):
     """
     Returns the multiplicity of the computation. Uses the SCF value.
@@ -498,3 +507,10 @@ def update_geom(infile='input.dat', outfile='output.dat'):
 
     with open(infile, 'w') as f:
         f.writelines(updated)
+
+
+def completed(lines):
+    """
+    Check if the output file shows successful completion
+    """
+    return lines[-1][:14] == 'TOTAL RUN TIME'

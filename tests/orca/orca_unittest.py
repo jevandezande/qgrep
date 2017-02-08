@@ -95,5 +95,14 @@ H      -2.14677300    0.52045900    0.36334300
 F      -3.76420600   -0.44266200    0.03854700'''
         self.assertEqual(molecule, str(orca.get_molecule(self.files['CH3F_Cl_scan.out'])))
 
+    def test_get_charge(self):
+        self.assertEqual(orca.get_charge(self.files['Benzene_freqs.out']), 0)
+        self.assertEqual(orca.get_charge(self.files['CH3F_Cl_scan.out']), -1)
+
+    def test_completed(self):
+        self.assertTrue(orca.completed(self.files['Benzene_freqs.out']))
+        self.assertTrue(orca.completed(self.files['CH3F_Cl_scan.out']))
+
+
 if __name__ == '__main__':
     unittest.main()
