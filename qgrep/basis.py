@@ -480,6 +480,37 @@ class BasisSet:
                 bs.atoms[atom] = Basis(atom, bfs, basis_name)
         elif style == 'bagel':
             raise SyntaxError('Bagel is only partially supported, writing but no reading.')
+        elif style == 'molpro':
+            with open(in_file) as f:
+                lines = [line.strip() for line in f.readlines() if len(line.strip())]
+            atom_old = ''
+            for line in lines:
+                # Ignore start and end
+                if line[:7] == 'basis={' or line[0] == '}':
+                    continue
+                # Comments start with an '!'
+                if line[0] == '!':
+                    continue
+                # Exponent line
+                if line[0].upper() in AM:
+                    am, atom, *exps = line.split(',')
+                    am, atom = am.strip(), atom.strip()
+                    if atom != atom_old:
+                        if atom_old != '':
+                            bs[atom_old] = Basis(atom_old, bfs)
+                        atom_old = atom
+                        bfs = []
+                    exps = [*map(float, exps)]
+                # Coefficient line
+                elif line[0] == 'c':
+                    c, c_range, *coeffs = line.split(',')
+                    coeffs = [*map(float, coeffs)]
+                    c_start, c_end = map(int, c_range.split('.'))
+                    c_exps = exps[c_start - 1:c_end]
+                    bfs.append(BasisFunction(am, c_exps, coeffs))
+                else:
+                    raise SyntaxError('Not sure what to with line:\n{}'.format(line))
+                bs[atom] = Basis(atom, bfs)
         else:
             if style == 'gaussian94':
                 atom_separator = '****'
