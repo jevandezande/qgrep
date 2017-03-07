@@ -64,6 +64,13 @@ class BasisFunction:
         return self.func_type == other.func_type and \
             np.isclose(self.values, other.values).all()
 
+    def __hash__(self):
+        """
+        Hash the BasisFunction
+        WARNING: Hashing floats only checks for exact equality
+        """
+        return hash((self.func_type, self.values.data.tobytes()))
+
     @staticmethod
     def check_exps(exps):
         """Check to make sure that the exponents are valid"""
@@ -280,9 +287,12 @@ class Basis:
         :return: Basis with all BasisFunctions decontracted (duplicates removed)
         """
         basis_functions = []
+        basis_functions_set = set()
         for con in self.basis_functions:
-            # only add new functions (assumes no duplicate functions in contraction)
-            basis_functions += [f for f in con.decontracted() if f not in basis_functions]
+            for f in con.decontracted():
+                if f not in basis_functions_set:
+                    basis_functions_set.add(f)
+                    basis_functions.append(f)
         return Basis(self.atom, basis_functions, self.name)
 
     def print(self, style='gaussian94', print_name=True):
