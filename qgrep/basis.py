@@ -277,14 +277,13 @@ class Basis:
     def decontracted(self):
         """
         Generates a decontracted Basis. See BasisFunction.decontracted()
-        :return: Basis with all BasisFunctions decontracted
+        :return: Basis with all BasisFunctions decontracted (duplicates removed)
         """
         basis_functions = []
         for con in self.basis_functions:
-            basis_functions += con.decontracted()
-        basis = Basis(self.atom, basis_functions, self.name)
-
-        return basis
+            # only add new functions (assumes no duplicate functions in contraction)
+            basis_functions += [f for f in con.decontracted() if f not in basis_functions]
+        return Basis(self.atom, basis_functions, self.name)
 
     def print(self, style='gaussian94', print_name=True):
         """Print all BasisFunctions in the specified format"""
@@ -555,7 +554,7 @@ class BasisSet:
     def decontracted(self):
         """
         Generates a decontracted BasisSet. See BasisFunction.decontracted()
-        :return: BasisSet with all BasisFunctions decontracted
+        :return: BasisSet with all BasisFunctions decontracted (duplicates removed)
         """
         atoms = OrderedDict()
         for atom, basis in self.atoms.items():

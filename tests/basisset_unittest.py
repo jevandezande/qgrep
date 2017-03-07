@@ -179,6 +179,17 @@ SP    3
         self.assertEqual(c_gaussian94, str(self.basis))
         self.assertEqual(c_gamess, self.basis.print('gamess'))
 
+    def test_decontracted(self):
+        """
+        Test decontracting of basis
+        """
+        # Check that s and p are split upon decontraction
+        self.assertEqual(len(self.basis.decontracted()), 11)
+
+        # Check that decontraction removes dulicates
+        basis2 = Basis('C', [self.bfs, self.bfp, self.bfsp, self.bfs, self.bfp, self.bfsp])
+        self.assertEqual(self.basis.decontracted(), basis2.decontracted())
+
 
 class TestBasisSet(unittest.TestCase):
     """Test the BasisSet class"""
