@@ -260,8 +260,8 @@ class TestBasisSet(unittest.TestCase):
         test_file_bagel = 'my_basis_bagel.json.tmp'
         with open(test_file_bagel, 'w') as f:
             f.write(bs.print('bagel'))
-        #bs3 = BasisSet.read(test_file_bagel, 'bagel')
-        #self.assertEqual(bs, bs3)
+        bs3 = BasisSet.read(test_file_bagel, 'bagel')
+        self.assertEqual(bs, bs3)
 
         test_file_cfour = 'my_basis_cfour.GENBAS.tmp'
         with open(test_file_cfour, 'w') as f:

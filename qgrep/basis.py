@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import numpy as np
+import json
 
 SUPPORTED = ['gaussian94', 'gamess', 'bagel', 'cfour']
 AM = 'SPDFGHIKLMN'
@@ -407,7 +408,8 @@ class BasisSet:
     def read(in_file="basis.gbs", style='gaussian94', debug=False):
         """Read a gaussian94 style basis set"""
         # assume spherical
-        bs = BasisSet(name=in_file.split('/')[-1].split('.')[0])
+        basis_name = in_file.split('/')[-1].split('.')[0]
+        bs = BasisSet(name=basis_name)
         num_skip = 0
 
         if style == 'cfour':
@@ -421,7 +423,7 @@ class BasisSet:
                 """ Read Numbering section, i.e.
                 nsections
                     am          am              am          am
-                ncontractions ncontractions ncontractions ncontractions 
+                ncontractions ncontractions ncontractions ncontractions
                     nexp        nexp            nexp        nexp
                 """
                 try:
@@ -460,11 +462,11 @@ class BasisSet:
                         coeffs = []
                         if con_length > 6:
                             print('CFour format does not allow more than 6 contracted coefficients: proceed with caution.')
-                        # Read contractions
+
                         for line in lines[con_start:con_end]:
                             coeffs.append([float(c) for c in line.split()])
                         coeffs = np.array(coeffs).T
-                        if len(coeffs) != con_length: 
+                        if len(coeffs) != con_length:
                             print(coeffs)
                             if len(coeffs) > con_length and not coeffs[con_length:].any():
                                 coeffs = coeffs[:con_length]
@@ -487,8 +489,18 @@ class BasisSet:
                         print('Failed to parse section starting on line {}.'.format(start))
                     raise
                 bs.atoms[atom] = Basis(atom, bfs, basis_name)
+
         elif style == 'bagel':
-            raise SyntaxError('Bagel is only partially supported, writing but no reading.')
+            with open(in_file) as f:
+                in_file_dict = json.load(f)
+            for atom, basis_list in in_file_dict.items():
+                bfs = []
+                for c in basis_list:
+                    am, coeffs, exps = c['angular'], c['cont'], c['prim']
+                    # TODO: Use GenConBasisFunction
+                    bfs += [BasisFunction(am, exps, cs) for cs in coeffs]
+                bs.atoms[atom] = Basis(atom, bfs, basis_name)
+
         elif style == 'molpro':
             with open(in_file) as f:
                 lines = [line.strip() for line in f.readlines() if len(line.strip())]
