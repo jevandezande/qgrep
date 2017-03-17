@@ -35,7 +35,7 @@ def plot(lines, geom_type='xyz'):
     """Plots all the geometries for the optimization steps"""
     if geom_type != 'xyz':
         raise SyntaxError('Only xyz coordinates are currently supported')
-    
+
     start = 'Standard Nuclear Orientation (Angstroms)'
     end = 'Molecular Point Group'
 
@@ -128,7 +128,7 @@ def generate_input(geom='', options=None):
                     multiplicity = int(geom[0][1])
                 else:
                     check.append('charge/multiplicity')
-                    
+
                 if len(geom[0]) == 1 and geom[0][0].isdigit():
                     # Remove the useless numatoms and blank line
                     geom = geom[2:]
@@ -159,7 +159,7 @@ def generate_input(geom='', options=None):
     # Extra options
     if not 'max_scf_cycles' in options:
         options['max_scf_cycles'] = '300'
-    
+
     # Write rem section using keys and values from dictionary
     kv_form = '\t{:<19s} {}\n'
     rem = ''.join([kv_form.format(k, v) for k, v in sorted(options.items())])

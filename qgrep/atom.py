@@ -32,7 +32,7 @@ class Atom:
     Simple atom class
     """
     def __init__(self, name, *xyz):
-       self.check_name(name) 
+       self.check_name(name)
        self.check_xyz(xyz)
        self.name = name
        self.xyz = xyz
@@ -43,7 +43,7 @@ class Atom:
     def check_name(self, name):
         if name not in short_to_long_names or name not in long_to_short_names:
             raise SyntaxError('Invalid atom name')
-        
+
     def check_xyz(self, xyz):
         if len(xyz) != 3:
             raise SyntaxError('Improper number of coordinates')

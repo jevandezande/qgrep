@@ -2,6 +2,7 @@
 
 from .helper import BOHR_TO_ANGSTROM
 
+
 def get_geom(lines, geom_type='xyz', units='angstrom'):
     """
     Takes the lines of a Molpro output file and returns its last geometry in the
@@ -33,12 +34,14 @@ def get_geom(lines, geom_type='xyz', units='angstrom'):
 
     return geom
 
+
 def get_energy(lines, energy_type=''):
     """Get the energy"""
     # The energy will always be on the third line from the end, zeroth element
     energy = lines[-3].split()[0]
 
     return energy
+
 
 def check_convergence(lines):
     """

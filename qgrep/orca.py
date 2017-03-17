@@ -439,7 +439,7 @@ def get_multiplicity(lines):
 
 
 def convergence(output_file):
-    """ 
+    """
     Sample geometry convergence output. May not include energy change line
                                 .--------------------.
           ----------------------|Geometry convergence|---------------------
@@ -480,7 +480,7 @@ def convergence(output_file):
         ms_val, ms_tol, ms_conv = match[13:16]
         rg_val, mg_val, rs_val, ms_val = float(rg_val), float(mg_val), float(rs_val), float(ms_val)
         steps.append(Step(e_val, rg_val, mg_val, rs_val, ms_val))
-        
+
     return Convergence(steps, [])
 
 
@@ -514,3 +514,21 @@ def completed(lines):
     Check if the output file shows successful completion
     """
     return lines[-1][:14] == 'TOTAL RUN TIME'
+
+
+def get_nat_orb_occ(lines):
+    """
+    Find the natural orbital occupations
+    """
+    nat_occ = []
+    start = False
+    for line in lines:
+        if start:
+            if line.strip():
+                nat_occ.append(abs(float(line.split('=')[-1].strip())))
+            else:
+                break
+        elif line == 'Natural Orbital Occupation Numbers:\n':
+            start = True
+
+    return nat_occ

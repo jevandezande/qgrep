@@ -102,13 +102,13 @@ def get_ir(lines):
                vib_modes_end = i - 1
            elif 'Normal Coordinates' in line:
                vib_modes_start = i + 2
-           elif 'Zero-point vibrational energy' in line: 
+           elif 'Zero-point vibrational energy' in line:
                   vib_freqs_end = i - 1
            elif 'Cartesian force constants:' in line:
                if num_atoms == 2:
-                 vib_freqs_start = i # + 1 + 5 # The + 6 is to exclude the 0.000 cm^-1 freqs 
+                 vib_freqs_start = i # + 1 + 5 # The + 6 is to exclude the 0.000 cm^-1 freqs
                else:
-                 vib_freqs_start = i #+ 1 + 6 # The + 6 is to exclude the 0.000 cm^-1 freqs 
+                 vib_freqs_start = i #+ 1 + 6 # The + 6 is to exclude the 0.000 cm^-1 freqs
                break
         else:
            if 'Gradient vector in normal coordinate representation' in line:
@@ -119,9 +119,9 @@ def get_ir(lines):
                   vib_freqs_end = i - 1
            elif 'Cartesian force constants:' in line:
                if num_atoms == 2:
-                 vib_freqs_start = i# + 1 + 5 # The + 6 is to exclude the 0.000 cm^-1 freqs 
+                 vib_freqs_start = i# + 1 + 5 # The + 6 is to exclude the 0.000 cm^-1 freqs
                else:
-                 vib_freqs_start = i# + 1 + 6 # The + 6 is to exclude the 0.000 cm^-1 freqs 
+                 vib_freqs_start = i# + 1 + 6 # The + 6 is to exclude the 0.000 cm^-1 freqs
                break
 
     freqs = []
@@ -145,7 +145,7 @@ def get_theo_method(lines):
         basis = lines[i].split()[2]
       if 'IREFNC' in lines[i]:
         reference = lines[i].split()[2]
-    
+
     return theory, basis, reference
 
 def get_charge(lines):
@@ -156,7 +156,7 @@ def get_charge(lines):
         charge = lines[i].split()[2]
 
     return charge
-      
+
 def get_multiplicity(lines):
     """ Searches through file and finds the charge of the molecule. """
 
@@ -179,19 +179,19 @@ def get_conv_params(lines):
       if 'IZTACN' in lines[i]:
         lineq_conv = lines[i].split()[3]
       if 'Integrals less than' in lines[i]:
-        int_thresh = lines[i].split()[3]      
-      
+        int_thresh = lines[i].split()[3]
+
     return scf_conv, cc_conv, geo_conv, lineq_conv, int_thresh
 
 def get_diagnostics(lines):
     """ Gets the S^2 and T1 and T2 diagnostics. """
-    s2 = maxT2 = t1a = t1b = t1 = 0.0 
+    s2 = maxT2 = t1a = t1b = t1 = 0.0
     end = case = caset1 = Nbeta = Nalpha = Ncore = 0
 
     for i in reversed(list(range(len(lines)))):
       if 'The expectation value of S**2 is' in lines[i]:
         s2 = lines[i].split()[6]
-    
+
       if 'Largest T2 amplitudes for spin case' in lines[i]:
         maxT = 0
         case = case + 1
@@ -251,7 +251,7 @@ def get_final_energy(lines):
 
 def get_energy(lines):
     """ Obtain the latest HF, MP2, CCSD, and CCSD(T), energies. """
-    
+
     for i in reversed(list(range(len(lines)))):
       if 'CCSD(T) energy' in lines[i]:
         ccsdpt_energy = lines[i].strip().split()[2]

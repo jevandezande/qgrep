@@ -69,7 +69,7 @@ class Convergence:
     @property
     def max_grad(self):
         return np.array([step.max_grad for step in self.steps])
-        
+
     @property
     def rms_grad(self):
         return np.array([step.rms_grad for step in self.steps])

@@ -43,7 +43,7 @@ def get_geom(lines, geom_type='xyz', units='Angstroms'):
                 break
         if geom_start == 0:
             return ''
-        
+
         geom_end = 0
         for i, line in enumerate(lines[geom_start:], start=geom_start):
             if line == '\n':

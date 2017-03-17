@@ -1,7 +1,9 @@
 """A repository for various helper functions"""
 import numpy as np
 
+
 BOHR_TO_ANGSTROM=0.52917721067
+
 
 def read(file_name):
     """
@@ -76,7 +78,6 @@ def find_input_program(in_file):
         elif 'molecule' == line[:8] or 'set ' == line[:4]:
             return 'psi4'
     return None
-        
 
 
 # Values from NIST
@@ -93,7 +94,7 @@ def convert_energy(data, in_type='hartree', out_type='kcal/mol'):
     if in_type not in energy_conversions or out_type not in energy_conversions[in_type]:
         raise SyntaxError("Unsupported energy type, please use {}".format(list(energy_conversions.keys())))
     conversion = energy_conversions[in_type][out_type]
-    
+
     if isinstance(data, (int, float)):
         return data * conversion
     elif isinstance(data, np.ndarray):
@@ -105,6 +106,7 @@ def convert_energy(data, in_type='hartree', out_type='kcal/mol'):
             raise SyntaxError("List may only be filled with numbers.")
     else:
         raise SyntaxError(type(data) + " is not currently supported. Please use int, float, np.ndarray, or list")
+
 
 class colors:
     normal = '\033[0m'
