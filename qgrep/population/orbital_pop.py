@@ -60,7 +60,7 @@ class OrbitalPopulation:
         elif format == 'csv':
             out = self.csv()
         elif format == 'latex':
-            out = '\n\n'.join([str(orb) for orb in self.orb_list])
+            out = '\n\n'.join([orb.latex() for orb in self.orb_list])
         else:
             raise SyntaxError('Invalid write format.')
 
@@ -347,11 +347,13 @@ class MOrbital:
         """
         Make into a latex tabular
         """
-        aoc_latex = '\\begin{tabular}{r l r r}\n Index & Atom & AO & val \\\\ \\hline\n'
+        aoc_latex = '{:>2d} {: > 6.4f} {:>3.2f}\n'.format(self.index, self.energy, self.occupation)
+        aoc_latex += '\\begin{tabular}{r l r r}\n Index & Atom & AO  &  val \\\\ \\hline\n'
         for aoc in self.contributions:
-            aoc_latex += '{:>2d} & {:<2s} & {:<4s} & {:>4.1f} \\\n'.format(aoc.index, aoc.atom, aoc.ao, aoc.val)
+            aoc_latex += '{:>6d} & {:<4s} & {:<3s} & {:>4.1f} \\\\\n'.format(aoc.index, aoc.atom, aoc.ao, aoc.val)
         aoc_latex += '\\end{tabular}'
-        return '{: >2d} {: > 6.4f} {:>3.2f}\n{}'.format(self.index, self.energy, self.occupation, ao_contrib_str)
+
+        return aoc_latex
 
     def atom_contract(self):
         """
