@@ -9,7 +9,7 @@ from .helper import colors
 JOB_ID_LENGTH = 7
 COLUMN_WIDTH = 23 + JOB_ID_LENGTH
 SMALL = 3
-BAR = colors.purple + '|' + colors.normal
+BAR = colors.purple + '│' + colors.normal
 
 
 class Queues:
@@ -46,10 +46,12 @@ class Queues:
         """
         # Form header (without small queues)
         large_num = sum([size > SMALL for size in self.sizes.values()])
-        # Horizontal line
-        line = '\033[95m' + '-'*(COLUMN_WIDTH*large_num + 1)+ '\033[0m\n'
+        # Horizontal line (uses box drawing characters)
+        top_line = '\033[95m' + '┌' + '┬'.join(['─'*(COLUMN_WIDTH - 1)]*large_num) + '┐' + '\033[0m\n'
+        mid_line = '\033[95m' + '├' + '┼'.join(['─'*(COLUMN_WIDTH - 1)]*large_num) + '┤' + '\033[0m\n'
+        bot_line = '\033[95m' + '└' + '┴'.join(['─'*(COLUMN_WIDTH - 1)]*large_num) + '┘' + '\033[0m\n'
 
-        out = line
+        out = top_line
 
         name_form = '{} ({:2d}/{:2d}/{:2d})'
         # Print a nice header
@@ -58,14 +60,14 @@ class Queues:
             if queue.size <= SMALL:
                 continue
             out += BAR + ('{:^' + str(COLUMN_WIDTH-1) + '}').format(name_form.format(name, queue.used, queue.avail, queue.queued))
-        out += BAR + '\n' + line
+        out += BAR + '\n' + mid_line
         header = BAR + '  ID   USER    Job Name   St'.rjust(COLUMN_WIDTH-1)
-        out += header*large_num + BAR + '\n' + line
+        out += header*large_num + BAR + '\n' + mid_line
 
         if person is True:
             person = getpass.getuser()
 
-        # Remove small queues
+        # Remove small queues for later use
         job_list = []
         small_queues = []
         for name, queue in sorted(self.queues.items()):
@@ -89,12 +91,14 @@ class Queues:
             for job in job_row:
                 out += BAR + str(job) if job else blank
             out += BAR + '\n'
-        out += line
+        out += mid_line if small_queues else bot_line
 
-        for queue in small_queues:
-            out += queue.print_inline(large_num, None, person) + '\n' + line
+        # Display small queues below other queues
+        for i, queue in enumerate(small_queues):
+            out += queue.print_inline(large_num, None, person) + '\n'
+            out += mid_line if i < len(small_queues) - 1 else bot_line
 
-        # Remove newline
+        # Remove newline character
         out = out[:-1]
 
         return out
