@@ -1,4 +1,4 @@
-"""Source for all gaussian related functions"""
+"""Source for all Gaussian related functions"""
 
 import re
 from .atom import Atom

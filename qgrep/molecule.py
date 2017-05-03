@@ -59,7 +59,7 @@ class Molecule(object):
     @property
     def geom(self):
         """Return the geometry
-        Use self._geom to store the geomtery so extra checks can be added"""
+        Use self._geom to store the geometry so extra checks can be added"""
         return self._geom
 
     @geom.setter
@@ -96,7 +96,7 @@ class Molecule(object):
 
     @staticmethod
     def read_geom(infile="geom.xyz"):
-        """Read the geometry from a file, currectly only supports XYZ files"""
+        """Read the geometry from a file, correctly only supports XYZ files"""
         lines, program = helper.read(infile)
         if program:
             if program == 'zmatrix':

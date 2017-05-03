@@ -55,7 +55,7 @@ def get_geom(lines, geom_type='xyz', units='angstrom'):
 
 
 def plot(lines, geom_type='xyz'):
-    """Plots the the geometries from the optimization steps"""
+    """Plots the geometries from the optimization steps"""
     start = ' COORDINATES OF ALL ATOMS ARE (ANGS)\n'
     end = '\n'
     geoms = []

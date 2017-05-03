@@ -7,7 +7,7 @@ class Step:
     """
     def __init__(self, delta_e=None, rms_grad=None,
                  max_grad=None, rms_step=None, max_step=None):
-        # TODO: institue better checks
+        # TODO: institute better checks
         self.delta_e  = delta_e
         self.rms_grad = rms_grad
         self.max_grad = max_grad

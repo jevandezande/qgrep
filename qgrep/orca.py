@@ -50,7 +50,7 @@ def get_geom(lines, geom_type='xyz', units='angstrom'):
 
 
 def plot(lines, geom_type='xyz'):
-    """Plots the the geometries from the optimization steps"""
+    """Plots the geometries from the optimization steps"""
     start = 'CARTESIAN COORDINATES (ANGSTROEM)\n'
     end = 'CARTESIAN COORDINATES (A.U.)\n'
 

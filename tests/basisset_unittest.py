@@ -166,7 +166,7 @@ SP    3
         # Check that s and p are split upon decontraction
         self.assertEqual(len(self.basis.decontracted()), 11)
 
-        # Check that decontraction removes dulicates
+        # Check that decontraction removes duplicates
         basis2 = Basis('C', [self.bfs, self.bfp, self.bfsp, self.bfs, self.bfp, self.bfsp])
         self.assertEqual(self.basis.decontracted(), basis2.decontracted())
 

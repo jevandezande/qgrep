@@ -27,6 +27,7 @@ def get_geom(lines, type='xyz', units='angstrom'):
         raise Exception('Could not find end of geometry')
 
     scale = 1
+    units = units.lower()
     if units == 'angstrom':
         scale = BOHR_TO_ANGSTROM
     elif units != 'bohr':
@@ -43,7 +44,7 @@ def get_geom(lines, type='xyz', units='angstrom'):
 
 
 def plot(lines, type='xyz'):
-    """Plots the the geometries from the optimization steps"""
+    """Plots the geometries from the optimization steps"""
 
     return get_geom(lines)
 

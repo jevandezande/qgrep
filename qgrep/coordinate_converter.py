@@ -1,5 +1,5 @@
 """
-A module for converting between zmatrices and cartesian coordinates
+A module for converting between zmatrices and Cartesian coordinates
 """
 
 import math as m
@@ -90,8 +90,8 @@ class CoordinateConverter:
 
     def read_cartesian(self, input_file='geom.xyz'):
         """
-        Read the cartesian coordinates file (assumes no errors)
-        The cartesian coordinates consist of a list of atoms formatted as
+        Read the Cartesian coordinates file (assumes no errors)
+        The Cartesian coordinates consist of a list of atoms formatted as
         follows:
         [name, np.array([x, y, z]), mass]
         """
@@ -150,7 +150,7 @@ class CoordinateConverter:
         self.cartesian.append(atom)
 
     def add_atom_to_cartesian(self, coords):
-        """Find the cartesian coordinates of the atom"""
+        """Find the Cartesian coordinates of the atom"""
         name, coords, mass = coords
         atom1, distance = coords[0]
         atom2, angle = coords[1]
@@ -183,7 +183,7 @@ class CoordinateConverter:
         self.cartesian.append(atom)
 
     def zmatrix_to_cartesian(self):
-        """Convert the zmartix to cartesian coordinates"""
+        """Convert the zmartix to Cartesian coordinates"""
         # Deal with first three line separately
         self.add_first_three_to_cartesian()
 
@@ -228,7 +228,7 @@ class CoordinateConverter:
     def add_atom_to_zmatrix(self, i, line):
         """
         Generates an atom for the zmatrix
-        (assumes that three previous atoms have been placed in the cartesian
+        (assumes that three previous atoms have been placed in the Cartesian
         coordinates)
         """
         name, position, mass = line
@@ -260,7 +260,7 @@ class CoordinateConverter:
         self.zmatrix.append(atom)
 
     def cartesian_to_zmatrix(self):
-        """Convert the cartesian coordinates to a zmatrix"""
+        """Convert the Cartesian coordinates to a zmatrix"""
         self.add_first_three_to_zmatrix()
         for i in range(3, len(self.cartesian)):
             line = self.cartesian[i]
@@ -271,7 +271,7 @@ class CoordinateConverter:
     def remove_dummy_atoms(self):
         """
         Delete any dummy atoms that may have been placed in the calculated
-        cartesian coordinates
+        Cartesian coordinates
         """
         new_cartesian = []
         for line in self.cartesian:
@@ -299,7 +299,7 @@ class CoordinateConverter:
             atom[1][2][1] = np.degrees(atom[1][2][1])
 
     def output_cartesian(self, output_file='geom.xyz'):
-        """Output the cartesian coordinates of the file"""
+        """Output the Cartesian coordinates of the file"""
         with open(output_file, 'w') as f:
             f.write(str(len(self.cartesian)))
             f.write('\n\n')
@@ -310,7 +310,7 @@ class CoordinateConverter:
                 f.write('\n')
 
     def print_cartesian(self):
-        """Print the cartesian coordinates"""
+        """Print the Cartesian coordinates"""
         for line in self.cartesian:
             print(line[0] + '\t' + '\t'.join(str(x) for x in line[1]))
 
@@ -333,7 +333,7 @@ class CoordinateConverter:
 
     def convert_zmatrix(self, input_file='geom.zmat', output_file='geom.xyz'):
         """
-        Read in the zmatrix, converts it to cartesian, and outputs it to a file.
+        Read in the zmatrix, converts it to Cartesian, and outputs it to a file.
         """
         self.read_zmatrix(input_file)
 
@@ -345,7 +345,7 @@ class CoordinateConverter:
 
     def convert_cartesian(self, input_file='geom.xyz', output_file='geom.zmat'):
         """
-        Read in the cartesian coordinates, convert to cartesian, and output the
+        Read in the Cartesian coordinates, convert to Cartesian, and output the
         file.
         """
         self.read_cartesian(input_file)

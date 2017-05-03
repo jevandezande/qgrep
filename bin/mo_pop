@@ -18,11 +18,11 @@ parser.add_argument('-i', '--input', help='The file to be read.', type=str,
 parser.add_argument('-n', '--number', help='The number of orbitals above and '\
                     'below the fermi level to be output.', type=int, default=2)
 parser.add_argument('-c', '--crop', help='Crop the output', default=False, action='store_true')
-parser.add_argument('-a', '--atom_contract', help='Contract all ao contributions on the same atom',
+parser.add_argument('-a', '--atom_contract', help='Contract all AO contributions on the same atom',
                     default=False, action='store_true')
 parser.add_argument('-j', '--am_contract', help='Contract all of the same am contributions.',
                     default=False, action='store_true')
-parser.add_argument('-s', '--sorted', help='Sort by ao_contribution.',
+parser.add_argument('-s', '--sorted', help='Sort by AO contribution.',
                     default=False, action='store_true')
 parser.add_argument('-l', '--latex', help='Write in latex format',
                     default=False, action='store_true')

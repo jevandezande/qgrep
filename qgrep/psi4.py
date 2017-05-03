@@ -58,7 +58,7 @@ def get_geom(lines, geom_type='xyz', units='Angstroms'):
 
 
 def plot(lines, geom_type='xyz'):
-    """Plots the the geometries from the optimization steps"""
+    """Plots the geometries from the optimization steps"""
     start = '\tCartesian Geometry (in Angstrom)\n'
     end = '\t\t\t OPTKING Finished Execution \n'
 
@@ -216,7 +216,7 @@ def get_energy(lines, energy_type='sp'):
 
 def get_energies(lines, energy_type='sp'):
     """
-    Returns the enrgies of an optimization
+    Returns the energies of an optimization
     """
     energies = []
     if energy_type == 'sp':

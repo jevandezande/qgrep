@@ -44,7 +44,7 @@ class BasisFunction:
         self.values[item] = value
 
     def __repr__(self):
-        """Make a nice represenation of the BasisFunction"""
+        """Make a nice representation of the BasisFunction"""
         mult_str = '' if self.num_coeffs == 1 else 'x' + str(self.coeffs.shape[1])
         return "<BasisFunction {:s} {:d}{}>".format(self.func_type, len(self.exps), mult_str)
 
@@ -108,7 +108,7 @@ class BasisFunction:
 
     def decontracted(self):
         """
-        Creates individual BasisFunctions with only a single gaussian
+        Creates individual BasisFunctions with only a single Gaussian
         :yield: BasisFunctions with a single element
         """
         func_type, exps, coeffs = self.func_type, self.exps, self.coeffs
@@ -380,7 +380,7 @@ class BasisSet:
                             print('Incorrectly formatted GENBAS exponent section: proceed with caution (section starting on line {})'.format(start))
 
                         if len(exps) != exp_length:
-                            raise Exception('The number of exponenets in the header ({}) does not match the number of exponents read ({}).'.format(exp_length, len(exps)))
+                            raise Exception('The number of exponents in the header ({}) does not match the number of exponents read ({}).'.format(exp_length, len(exps)))
 
                         con_start = exp_end + 2
                         con_end = con_start + exp_length
@@ -529,6 +529,6 @@ class BasisSet:
             raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
 
     def values(self):
-        """Returns a list of list of np.array(exp, coeff, *coeff2)"""
+        """Returns a list of list of np.array(exp, coeff)"""
         vals = [[con.values for con in basis] for basis in self]
         return vals

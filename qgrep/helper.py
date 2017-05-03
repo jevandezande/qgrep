@@ -55,7 +55,7 @@ def find_input_program(in_file):
     """
     Find the type of input file based on unique identifiers
 
-    :param in_file: file name string
+    :param: in_file: file name string
     :return: string of the program or None
     """
     lines = open(in_file).readlines()
