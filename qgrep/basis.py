@@ -1,4 +1,4 @@
-from collections import OrderedDict
+from collections import OrderedDict, Iterable
 import numpy as np
 import json
 
@@ -8,32 +8,27 @@ AM = 'SPDFGHIKLMN'
 class BasisFunction:
     """A primitive or a contraction of primitives"""
 
-    def __init__(self, func_type, exps, coeffs, c2=None):
-        if not c2:
-            c2 = []
+    def __init__(self, func_type, exps, coeffs):
+        exps, coeffs = np.array(exps), np.array(coeffs)
+        self.num_coeffs = 1 if len(coeffs.shape) == 1 else coeffs.shape[0]
         self.func_type = func_type.upper()
         if not self.func_type in 'SPDFGHIKLMN':
             raise SyntaxError("Invalid angular momentum.")
-        if self.func_type == 'SP':
-            if len(c2) == 0:
-                raise SyntaxError('Expected second set of coefficients for '
-                                  'combined BasisFunction.')
+        if self.func_type == 'SP' and coeffs.shape[0] != 2:
+            raise SyntaxError('Expected exactly two sets of coefficients for combined BasisFunction.')
 
-
-        if len(exps) == 0 or len(exps) != len(coeffs):
+        if len(exps) == 0 or len(coeffs) == 0:
+            raise SyntaxError('Cannot create an empty BasisFunction')
+        elif len(exps) != coeffs.shape[-1]:
             raise SyntaxError(('Need coefficients and exponents of the same'
                               'length, got: \n{}\n{}').format(exps, coeffs))
+
         BasisFunction.check_exps(exps)
         BasisFunction.check_coeffs(coeffs)
-        if len(c2) > 0 and len(c2) != len(coeffs):
-            raise SyntaxError('Second set of coefficients must have the same'
-                              'number as the first set')
-        self.c2 = True
-        if len(c2) == 0:
-            self.values = np.array(list(zip(exps, coeffs)))
-            self.c2 = False
-        else:
-            self.values = np.array(list(zip(exps, coeffs, c2)))
+
+        if self.num_coeffs == 1:
+            coeffs = coeffs[np.newaxis, :]
+        self.values = np.append(exps[:, np.newaxis], coeffs.T, axis=1)
 
     def __len__(self):
         return len(self.values)
@@ -43,17 +38,14 @@ class BasisFunction:
 
     def __setitem__(self, item, value):
         if len(value) != len(self.values[0]):
-            raise ValueError("Incorrect size, expected {} elements.".format(
-                len(self.values[0])))
+            raise ValueError("Incorrect size, expected {} elements.".format(len(self.values[0])))
         if not value[0] > 0:
             raise ValueError("All exponents must be greater than 0")
         self.values[item] = value
 
     def __repr__(self):
         """Make a nice represenation of the BasisFunction"""
-        mult_str = ''
-        if self.c2:
-            mult_str = 'x2'
+        mult_str = '' if self.num_coeffs == 1 else 'x' + str(self.coeffs.shape[1])
         return "<BasisFunction {:s} {:d}{}>".format(self.func_type, len(self.exps), mult_str)
 
     def __str__(self):
@@ -62,6 +54,7 @@ class BasisFunction:
 
     def __eq__(self, other):
         """Check if the two BasisFunctions are the same"""
+        # TODO: Change this to exact equality and make inexact a separate function?
         return self.func_type == other.func_type and \
             np.isclose(self.values, other.values).all()
 
@@ -82,7 +75,8 @@ class BasisFunction:
     @staticmethod
     def check_coeffs(coeffs):
         """Check to make sure that the coefficients are valid"""
-        pass
+        if len(coeffs.shape) not in [1, 2]:
+            raise SyntaxError('Wrong dimension of coeffs array.')
 
     @property
     def exps(self):
@@ -95,19 +89,15 @@ class BasisFunction:
 
     @property
     def coeffs(self):
-        return self.values[:, 1]
+        """Returns a np.array of values of shape (n_exps) or (n_exps, n_coeffs)"""
+        return self.values[:, 1:]
 
     @coeffs.setter
-    def coeffs(self, value):
-        self.values[:, 1] = value
-
-    @property
-    def coeffs2(self):
-        return self.values[:, 2]
-
-    @coeffs2.setter
-    def coeffs2(self, value):
-        self.values[:, 2] = value
+    def coeffs(self, cs):
+        BasisFunction.check_coeffs(cs)
+        if self.coeffs.shape != cs.shape:
+            raise SyntaxError('Incorrect number of coeffs: expected {}, got {}'.format(self.coeffs.shape, cs.shape))
+        self.values[:, 1:] = cs
 
     @property
     def am(self):
@@ -124,96 +114,31 @@ class BasisFunction:
         func_type, exps, coeffs = self.func_type, self.exps, self.coeffs
 
         if func_type == 'SP':
-            coeffs2 = self.coeffs2
-            yield from BasisFunction('S', np.array(exps), np.array(coeffs)).decontracted()
-            yield from BasisFunction('P', np.array(exps), np.array(coeffs2)).decontracted()
+            yield from BasisFunction('S', np.array(exps), coeffs[:, 0]).decontracted()
+            yield from BasisFunction('P', np.array(exps), coeffs[:, 1]).decontracted()
         else:
-            # Note: Does not decontract coeffs2, as it would generate the same BasisFunctions
-            for exp, coeff in zip(exps, coeffs):
+            # Note: Only needs exp as all different coeffs will produce same BasisFunction
+            for exp in exps:
                 yield BasisFunction(func_type, [exp], [1])
 
     def print(self, style='gaussian94', atom=''):
         """Print the BasisFunction to a string"""
+        num_coeffs = self.num_coeffs
         out = ''
-        num_coeffs = 1 + int(self.c2)
-        form = '{:>17.7f}' + ' {:> 11.7f}' * num_coeffs
-        if style == 'gaussian94':
-            out = '{:<2}    {}\n'.format(self.func_type, len(self))
-            out += '\n'.join([form.format(*group) for group in self.values]) + '\n'
-        elif style == 'gamess':
-            out = '{:<2}    {}\n'.format(self.func_type, len(self))
-            form = ' {:>2} ' + form
-            out += '\n'.join([form.format(i, *group) for i, group in
-                              enumerate(self.values, start=1)]) + '\n'
-        elif style == 'bagel':
-            vals_form = ','.join(['{:15.8f}']*len(self))
-            c_form = vals_form + ('], [' + vals_form if self.c2 else '')
-            bagel_form = '{{\n    "angular" : "{:s}", \n       "prim" :  [' + vals_form + '],\n       "cont" : [[' + c_form + ']]\n}}'
-            if self.c2:
-                return bagel_form.format(self.func_type.lower(), *self.exps, *self.coeffs, *self.coeffs2)
-            else:
-                return bagel_form.format(self.func_type.lower(), *self.exps, *self.coeffs)
-        elif style == 'cfour':
-            # Print exponents
-            for i, exp in enumerate(self.exps):
-                if not i % 6:
-                    out += '\n'
-                out += ' {:>12.7g}'.format(exp)
-            out += '\n\n'
-            # Print coefficients
-            if len(self.coeffs.shape) == 1:
-                out += (' {:>12.7g}\n'*len(self.coeffs)).format(*self.coeffs)
-            else:
-                for c_line in self.coeffs:
-                    out += (' {:>12.7g}'*len(self.coeffs)).format(*c_line) + '\n'
-        else:
-            raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
-        return out
-
-
-class GenConBasisFunction:
-    """
-    A collection of basis functions, all sharing the same exponents
-
-    TODO: Make this a subclass of BasisFunction
-    """
-
-    def __init__(self, basisFunctions):
-        self.bfs = basisFunctions
-        self.values = np.array(list(zip(self.bfs[0].exps, *[x.coeffs for x in self.bfs])))
-        self.func_type = self.bfs[0].func_type
-
-    def __len__(self):
-        return len(self.exps)
-
-    def __str__(self):
-        return self.print()
-
-    @property
-    def exps(self):
-        return self.values[:, 0]
-
-    @property
-    def coeffs(self):
-        return self.values[:, 1:]
-
-    def print(self, style='gaussian94'):
-        """Print the GenConBasisFunction to a string"""
-        out = ''
-        num_coeffs = len(self.bfs)
         form = '{:>17.7f}' + ' {:> 11.7f}' * num_coeffs
         if style == 'gaussian94':
             out += '{:<2}    {}\n'.format(self.func_type, len(self))
-            out += '\n'.join([form.format(*group) for group in self.values])
+            for group in self.values:
+                out += form.format(*group) + '\n'
         elif style == 'gamess':
             out += '{:<2}    {}\n'.format(self.func_type, len(self))
             form = ' {:>2} ' + form
-            out += '\n'.join([form.format(i, *group) for i, group in
-                              enumerate(self.values, start=1)])
+            for i, group in enumerate(self.values, start=1):
+                out += form.format(i, *group) + '\n'
         elif style == 'bagel':
             vals_form = ','.join(['{:>15.8f}']*len(self))
-            c_form = ', '.join(['[' + vals_form  + ']']*len(self.bfs))
-            bagel_form = '{{\n    "angular" : "{:s}",\n       "prim" :  [' + vals_form + '],\n       "cont" : [[' + c_form + ']]\n}}'
+            c_form = ', '.join(['[' + vals_form  + ']']*num_coeffs)
+            bagel_form = '{{\n    "angular" : "{:s}",\n       "prim" :  [' + vals_form + '],\n       "cont" : [' + c_form + ']\n}}\n'
             out += bagel_form.format(self.func_type.lower(), *self.exps, *self.coeffs.flatten())
         elif style == 'cfour':
             # Print exponents
@@ -224,10 +149,10 @@ class GenConBasisFunction:
             out += '\n\n'
             # Print coefficients
             for c_line in self.coeffs:
-                out += (' {:>12.7g}'*len(self.coeffs)).format(*c_line) + '\n'
+                out += (' {:>12.7g}'*self.num_coeffs).format(*c_line) + '\n'
         else:
             raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
-        return out + '\n'
+        return out
 
 
 class Basis:
@@ -238,7 +163,7 @@ class Basis:
             basis_functions = []
         self.atom = atom
         if not isinstance(basis_functions, list) or not all(
-                map(lambda x: isinstance(x, (BasisFunction, GenConBasisFunction)), basis_functions)):
+                map(lambda x: isinstance(x, BasisFunction), basis_functions)):
             raise SyntaxError("Expected a list of BasisFunctions")
         self.basis_functions = basis_functions
         self.name = name
@@ -480,7 +405,6 @@ class BasisSet:
                             raise Exception('The number of coefficients in the header ({}) does not match the number of exponents read ({}).'.format(exp_length, len(coeffs.T)))
                         if con_length > 1:
                             bfs += [BasisFunction(AM[am], exps, c) for c in coeffs]
-                            #bfs.append(GenConBasisFunction(bf_list))
                         else:
                             bfs.append(BasisFunction(AM[am], exps, coeffs[0]))
                         j = con_end + 1
@@ -497,8 +421,11 @@ class BasisSet:
                 bfs = []
                 for c in basis_list:
                     am, coeffs, exps = c['angular'], c['cont'], c['prim']
-                    # TODO: Use GenConBasisFunction
-                    bfs += [BasisFunction(am, exps, cs) for cs in coeffs]
+                    coeffs = np.squeeze(np.array(coeffs))
+                    if len(coeffs.shape) == 1:
+                        bfs.append(BasisFunction(am, exps, coeffs))
+                    else:
+                        bfs += [BasisFunction(am, exps, cs) for cs in coeffs]
                 bs.atoms[atom] = Basis(atom, bfs, basis_name)
 
         elif style == 'molpro':
@@ -558,12 +485,10 @@ class BasisSet:
                         con = []
                         for line in basis_chunk[i + 1:i + num + 1]:
                             con.append([float(x) for x in line.split()[num_skip:]])
-                        # Makes an empty list if no elements for coeffs2
-                        exps, coeffs, *coeffs2 = zip(*con)
-                        if coeffs2:
-                            # Remove extra list
-                            coeffs2 = coeffs2[0]
-                        con_list.append(BasisFunction(am, exps, coeffs, coeffs2))
+                        exps, *coeffs = zip(*con)
+                        # Remove extra list
+                        coeffs = np.array(coeffs[0])
+                        con_list.append(BasisFunction(am, exps, coeffs))
                         i += num + 1
                     bs.atoms[atom] = Basis(atom, con_list)
                 except:

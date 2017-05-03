@@ -1,8 +1,9 @@
 import unittest
 from sys import path
 path.insert(0, '..')
-from qgrep.basis import BasisFunction, GenConBasisFunction, Basis, BasisSet
+from qgrep.basis import BasisFunction, Basis, BasisSet
 import numpy as np
+from numpy.testing import assert_array_almost_equal as aaa_equal
 from collections import OrderedDict
 import os
 from glob import glob
@@ -13,8 +14,8 @@ class TestBasisFunction(unittest.TestCase):
     def setUp(self):
         self.bfs = BasisFunction('S', [1, 2], [0.5, 0.5])
         self.bfp = BasisFunction('P', [0.01, 0.2, 1], [0.3, 0.4, 0.3])
-        self.bfd = BasisFunction('D', [1, 2], [0.3, 0.7], [0.4, 0.6])
-        self.bfsp = BasisFunction('SP', [0.1, 0.4, 3], [0.2, 0.3, 0.5], [0.1, 0.3, 0.6])
+        self.bfd = BasisFunction('D', [1, 2], [[0.3, 0.7], [0.4, 0.6]])
+        self.bfsp = BasisFunction('SP', [0.1, 0.4, 3], [[0.2, 0.3, 0.5], [0.1, 0.3, 0.6]])
 
     def test_len(self):
         """Test __len__"""
@@ -46,11 +47,18 @@ class TestBasisFunction(unittest.TestCase):
         BasisFunction.check_exps([1, 2])
         self.assertRaises(ValueError, BasisFunction.check_exps, [1, 2, -3])
 
-    def test_exps_coeffs_coeffs2(self):
-        """Test exps, coeffs, and coeffs2"""
+    def test_check_coeffs(self):
+        """Test check_exps"""
+        BasisFunction.check_coeffs(np.arange(5))
+        BasisFunction.check_coeffs(np.arange(9).reshape((3,3)))
+        self.assertRaises(ValueError, BasisFunction.check_exps, np.arange(8).reshape((2, 2, 2)))
+
+    def test_exps_coeffs(self):
+        """Test exps and coeffs"""
         self.assertEqual([1, 2], list(self.bfs.exps))
         self.assertEqual([0.3, 0.4, 0.3], list(self.bfp.coeffs))
-        self.assertEqual([0.4, 0.6], list(self.bfd.coeffs2))
+        cs = np.array([[0.3, 0.4], [0.7, 0.6]])
+        aaa_equal(cs, self.bfd.coeffs)
 
     def test_reprprint(self):
         """Test print"""
@@ -73,7 +81,6 @@ class TestBasisFunction(unittest.TestCase):
         self.assertEqual('<BasisFunction SP 3x2>', repr(self.bfsp))
         self.assertEqual(s_gamess, self.bfs.print('gamess'))
         self.assertEqual(p_gaussian94, self.bfp.print())
-        #print(self.bfsp.print())
         self.assertEqual(sp_gaussian94, self.bfsp.print())
 
     def test_decontracted(self):
@@ -98,40 +105,13 @@ class TestBasisFunction(unittest.TestCase):
         self.assertEqual(decon2[4], bfp2)
         self.assertEqual(decon2[5], bfp3)
 
-class TestGenConBasisFunction(unittest.TestCase):
-    """Tests a generally contracted Basis Function (GenConBasisFunction)"""
-    def setUp(self):
-        self.bf1 = BasisFunction('S', [1, 2], [0.5, 0.5])
-        self.bf2 = BasisFunction('S', [1, 2], [0.3, 0.4])
-        self.bf3 = BasisFunction('S', [1, 2], [1.0, 0.0])
-        self.gc = GenConBasisFunction([self.bf1, self.bf2, self.bf3])
-
-    def teststrprint(self):
-        gaussian94 = """S     2
-        1.0000000   0.5000000   0.3000000   1.0000000
-        2.0000000   0.5000000   0.4000000   0.0000000
-"""
-        gamess = """S     2
-  1         1.0000000   0.5000000   0.3000000   1.0000000
-  2         2.0000000   0.5000000   0.4000000   0.0000000
-"""
-        bagel = """{
-    "angular" : "s",
-       "prim" :  [     1.00000000,     2.00000000],
-       "cont" : [[[     0.50000000,     0.30000000], [     1.00000000,     0.50000000], [     0.40000000,     0.00000000]]]
-}
-"""
-        self.assertEqual(self.gc.print('gaussian94'), gaussian94)
-        self.assertEqual(self.gc.print('gamess'), gamess)
-        self.assertEqual(self.gc.print('bagel'), bagel)
-
 
 class TestBasis(unittest.TestCase):
     """Tests a basis, which contains BasisFunctions"""
     def setUp(self):
         self.bfs = BasisFunction('S', [1, 2], [0.5, 0.5])
         self.bfp = BasisFunction('P', [0.01, 0.2, 1], [0.3, 0.4, 0.3])
-        self.bfsp = BasisFunction('SP', [0.1, 0.4, 3], [0.2, 0.3, 0.5], [0.1, 0.3, 0.6])
+        self.bfsp = BasisFunction('SP', [0.1, 0.4, 3], [[0.2, 0.3, 0.5], [0.1, 0.3, 0.6]])
         self.basis = Basis('C', [self.bfs, self.bfp, self.bfsp])
 
     def test_lengetsetdeleq(self):
@@ -217,7 +197,7 @@ class TestBasisSet(unittest.TestCase):
         bfp = BasisFunction('P', [0.01, 0.2, 1], [0.3, 0.4, 0.3])
         h = Basis('H', [bfs, bfp])
         bfs = BasisFunction('S', [0.1, 0.4], [0.6, 0.4])
-        bfp = BasisFunction('P', [0.1, 0.4, 3], [0.2, 0.3, 0.5], [0.1, 0.3, 0.6])
+        bfp = BasisFunction('P', [0.1, 0.4, 3], [[0.2, 0.3, 0.5], [0.1, 0.3, 0.6]])
         c = Basis('C', [bfs, bfp])
         atoms = OrderedDict([('H', h), ('C', c)])
         atoms = OrderedDict([('H', h)])
