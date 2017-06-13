@@ -1,38 +1,32 @@
 #!/usr/bin/env python3
 
-# Script that takes an output file and outputs the geometries of the individual
-# optimization steps
+# Script that takes an output file and gets all of the geometries
 
 import argparse
-import importlib
-import sys
-sys.path.insert(0, '../')
+from cclib import ccopen
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from qgrep.atom import numbers_atomic
 
-from qgrep.helper import read
 
-parser = argparse.ArgumentParser(description='Get the geometry of an output file.')
+parser = argparse.ArgumentParser(description='Get the geometry from an output file.')
 parser.add_argument('-i', '--input', help='The file to be read.', type=str,
                     default='output.dat')
 parser.add_argument('-o', '--output', help='Where to output the geometry.',
                     type=str, default='geom.xyz')
-parser.add_argument('-t', '--type', help='The geometry style', type=str,
-                    default='xyz')
 
 args = parser.parse_args()
 
-lines, program = read(args.input)
+data = ccopen(args.input).parse()
+geoms = data.atomcoords
+atoms = [numbers_atomic[atom] for atom in data.atomnos]
 
-if program:
-    try:
-        mod = importlib.import_module('qgrep.' + program)
-        if hasattr(mod, 'plot'):
-            geoms = mod.plot(lines, args.type)
-            with open(args.output, 'w') as f:
-                f.write('\n'.join(geoms))
-        else:
-            print(program + ' does not yet have plot implemented.')
-    except ImportError:
-        print(program + ' is not yet supported.')
-else:
-    print('Cannot determine what program made this output file.')
+form = '{:2}' + ' {:>15.10f}'*3 + '\n'
+plot = ''
+for i, geom in enumerate(geoms):
+    plot += '{}\nStep {:}\n'.format(len(atoms), i)
+    plot += ''.join(form.format(atom, *xyz) for atom, xyz in zip(atoms, geom)) + '\n'
+#plot = '\n'.join(''.join(form.format(a, *q) for a, q in zip(a, g)) for g in geoms)
 
+with open(args.output, 'w') as f:
+    f.write(plot)
