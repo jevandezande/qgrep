@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
 import argparse
-import importlib
-import sys
-sys.path.insert(0, '../')
-
-from qgrep.helper import read
+from cclib import ccopen
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from qgrep.atom import numbers_atomic
 
 
 parser = argparse.ArgumentParser(description='Get the geometry of an output file.')
@@ -16,17 +15,22 @@ parser.add_argument('-o', '--output', help='Where to output the geometry.',
 
 args = parser.parse_args()
 
-lines, program = read(args.input)
+data = ccopen(args.input).parse()
 
-if program:
-    try:
-        mod = importlib.import_module('qgrep.' + program)
-        if hasattr(mod, 'get_freqs'):
-            with open(args.output, 'w') as f:
-                f.write(mod.get_freqs(lines))
-        else:
-            print(program + ' does not yet have get_freqs implemented.')
-    except ImportError:
-        print(program + ' is not yet supported.')
-else:
-    print('Cannot determine what program made this output file.')
+disps_array = data.vibdisps
+freqs = data.vibfreqs
+irs = data.vibirs
+geoms = data.atomcoords
+atoms = [numbers_atomic[atom] for atom in data.atomnos]
+
+out = ''
+header_form = str(data.natom) + "\n{:>5.3f}: {:7.5f}\n"
+line_form = "{:2} " + " {:>10.7f}"*6 + "\n"
+for disps, freq, ir in zip(disps_array, freqs, irs):
+    out += header_form.format(freq, ir)
+    for atom, xyz, dxyz in zip(atoms, geoms[-1], disps):
+        out += line_form.format(atom, *xyz, *dxyz)
+    out += '\n'
+
+with open(args.output, 'w') as f:
+    f.write(out)
