@@ -1,37 +1,36 @@
 #!/usr/bin/env python3
 
-# Script that takes an output file and prints all of its geometry convergence
-# results
+# Script that takes an output file and prints its geometry convergence results
 
 import argparse
-import importlib
-import sys
-sys.path.insert(0, '../')
-from qgrep.helper import read
+from cclib import ccopen
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from qgrep.convergence import Convergence, Step
 
 
 parser = argparse.ArgumentParser(description='Get the geometry of an output file.')
 parser.add_argument('-i', '--input', help='The file to be read.', type=str,
                     default='output.dat')
-parser.add_argument('-n', '--number', help='The number of steps to be output',
-                    type=int, default=0)
+parser.add_argument('-p', '--plot', help='Plot the convergence.',
+                    action='store_true', default=False)
 
 args = parser.parse_args()
 
-lines, program = read(args.input)
+data = ccopen(args.input).parse()
 
-if program:
-    try:
-        mod = importlib.import_module('qgrep.' + program)
-        if hasattr(mod, 'check_convergence'):
-            convergence_list = mod.check_convergence(lines)
-            # Print the last number of convergence results (even works for
-            # numbers that are too large)
-            print('\n'.join(convergence_list[-args.number:]))
-            print('Optimization Steps: ' + str(len(convergence_list)))
-        else:
-            print(program + ' does not yet have check_convergence implemented.')
-    except ImportError:
-        print(program + ' is not yet supported.')
-else:
-    print('Cannot determine what program made this output file.')
+package = data.metadata['package']
+steps = []
+for vals in data.geovalues:
+    if package == 'ORCA':
+        delta_e, rms_grad, max_grad, rms_step, max_step = vals
+        step = Step(delta_e, rms_grad, max_grad, rms_step, max_step)
+        steps.append(step)
+    else:
+        raise NotImplementedError('Only ORCA check_convergence has been implemented so far.')
+
+conv = Convergence(steps, data.geotargets)
+print(conv)
+
+if args.plot:
+    conv.plot()
