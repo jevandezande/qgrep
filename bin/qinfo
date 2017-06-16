@@ -3,10 +3,9 @@
 # Script prints out the queues in a nice format
 
 import argparse
-import sys
-sys.path.insert(0, '../')
-
 import time
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from qgrep.queues import Queues
 
 parser = argparse.ArgumentParser(description='Get the final energy of an output file.')
