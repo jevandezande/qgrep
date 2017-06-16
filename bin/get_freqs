@@ -17,11 +17,16 @@ args = parser.parse_args()
 
 data = ccopen(args.input).parse()
 
-disps_array = data.vibdisps
-freqs = data.vibfreqs
-irs = data.vibirs
-geoms = data.atomcoords
-atoms = [numbers_atomic[atom] for atom in data.atomnos]
+try:
+    disps_array = data.vibdisps
+    freqs = data.vibfreqs
+    irs = data.vibirs
+    geoms = data.atomcoords
+    atomnos = data.atomnos
+except AttributeError as e:
+    raise Exception('Cannot find appropriate data, are there frequencies run yet?')
+
+atoms = [numbers_atomic[atom] for atom in atomnos]
 
 out = ''
 header_form = str(data.natom) + "\n{:>5.3f}: {:7.5f}\n"
