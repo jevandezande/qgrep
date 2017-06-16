@@ -15,7 +15,7 @@ BAR = colors.purple + '│' + colors.normal
 class Queues:
     def __init__(self, omit=[]):
         self.queues = {}
-        self.tree = self.qxml()
+        self.grid_engine, self.tree = self.qxml()
         self.find_sizes()
         self.parse_tree(omit=omit)
 
@@ -108,85 +108,157 @@ class Queues:
         """
         Produce an xml ElementTree object containing all the queued jobs
 
-        Sample output
+        Sample output from SGE:
 
-    <?xml version='1.0'?>
-    <job_info  xmlns:xsd="http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qstat/qstat.xsd?revision=1.11">
-    <queue_info>
-        <Queue-List>
-            <name>debug.q@v3.cl.ccqc.uga.edu</name>
-            ...
-        </Queue-List>
-        <Queue-List>
-            <name>gen3.q@v10.cl.ccqc.uga.edu</name>
-            ...
-            <job_list state="running">
-                <JB_job_number>113254</JB_job_number>
-                <JB_name>optg</JB_name>
-                <JB_owner>mullinax</JB_owner>
-                <state>r</state>
-                <JAT_start_time>2015-05-11T15:52:49</JAT_start_time>
-                <hard_req_queue>large.q<hard_req_queue>
-                ...
-            </job_list>
-        </Queue-List>
-        ...
-    </queue_info>
-    <job_info>
-        <job_list state="pending">
-            <JB_job_number>112742</JB_job_number>
-            <JB_name>CH3ONO2</JB_name>
-            <JB_owner>meghaanand</JB_owner>
-            <state>qw</state>
-            <JB_submission_time>2015-05-08T16:30:25</JB_submission_time>
-            <hard_req_queue>large.q<hard_req_queue>
-            ...
-        </job_list>
-    </job_info>
+<?xml version='1.0'?>
+<job_info  xmlns:xsd="http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qstat/qstat.xsd?revision=1.11">
+<queue_info>
+    <Queue-List>
+    <name>debug.q@v3.cl.ccqc.uga.edu</name>
     ...
-    </job_info>
+    </Queue-List>
+    <Queue-List>
+    <name>gen3.q@v10.cl.ccqc.uga.edu</name>
+    ...
+    <job_list state="running">
+        <JB_job_number>113254</JB_job_number>
+        <JB_name>optg</JB_name>
+        <JB_owner>mullinax</JB_owner>
+        <state>r</state>
+        <JAT_start_time>2015-05-11T15:52:49</JAT_start_time>
+        <hard_req_queue>large.q<hard_req_queue>
+        ...
+    </job_list>
+    </Queue-List>
+    ...
+</queue_info>
+<job_info>
+    <job_list state="pending">
+    <JB_job_number>112742</JB_job_number>
+    <JB_name>CH3ONO2</JB_name>
+    <JB_owner>meghaanand</JB_owner>
+    <state>qw</state>
+    <JB_submission_time>2015-05-08T16:30:25</JB_submission_time>
+    <hard_req_queue>large.q<hard_req_queue>
+    ...
+    </job_list>
+</job_info>
+...
+</job_info>
+
+    Sample output from PBS:
+<Data>
+    <Job>
+        <Job_Id>77816.icqc</Job_Id>
+        <Job_Name>e7_cas2_ddci3_tighter</Job_Name>
+        <Job_Owner>sivalingam@icmaster1</Job_Owner>
+        <resources_used>
+            <cput>21002:04:52</cput>
+            <energy_used>0</energy_used>
+            <mem>60978424kb</mem>
+            <vmem>73997480kb</vmem>
+            <walltime>2630:02:36</walltime>
+        </resources_used>
+        <job_state>R</job_state>
+        <queue>batch</queue>
+        <server>control</server>
+        <Checkpoint>u</Checkpoint>
+        <ctime>1488149683</ctime>
+        <Error_Path>zeusln1:/home/sivalingam/s4/e7_cas2_ddci3_tighter.err</Error_Path>
+        <exec_host>izeusbn13/8-11+izeusbn12/11-12+izeusbn11/12-13</exec_host>
+        <Hold_Types>n</Hold_Types>
+        <Join_Path>oe</Join_Path>
+        <Keep_Files>n</Keep_Files>
+        <Mail_Points>a</Mail_Points>
+        <mtime>1488149684</mtime>
+        <Output_Path>zeus1:/home/sivalingam/s4/e7_cas2_ddci3_tighter.o77816</Output_Path>
+        <Priority>0</Priority>
+        <qtime>1488149683</qtime>
+        <Rerunable>False</Rerunable>
+        <Resource_List>
+            <nodect>8</nodect>
+            <nodes>8</nodes>
+            <walltime>8760:00:00</walltime>
+        </Resource_List>
+        <session_id>3716</session_id>
+        <Shell_Path_List>/bin/zsh</Shell_Path_List>
+        <euser>sivalingam</euser>
+        <egroup>gl-ag orca</egroup>
+        <queue_type>E</queue_type>
+        <etime>1488149683</etime>
+        <submit_args>-j oe -e /home/sivalingam/s4/e7_cas2_ddci3_tighter.err -N e7_cas2_ddci3_tighter -r n e7_cas2_ddci3_tighter.job</submit_args>
+        <start_time>1488149684</start_time>
+        <Walltime>
+            <Remaining>22067782</Remaining>
+        </Walltime>
+        <start_count>1</start_count>
+        <fault_tolerant>False</fault_tolerant>
+        <job_radix>0</job_radix>
+        <submit_host>zeus1</submit_host>
+    </Job>
+    ...
+</Data>
         """
-        qstat_xml_cmd = "qstat -u '*' -r -f -xml"
-        try:
-            xml = subprocess.check_output(qstat_xml_cmd, shell=True)
-            return ElementTree.fromstring(xml)
-        except FileNotFoundError as e:
-            raise Exception("Could not find qstat")
+        cmds = [('sge', 'qstat -u "*" -r -f -xml'), ('pbs', 'qstat -x')]
+        for grid_engine, cmd in cmds:
+            try:
+                xml = subprocess.check_output(cmd, shell=True, stderr=subprocess.DEVNULL)
+                return grid_engine, ElementTree.fromstring(xml)
+            except FileNotFoundError as e:
+                raise Exception("Could not find qstat")
+            except subprocess.CalledProcessError as e:
+                pass
+
+        raise Exception('Could not generate XML, only PBS and SGE currently supported.')
 
     def parse_tree(self, omit=[]):
         """
         Parse the xml tree from qxml
         """
-        self.queues = OrderedDict()
-        for child in self.tree:
-            # Running jobs are arranged by node/queue
-            if child.tag == 'queue_info':
-                for node in child:
-                    #<Queue-List>
-                    #   <name>gen3.q@v10.cl.ccqc.uga.edu</name>
-                    name = node.find('name').text.split('@')[0]
-                    # If we don't want to display the queue
-                    if name in omit:
-                        continue
-                    if name not in self.queues:
-                        self.queues[name] = Queue(self.sizes[name], name)
+        if self.grid_engine == 'sge':
+            self.queues = OrderedDict()
+            for child in self.tree:
+                # Running jobs are arranged by node/queue
+                if child.tag == 'queue_info':
+                    for node in child:
+                        #<Queue-List>
+                        #   <name>gen3.q@v10.cl.ccqc.uga.edu</name>
+                        name = node.find('name').text.split('@')[0]
+                        # If we don't want to display the queue
+                        if name in omit:
+                            continue
+                        if name not in self.queues:
+                            self.queues[name] = Queue(self.sizes[name], name)
 
-                    for job_xml in node.iterfind('job_list'):
+                        for job_xml in node.iterfind('job_list'):
+                            job = Job(job_xml)
+                            self.queues[name].running[job.id] = job
+
+                # Queued jobs
+                elif child.tag == 'job_info':
+                    for job_xml in child:
                         job = Job(job_xml)
-                        self.queues[name].running[job.id] = job
+                        name = job.queue.split('@')[0]
+                        if name in omit:
+                            continue
 
-            # Queued jobs
-            elif child.tag == 'job_info':
-                for job_xml in child:
-                    job = Job(job_xml)
-                    name = job.queue.split('@')[0]
-                    if name in omit:
-                        continue
+                        if name not in self.queues:
+                            self.queues[name] = Queue(self.sizes[name], name)
 
-                    if name not in self.queues:
-                        self.queues[name] = Queue(self.sizes[name], name)
+                        self.queues[name].queueing[job.id] = job
+        elif self.grid_engine == 'pbs':
+            self.queues = OrderedDict()
+            for job_xml in self.tree:
+                job = Job(job_xml, self.grid_engine)
+                if job.state == 'c':
+                    continue
+                queue = job.queue
+                if queue not in self.queues:
+                    self.queues[queue] = Queue(self.sizes[queue], queue)
+                self.queues[queue].queueing[job.id] = job
+        else:
+            raise Exception('Could not read XML, only PBS and SGE currently supported.')
 
-                    self.queues[name].queueing[job.id] = job
 
     def find_sizes(self):
         """
@@ -202,17 +274,23 @@ class Queues:
         gen6.q                            0.39     19      0      0     19      0      1
         """
         self.sizes = {}
-        qstat_xml_cmd = "qstat -g c"
-        try:
-            out = subprocess.check_output(qstat_xml_cmd, shell=True)
-            for line in out.splitlines()[2:]:
-                line = line.decode('UTF-8')
-                if 'all.q' == line[:5]:
-                    continue
-                queue, cqload, used, res, avail, total, aoacds, cdsue = line.split()
-                self.sizes[queue] = int(used) + int(avail)
-        except FileNotFoundError as e:
-            raise Exception("Could not find qstat")
+        if self.grid_engine == 'sge':
+            qstat_queues_cmd = "qstat -g c"
+            try:
+                out = subprocess.check_output(qstat_queues_cmd, shell=True)
+                for line in out.splitlines()[2:]:
+                    line = line.decode('UTF-8')
+                    if 'all.q' == line[:5]:
+                        continue
+                    queue, cqload, used, res, avail, total, aoacds, cdsue = line.split()
+                    self.sizes[queue] = int(used) + int(avail)
+            except FileNotFoundError as e:
+                raise Exception("Could not find qstat")
+        elif self.grid_engine == 'pbs':
+            self.sizes['small'] = 22
+            self.sizes['batch'] = 44
+        else:
+            raise Exception('Could not read queue sizes, only PBS and SGE currently supported.')
 
 
 class Queue:
@@ -221,7 +299,7 @@ class Queue:
     """
     def __init__(self, size, name='', running=None, queueing=None):
         """
-        Initialize a queue with it's jobs
+        Initialize a queue with its jobs
 
         :param running: an OrderedDict of Jobs that are running
         :param queueing: an OrderedDict of Jobs that are queueing
@@ -346,8 +424,8 @@ class Job:
     A simple class that contains important information about a job and prints it
     nicely
     """
-    def __init__(self, job_xml):
-        self.id, self.name, self.state, self.owner, self.queue = Job.read_job_xml(job_xml)
+    def __init__(self, job_xml, grid_engine):
+        self.id, self.name, self.state, self.owner, self.queue = Job.read_job_xml(job_xml, grid_engine)
 
     def __eq__(self, other):
         if self.id == other.id and \
@@ -378,29 +456,40 @@ class Job:
                                job_colors[self.state], self.state[:2])
 
     @staticmethod
-    def read_job_xml(job_xml):
+    def read_job_xml(job_xml, grid_engine):
         """
         Read the xml of qstat and find the necessary variables
         """
-        jid = int(job_xml.find('JB_job_number').text)
-        tasks = job_xml.find('tasks')
-        # If there are multiple tasks with the same id, make the id a float
-        # with the task number being the decimal
-        if tasks is not None:
-            # If it is a range of jobs, e.g. 17-78:1, just take the first
-            task = tasks.text.split('-')[0]  # If not a range, this does nothing
-            # SGE is being cute and comma separates two numbers if sequential
-            task = task.split(',')[0]
-            jid += int(task) / 10 ** len(task)
-        name = job_xml.find('JB_name').text
-        state = job_xml.get('state')
-        owner = job_xml.find('JB_owner').text
-        state2 = job_xml.find('state').text
-        try:
-            queue = job_xml.find('hard_req_queue').text
-        except AttributeError as e:
-            queue = 'debug.q'
-        if (state == 'running' and state2 != 'r') or \
-           (state == 'pending' and state2 != 'qw'):
-            pass
-        return jid, name, state2, owner, queue
+        if grid_engine == 'sge':
+            jid = int(job_xml.find('JB_job_number').text)
+            tasks = job_xml.find('tasks')
+            # If there are multiple tasks with the same id, make the id a float
+            # with the task number being the decimal
+            if tasks is not None:
+                # If it is a range of jobs, e.g. 17-78:1, just take the first
+                task = tasks.text.split('-')[0]  # If not a range, this does nothing
+                # SGE is being cute and comma separates two numbers if sequential
+                task = task.split(',')[0]
+                jid += int(task) / 10 ** len(task)
+            name = job_xml.find('JB_name').text
+            state = job_xml.get('state').lower()
+            owner = job_xml.find('JB_owner').text
+            state2 = job_xml.find('state').text
+            try:
+                queue = job_xml.find('hard_req_queue').text
+            except AttributeError as e:
+                queue = 'debug.q'
+            if (state == 'running' and state2 != 'r') or \
+            (state == 'pending' and state2 != 'qw'):
+                pass
+            return jid, name, state2, owner, queue
+        elif grid_engine == 'pbs':
+            jid = int(job_xml.find('Job_Id').text.split('.')[0])
+            # TODO: deal with job_arrays
+            name = job_xml.find('Job_Name').text
+            state = job_xml.find('job_state').text.lower()
+            owner = job_xml.find('Job_Owner').text.split('@')[0]
+            queue = job_xml.find('queue').text
+            return jid, name, state, owner, queue
+        else:
+            raise Exception('Could not read XML, only PBS and SGE currently supported.')
