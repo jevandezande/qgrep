@@ -17,6 +17,7 @@ args = parser.parse_args()
 
 data = ccopen(args.input).parse()
 
+<<<<<<< HEAD
 try:
     disps_array = data.vibdisps
     freqs = data.vibfreqs
