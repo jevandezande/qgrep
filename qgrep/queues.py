@@ -7,7 +7,7 @@ from .helper import colors
 
 
 JOB_ID_LENGTH = 7
-COLUMN_WIDTH = 23 + JOB_ID_LENGTH
+COLUMN_WIDTH = 33 + JOB_ID_LENGTH
 SMALL = 3
 BAR = colors.purple + '│' + colors.normal
 
@@ -231,13 +231,13 @@ class Queues:
                             self.queues[name] = Queue(self.sizes[name], name)
 
                         for job_xml in node.iterfind('job_list'):
-                            job = Job(job_xml)
+                            job = Job(job_xml, self.grid_engine)
                             self.queues[name].running[job.id] = job
 
                 # Queued jobs
                 elif child.tag == 'job_info':
                     for job_xml in child:
-                        job = Job(job_xml)
+                        job = Job(job_xml, self.grid_engine)
                         name = job.queue.split('@')[0]
                         if name in omit:
                             continue
@@ -255,7 +255,10 @@ class Queues:
                 queue = job.queue
                 if queue not in self.queues:
                     self.queues[queue] = Queue(self.sizes[queue], queue)
-                self.queues[queue].queueing[job.id] = job
+                if job.state == 'r':
+                    self.queues[queue].running[job.id] = job
+                else:
+                    self.queues[queue].queueing[job.id] = job
         else:
             raise Exception('Could not read XML, only PBS and SGE currently supported.')
 
@@ -264,30 +267,30 @@ class Queues:
         """
         Find the sizes of the queues
 
-        Sample output from 'qstat -g c':
-        CLUSTER QUEUE                   CQLOAD   USED    RES  AVAIL  TOTAL aoACDS  cdsuE
-        --------------------------------------------------------------------------------
-        all.q                             -NA-      0      0      0      0      0      0
-        gen3.q                            0.00      0      0      0     16      0     16
-        gen4.q                            0.26     31      0     13     48      0      4
-        gen5.q                            0.50      4      0      0      4      0      0
-        gen6.q                            0.39     19      0      0     19      0      1
         """
         self.sizes = {}
         if self.grid_engine == 'sge':
+            """Sample output from 'qstat -g c':
+            CLUSTER QUEUE                   CQLOAD   USED    RES  AVAIL  TOTAL aoACDS  cdsuE
+            --------------------------------------------------------------------------------
+            all.q                             -NA-      0      0      0      0      0      0
+            gen3.q                            0.00      0      0      0     16      0     16
+            gen4.q                            0.26     31      0     13     48      0      4
+            gen5.q                            0.50      4      0      0      4      0      0
+            gen6.q                            0.39     19      0      0     19      0      1
+            """
             qstat_queues_cmd = "qstat -g c"
-            try:
-                out = subprocess.check_output(qstat_queues_cmd, shell=True)
-                for line in out.splitlines()[2:]:
-                    line = line.decode('UTF-8')
-                    if 'all.q' == line[:5]:
-                        continue
-                    queue, cqload, used, res, avail, total, aoacds, cdsue = line.split()
-                    self.sizes[queue] = int(used) + int(avail)
-            except FileNotFoundError as e:
-                raise Exception("Could not find qstat")
+            out = subprocess.check_output(qstat_queues_cmd, shell=True)
+            for line in out.splitlines()[2:]:
+                line = line.decode('UTF-8')
+                if 'all.q' == line[:5]:
+                    continue
+                queue, cqload, used, res, avail, total, aoacds, cdsue = line.split()
+                self.sizes[queue] = int(used) + int(avail)
         elif self.grid_engine == 'pbs':
-            self.sizes['small'] = 22
+            """sample output from pbsnodes:
+            """
+            self.sizes['small'] = 25
             self.sizes['batch'] = 44
         else:
             raise Exception('Could not read queue sizes, only PBS and SGE currently supported.')
@@ -425,7 +428,7 @@ class Job:
     nicely
     """
     def __init__(self, job_xml, grid_engine):
-        self.id, self.name, self.state, self.owner, self.queue = Job.read_job_xml(job_xml, grid_engine)
+        self.id, self.name, self.state, self.owner, self.queue, self.workdir = Job.read_job_xml(job_xml, grid_engine)
 
     def __eq__(self, other):
         if self.id == other.id and \
@@ -441,7 +444,8 @@ class Job:
 
     def __str__(self):
         """Print a short description of the job, with color"""
-        job_form = '{:>' + str(JOB_ID_LENGTH) + 'd} {:<5s} {:<12s} {}{:2s}' + colors.normal
+        name_length = COLUMN_WIDTH - JOB_ID_LENGTH - 11
+        job_form = '{:>' + str(JOB_ID_LENGTH) + 'd} {:<5s} {:<' + str(name_length) + 's} {}{:2s}' + colors.normal
 
         # Color queue status by type, use red if unrecognized
         job_colors = defaultdict(lambda: colors.red, {'r': colors.green, 'qw': colors.blue})
@@ -452,7 +456,7 @@ class Job:
         else:
             owner = '{:5.5s}'.format(self.owner)
 
-        return job_form.format(int(self.id), owner, self.name[:12],
+        return job_form.format(int(self.id), owner, self.name[:name_length],
                                job_colors[self.state], self.state[:2])
 
     @staticmethod
@@ -490,6 +494,15 @@ class Job:
             state = job_xml.find('job_state').text.lower()
             owner = job_xml.find('Job_Owner').text.split('@')[0]
             queue = job_xml.find('queue').text
-            return jid, name, state, owner, queue
+
+            workdir = None
+            try:
+                variables = job_xml.find('Variable_List').text.split(',')
+                variables = dict(kv.split('=') for kv in variables)
+                workdir = variables['PBS_O_WORKDIR']
+            except AttributeError:
+                pass
+
+            return jid, name, state, owner, queue, workdir
         else:
             raise Exception('Could not read XML, only PBS and SGE currently supported.')
