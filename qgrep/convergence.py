@@ -11,7 +11,7 @@ class Step:
         self.params = params
 
     def __str__(self):
-        return ' '.join("{:> 13.10f}".format(value) for key, value in self.params.items())
+        return ' '.join("{:> 9.2e}".format(value) for key, value in self.params.items())
 
 
 class Convergence:
@@ -25,15 +25,15 @@ class Convergence:
 
     def __str__(self):
         if self.program == 'orca':
-            header = "         Δ energy     RMS grad      MAX grad      RMS step      MAX Step\n"
+            header = "      Δ energy  RMS grad  MAX grad  RMS step  MAX Step\n"
         else:
             raise NotImplementedError('Congervence currently only implemented for ORCA')
 
-        line = '-'*75 + '\n'
+        line = '-'*54 + '\n'
         out = header + line
         out += ''.join('{:>3}: {}\n'.format(i, step) for i, step in enumerate(self.steps))
 
-        return out + line + '    ' + (' {:> 13.10f}'*len(self.criteria)).format(*self.criteria)
+        return out + line + '    ' + (' {:> 9.2e}'*len(self.criteria)).format(*self.criteria)
 
     def plot(self):
         from matplotlib import pyplot as plt
