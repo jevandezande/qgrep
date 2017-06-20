@@ -18,16 +18,22 @@ parser.add_argument('-p', '--plot', help='Plot the convergence.',
 
 args = parser.parse_args()
 
-data = ccopen(args.input).parse()
+try:
+    data = ccopen(args.input).parse()
+except AttributeError as e:
+    raise Exception("No such data available, has the program not run that yet?") from e
 
 package = data.metadata['package']
 steps = []
-for vals in data.geovalues:
-    if package == 'ORCA':
-        params = OrderedDict((('delta_e', vals[0]), ('rms_grad', vals[1]), ('max_grad', vals[2]), ('rms_step', vals[3]), ('max_step', vals[4])))
-        steps.append(Step(params))
-    else:
-        raise NotImplementedError('Only ORCA check_convergence has been implemented so far.')
+try:
+    for vals in data.geovalues:
+        if package == 'ORCA':
+            params = OrderedDict((('delta_e', vals[0]), ('rms_grad', vals[1]), ('max_grad', vals[2]), ('rms_step', vals[3]), ('max_step', vals[4])))
+            steps.append(Step(params))
+        else:
+            raise NotImplementedError('Only ORCA check_convergence has been implemented so far.')
+except AttributeError as e:
+    raise Exception("No such data available, has the program not run that yet?") from e
 
 conv = Convergence(steps, data.geotargets)
 print(conv)
