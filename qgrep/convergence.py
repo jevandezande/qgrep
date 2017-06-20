@@ -1,37 +1,39 @@
 import numpy as np
+from collections import OrderedDict
 
 
 class Step:
     """
     An object that stores a convergence result
     """
-    def __init__(self, delta_e=None, rms_grad=None,
-                 max_grad=None, rms_step=None, max_step=None):
-        # TODO: institute better checks
-        self.delta_e  = delta_e
-        self.rms_grad = rms_grad
-        self.max_grad = max_grad
-        self.rms_step = rms_step
-        self.max_step = max_step
+    def __init__(self, params):
+        self.__dict__ = dict(params)
+        self.params = params
 
     def __str__(self):
-        #form = "{energy:} {delta_e:} {rms_grad:} {max_grad:} {rms_step:} {max_step:}"
-        form = "{:> 13.10f} {:> 13.10f} {:> 13.10f} {:> 13.10f} {:> 13.10f}"
-        return form.format(self.delta_e, self.rms_grad, self.max_grad,
-                           self.rms_step, self.max_step)
+        return ' '.join("{:> 13.10f}".format(value) for key, value in self.params.items())
 
 
 class Convergence:
     """
     Stores multiple convergence steps
     """
-    def __init__(self, steps, criteria):
+    def __init__(self, steps, criteria, program='orca'):
         self.steps = steps
         self.criteria = criteria
+        self.program = program
 
     def __str__(self):
-        header = "         Δ energy     RMS grad      MAX grad      RMS step      MAX Step\n"
-        return header + '\n'.join('{:>3}: {}'.format(i, step) for i, step in enumerate(self.steps))
+        if self.program == 'orca':
+            header = "         Δ energy     RMS grad      MAX grad      RMS step      MAX Step\n"
+        else:
+            raise NotImplementedError('Congervence currently only implemented for ORCA')
+
+        line = '-'*75 + '\n'
+        out = header + line
+        out += ''.join('{:>3}: {}\n'.format(i, step) for i, step in enumerate(self.steps))
+
+        return out + line + '    ' + (' {:> 13.10f}'*len(self.criteria)).format(*self.criteria)
 
     def plot(self):
         from matplotlib import pyplot as plt
@@ -58,11 +60,6 @@ class Convergence:
         ax1.plot(x, [self.criteria[3]]*len(self.steps), 'r-.')
         ax1.plot(x, [self.criteria[4]]*len(self.steps), 'r:')
 
-        #ax3.axis('off')
-        #ax4.set_title('Max Grad')
-        #ax4.plot(x, self.max_grad)
-        #ax5.set_title('Max Step')
-        #ax5.plot(x, self.max_step)
         plt.show()
 
     @property
@@ -88,29 +85,3 @@ class Convergence:
     @property
     def rms_step(self):
         return np.array([step.rms_step for step in self.steps])
-
-
-if __name__ == '__main__':
-    results1 = {
-        'delta_e'  : 0.5,
-        'rms_e'    : 0.25,
-        'max_grad' : 0.5,
-        'rms_grad' : 0.7,
-        'max_step' : 0.4,
-        'rms_step' : 0.3
-    }
-    step1 = Step(**results1)
-    results2 = {
-        'delta_e'  : 0.9,
-        'rms_e'    : 0.45,
-        'max_grad' : 0.7,
-        'rms_grad' : 0.8,
-        'max_step' : 0.5,
-        'rms_step' : 0.6
-    }
-    step2 = Step(**results2)
-
-    criteria = 1
-    conv = Convergence([step1, step2], criteria)
-    print(conv)
-    conv.plot()

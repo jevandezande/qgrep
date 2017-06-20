@@ -3,6 +3,7 @@
 # Script that takes an output file and prints its geometry convergence results
 
 import argparse
+from collections import OrderedDict
 from cclib import ccopen
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -23,9 +24,8 @@ package = data.metadata['package']
 steps = []
 for vals in data.geovalues:
     if package == 'ORCA':
-        delta_e, rms_grad, max_grad, rms_step, max_step = vals
-        step = Step(delta_e, rms_grad, max_grad, rms_step, max_step)
-        steps.append(step)
+        params = OrderedDict((('delta_e', vals[0]), ('rms_grad', vals[1]), ('max_grad', vals[2]), ('rms_step', vals[3]), ('max_step', vals[4])))
+        steps.append(Step(params))
     else:
         raise NotImplementedError('Only ORCA check_convergence has been implemented so far.')
 
