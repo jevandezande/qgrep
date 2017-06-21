@@ -3,13 +3,23 @@ from xml.etree import ElementTree
 from collections import OrderedDict, defaultdict
 from itertools import zip_longest, filterfalse
 import getpass
+from configparser import ConfigParser
+import os.path
 from .helper import colors
 
+config_file = os.path.join(os.path.expanduser("~"), '.qgrepconfig')
+config = ConfigParser()
+config.read(config_file)
 
-JOB_ID_LENGTH = 7
-COLUMN_WIDTH = 33 + JOB_ID_LENGTH
-SMALL = 3
 BAR = colors.purple + '│' + colors.normal
+JOB_ID_LENGTH = 7
+NAME_LENGTH = 22
+SMALL_QUEUE = 3
+if 'queues' in config:
+    JOB_ID_LENGTH = max(config['queues'].getint('job_id_length', 7), 4)
+    NAME_LENGTH = max(config['queues'].getint('name_length', 22), 8)
+    SMALL_QUEUE = max(config['queues'].getint('small_queue', 3), 1)
+COLUMN_WIDTH = 11 + JOB_ID_LENGTH + NAME_LENGTH
 
 
 class Queues:
@@ -45,7 +55,7 @@ class Queues:
         Print the queues in a nice table
         """
         # Form header (without small queues)
-        large_num = sum([size > SMALL for size in self.sizes.values()])
+        large_num = sum([size > SMALL_QUEUE for size in self.sizes.values()])
         # Horizontal line (uses box drawing characters)
         top_line = '\033[95m' + '┌' + '┬'.join(['─'*(COLUMN_WIDTH - 1)]*large_num) + '┐' + '\033[0m\n'
         mid_line = '\033[95m' + '├' + '┼'.join(['─'*(COLUMN_WIDTH - 1)]*large_num) + '┤' + '\033[0m\n'
@@ -57,11 +67,11 @@ class Queues:
         # Print a nice header
         for name, queue in sorted(self.queues.items()):
             # Print small queues near the end
-            if queue.size <= SMALL:
+            if queue.size <= SMALL_QUEUE:
                 continue
             out += BAR + ('{:^' + str(COLUMN_WIDTH-1) + '}').format(name_form.format(name, queue.used, queue.avail, queue.queued))
         out += BAR + '\n' + mid_line
-        header = BAR + '  ID   USER    Job Name   St'.rjust(COLUMN_WIDTH-1)
+        header = BAR + 'ID'.center(JOB_ID_LENGTH) + ' USER  ' + 'Job Name'.center(NAME_LENGTH) + ' ST'
         out += header*large_num + BAR + '\n' + mid_line
 
         if person is True:
@@ -71,7 +81,7 @@ class Queues:
         job_list = []
         small_queues = []
         for name, queue in sorted(self.queues.items()):
-            if queue.size <= SMALL:
+            if queue.size <= SMALL_QUEUE:
                 if queue.size > 0:
                     small_queues.append(queue)
                 continue
@@ -429,6 +439,7 @@ class Job:
     """
     def __init__(self, job_xml, grid_engine):
         self.id, self.name, self.state, self.owner, self.queue, self.workdir = Job.read_job_xml(job_xml, grid_engine)
+        #self.id, self.name, self.state, self.owner, self.queue, self.workdir, (self.nodect, self.nodes) = Job.read_job_xml(job_xml, grid_engine)
 
     def __eq__(self, other):
         if self.id == other.id and \
@@ -444,8 +455,7 @@ class Job:
 
     def __str__(self):
         """Print a short description of the job, with color"""
-        name_length = COLUMN_WIDTH - JOB_ID_LENGTH - 11
-        job_form = '{:>' + str(JOB_ID_LENGTH) + 'd} {:<5s} {:<' + str(name_length) + 's} {}{:2s}' + colors.normal
+        job_form = '{:>' + str(JOB_ID_LENGTH) + 'd} {:<5s} {:<' + str(NAME_LENGTH) + 's} {}{:2s}' + colors.normal
 
         # Color queue status by type, use red if unrecognized
         job_colors = defaultdict(lambda: colors.red, {'r': colors.green, 'qw': colors.blue})
@@ -456,8 +466,8 @@ class Job:
         else:
             owner = '{:5.5s}'.format(self.owner)
 
-        return job_form.format(int(self.id), owner, self.name[:name_length],
-                               job_colors[self.state], self.state[:2])
+        return job_form.format(int(self.id), owner, self.name[:NAME_LENGTH],
+                            job_colors[self.state], self.state[:2])# + str(self.nodes) + ', ' + str(self.nodect)
 
     @staticmethod
     def read_job_xml(job_xml, grid_engine):
@@ -495,6 +505,9 @@ class Job:
             owner = job_xml.find('Job_Owner').text.split('@')[0]
             queue = job_xml.find('queue').text
 
+            resource_list = job_xml.find('Resource_List')
+            nodect, nodes = resource_list.find('nodect').text, resource_list.find('nodes').text
+
             workdir = None
             try:
                 variables = job_xml.find('Variable_List').text.split(',')
@@ -504,5 +517,6 @@ class Job:
                 pass
 
             return jid, name, state, owner, queue, workdir
+            #return jid, name, state, owner, queue, workdir, (nodect, nodes)
         else:
             raise Exception('Could not read XML, only PBS and SGE currently supported.')
