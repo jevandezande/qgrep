@@ -117,3 +117,11 @@ class colors:
     yellow = '\033[93m'
     blue = '\033[94m'
     purple = '\033[95m'
+
+
+box_drawing = """\
+┌┬─┐
+││ │
+├┼─┤
+└┴─┘
+"""
