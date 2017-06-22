@@ -5,6 +5,7 @@ from itertools import zip_longest, filterfalse
 import getpass
 from configparser import ConfigParser
 import os.path
+import re
 from .helper import colors
 
 config_file = os.path.join(os.path.expanduser("~"), '.qgrepconfig')
@@ -299,9 +300,24 @@ class Queues:
                 self.sizes[queue] = int(used) + int(avail)
         elif self.grid_engine == 'pbs':
             """sample output from pbsnodes:
-            """
-            self.sizes['small'] = 25
-            self.sizes['batch'] = 44
+izeussn153
+    state = job-exclusive
+    power_state = Running
+    np = 16
+    properties = small
+    ntype = cluster
+    jobs = 0-15/86886.icqc
+    status = rectime=1498123346,macaddr=40:f2:e9:c6:22:60,cpuclock=Fixed,varattr=,jobs=86886.icqc(cput=65375153,energy_used=0,mem=118685472kb,vmem=133127908kb,walltime=4154720,session_id=3357),state=free,netload=75804699166624,gres=,loadave=16.00,ncpus=16,physmem=131338172kb,availmem=176492292kb,totmem=265555896kb,idletime=10974874,nusers=1,nsessions=1,sessions=3357,uname=Linux zeussn153 3.10.0-229.el7.x86_64 #1 SMP Fri Mar 6 11:36:42 UTC 2015 x86_64,opsys=linux
+    mom_service_port = 15002
+    mom_manager_port = 15003
+"""
+            out = subprocess.check_output('pbsnodes', shell=True).decode('utf-8').strip()
+            for job in out.split('\n\n'):
+                queue = re.search('properties = (.*)', job).group(1)
+                if queue in self.sizes:
+                    self.sizes[queue] += 1
+                else:
+                    self.sizes[queue] = 1
         else:
             raise Exception('Could not read queue sizes, only PBS and SGE currently supported.')
 
@@ -504,6 +520,9 @@ class Job:
             state = job_xml.find('job_state').text.lower()
             owner = job_xml.find('Job_Owner').text.split('@')[0]
             queue = job_xml.find('queue').text
+            # Hack misnamed queue
+            if queue == 'batch':
+                queue = 'big'
 
             resource_list = job_xml.find('Resource_List')
             nodect, nodes = resource_list.find('nodect').text, resource_list.find('nodes').text
