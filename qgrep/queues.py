@@ -313,7 +313,10 @@ izeussn153
 """
             out = subprocess.check_output('pbsnodes', shell=True).decode('utf-8').strip()
             for job in out.split('\n\n'):
-                queue = re.search('properties = (.*)', job).group(1)
+                try:
+                    queue = re.search('properties = (.*)', job).group(1)
+                except AttributeError as e:
+                    queue = 'queue'
                 if queue in self.sizes:
                     self.sizes[queue] += 1
                 else:
