@@ -24,11 +24,12 @@ COLUMN_WIDTH = 11 + JOB_ID_LENGTH + NAME_LENGTH
 
 
 class Queues:
-    def __init__(self, omit=[]):
+    def __init__(self, omit=None):
+        self.omit = omit if omit else []
         self.queues = {}
         self.grid_engine, self.tree = self.qxml()
-        self.find_sizes()
-        self.parse_tree(omit=omit)
+        self.find_sizes(omit=self.omit)
+        self.parse_tree(omit=self.omit)
 
     def __str__(self):
         """
@@ -222,10 +223,12 @@ class Queues:
 
         raise Exception('Could not generate XML, only PBS and SGE currently supported.')
 
-    def parse_tree(self, omit=[]):
+    def parse_tree(self, omit=None):
         """
         Parse the xml tree from qxml
         """
+        omit = omit if omit else []
+
         if self.grid_engine == 'sge':
             self.queues = OrderedDict()
             for child in self.tree:
@@ -261,9 +264,11 @@ class Queues:
             self.queues = OrderedDict()
             for job_xml in self.tree:
                 job = Job(job_xml, self.grid_engine)
-                if job.state == 'c':
-                    continue
                 queue = job.queue
+
+                if job.state == 'c' or queue in omit:
+                    continue
+
                 if queue not in self.queues:
                     self.queues[queue] = Queue(self.sizes[queue], queue)
                 if job.state == 'r':
@@ -274,11 +279,12 @@ class Queues:
             raise Exception('Could not read XML, only PBS and SGE currently supported.')
 
 
-    def find_sizes(self):
+    def find_sizes(self, omit=None):
         """
         Find the sizes of the queues
 
         """
+        omit = omit if omit else []
         self.sizes = {}
         if self.grid_engine == 'sge':
             """Sample output from 'qstat -g c':
@@ -297,7 +303,8 @@ class Queues:
                 if 'all.q' == line[:5]:
                     continue
                 queue, cqload, used, res, avail, total, aoacds, cdsue = line.split()
-                self.sizes[queue] = int(used) + int(avail)
+                if queue not in omit:
+                    self.sizes[queue] = int(used) + int(avail)
         elif self.grid_engine == 'pbs':
             """sample output from pbsnodes:
 izeussn153
@@ -317,10 +324,12 @@ izeussn153
                     queue = re.search('properties = (.*)', job).group(1)
                 except AttributeError as e:
                     queue = 'queue'
-                if queue in self.sizes:
-                    self.sizes[queue] += 1
-                else:
-                    self.sizes[queue] = 1
+
+                if queue not in omit:
+                    if queue in self.sizes:
+                        self.sizes[queue] += 1
+                    else:
+                        self.sizes[queue] = 1
         else:
             raise Exception('Could not read queue sizes, only PBS and SGE currently supported.')
 
