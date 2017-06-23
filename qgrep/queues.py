@@ -323,7 +323,9 @@ izeussn153
                 try:
                     queue = re.search('properties = (.*)', job).group(1)
                 except AttributeError as e:
-                    queue = 'queue'
+                    queue = 'batch'
+                if queue == 'big':
+                    queue = 'batch'
 
                 if queue not in omit:
                     if queue in self.sizes:
@@ -532,9 +534,6 @@ class Job:
             state = job_xml.find('job_state').text.lower()
             owner = job_xml.find('Job_Owner').text.split('@')[0]
             queue = job_xml.find('queue').text
-            # Hack misnamed queue
-            if queue == 'batch':
-                queue = 'big'
 
             resource_list = job_xml.find('Resource_List')
             nodect, nodes = resource_list.find('nodect').text, resource_list.find('nodes').text
