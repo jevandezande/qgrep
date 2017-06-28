@@ -21,7 +21,8 @@ args = parser.parse_args()
 try:
     data = ccopen(args.input).parse()
 except AttributeError as e:
-    raise Exception("No such data available, has the program not run that yet?") from e
+    print("No such data available, has the program not run that yet?")
+    sys.exit()
 
 package = data.metadata['package']
 steps = []
@@ -33,7 +34,8 @@ try:
         else:
             raise NotImplementedError('Only ORCA check_convergence has been implemented so far.')
 except AttributeError as e:
-    raise Exception("No such data available, has the program not run that yet?") from e
+    print("No such data available, has the program not run that yet?")
+    sys.exit()
 
 conv = Convergence(steps, data.geotargets)
 print(conv)
