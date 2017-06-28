@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 # Script that takes an output file and gets the last energy of specified type
-# Energy in eV currently
 
 import argparse
+from glob import glob
+from natsort import natsorted
+import numpy as np
 from cclib import ccopen
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -11,23 +13,48 @@ from qgrep.helper import convert_energy
 
 
 parser = argparse.ArgumentParser(description='Get the energy from output file.')
-parser.add_argument('-i', '--input', help='The file to be read.', type=str,
-                    default='output.dat')
+parser.add_argument('-i', '--input', help='The file(s) to be read (accepts *).',
+                    type=str, nargs='+', default=['output.dat'])
 parser.add_argument('-t', '--energy_type', help='Output the specified energy.',
                     type=str, default='scf')
 parser.add_argument('-u', '--units', help='Units to output energy in.',
                     type=str, default='hartree')
+parser.add_argument('-l', '--list', help='Print a list of the energies',
+                    default=False, action='store_true')
 
 args = parser.parse_args()
 
-data = ccopen(args.input).parse()
-
-if args.energy_type == 'gibbs':
-    energies = data.freeenergy
-else:
+def grab_energies(inp, units='hartree'):
+    """
+    Grab the energies list from the input file
+    """
+    data = ccopen(inp).parse()
     try:
-        energies = getattr(data, args.energy_type + 'energies')
-    except AttributeError as e:
-        raise Exception("Invalid energy type, perhaps it hasn't been run?")
+        if args.energy_type == 'free':
+            energies = [data.freeenergy]
+        else:
+            energies = getattr(data, args.energy_type + 'energies')
+        return convert_energy(energies, 'eV', units)
 
-print(convert_energy(energies[-1], 'eV', 'hartree'))
+    except AttributeError as e:
+        print("Invalid energy type, perhaps it hasn't been run?")
+        return [0]
+
+# Find all matches, delete duplicates
+inps = set()
+for inp_arg in args.input:
+    inps |= set(inp for inp in glob(inp_arg) if os.path.isfile(inp))
+    inps |= set(inp for inp in glob(inp_arg + '/output.dat') if os.path.isfile(inp))
+
+if len(inps) == 0:
+    print('Could not find input file(s)')
+else:
+    inps = natsorted(inps)
+    length = len(max(inps, key=len))
+    all_energies = []
+    for inp in inps:
+        energy = grab_energies(inp, args.units)[-1]
+        all_energies.append(energy)
+        print(('{:' + str(length) + 's}: {: >.8f}').format(inp, energy))
+    if args.list:
+        print(all_energies)
