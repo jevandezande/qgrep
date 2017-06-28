@@ -7,9 +7,7 @@ from glob import glob
 from natsort import natsorted
 import numpy as np
 from cclib import ccopen
-import os, sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from qgrep.helper import convert_energy
+from cclib.parser.utils import convertor
 
 
 parser = argparse.ArgumentParser(description='Get the energy from output file.')
@@ -34,7 +32,8 @@ def grab_energies(inp, units='hartree'):
             energies = [data.freeenergy]
         else:
             energies = getattr(data, args.energy_type + 'energies')
-        return convert_energy(energies, 'eV', units)
+        convert = lambda x: convertor(x, 'eV', units)
+        return list(map(convert, energies))
 
     except AttributeError as e:
         print("Invalid energy type, perhaps it hasn't been run?")
