@@ -4,7 +4,7 @@ import numpy as np
 from copy import deepcopy
 from re import search
 
-am_types = ['s', 'p', 'd', 'f', 'g', 'h']
+am_types = 'spdfghi'
 
 class OrbitalPopulation:
     """Löwdin Orbital Population class (OP for short)"""
