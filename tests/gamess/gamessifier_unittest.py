@@ -95,7 +95,7 @@ O-ECP NONE"""
         basis_set = BasisSet()
         basis_set['H'] = Basis('H', [BasisFunction('S', [1], [1])])
         basis_set['O'] = Basis('O', [BasisFunction('S', [1], [1]), BasisFunction('S', [2], [1])])
-        basis_set['C'] = Basis('C', [BasisFunction('S', [1], [1]), BasisFunction('SP', [1, 2], [0.4, 0.6], [0.1, 0.9])])
+        basis_set['C'] = Basis('C', [BasisFunction('S', [1], [1]), BasisFunction('SP', [1, 2], [[0.4, 0.6], [0.1, 0.9]])])
         open(tmp_basis_file, 'w').write(basis_set.print('gamess'))
         tmp_geom_file = 'geom.xyz.tmp'
         self.formaldehyde_xyz.write(tmp_geom_file)
