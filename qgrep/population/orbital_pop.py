@@ -323,11 +323,11 @@ class MOrbital:
         return len(self.contributions)
 
     def __repr__(self):
-            return '<MO {}{} {: >8.5f} [{}]>'.format(self.index, self.gspin, self.energy, self.occupation)
+        return '<MO {}{} {: >8.5f} [{}]>'.format(self.index, self.gspin, self.energy, self.occupation)
 
     def __str__(self):
         contrib_str = '\n'.join([str(contrib) for contrib in self.contributions])
-        return '{: >2d}{} {: >8.5f} {:>3.2f}\n{}'.format(self.index, self.gspin, self.energy, self.occupation, contrib_str)
+        return '{: >2d}{} {: >8.5f} {:>3.2f}\n{}'.format(self.index, self.gspin, self.energy, self.occupation, 
 
     def __sub__(self, other):
         if len(self) != len(other):
@@ -465,6 +465,9 @@ class AO_Contrib:
 
     def __repr__(self):
         return '<AOC {}{} {} {} [{}]>'.format(self.index, self.gspin, self.atom, self.ao, self.val)
+
+    def __repr__(self):
+        return '<AOC{} {: >8.5f} {} [{}]>'.format(self.index, self.atom, self.ao, val)
 
     def __eq__(self, other):
         """
