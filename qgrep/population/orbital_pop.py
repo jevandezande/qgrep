@@ -462,12 +462,15 @@ class AO_Contrib:
         self.ao = ao
         self.val = val
         self.spin = spin
+<<<<<<< HEAD
 
     def __repr__(self):
         return '<AOC {}{} {} {} [{}]>'.format(self.index, self.gspin, self.atom, self.ao, self.val)
+=======
+>>>>>>> Fixes orbital pop for open shell species.
 
     def __repr__(self):
-        return '<AOC{} {: >8.5f} {} [{}]>'.format(self.index, self.atom, self.ao, val)
+        return '<AOC {}{} {} {} [{}]>'.format(self.index, self.gspin, self.atom, self.ao, self.val)
 
     def __eq__(self, other):
         """
