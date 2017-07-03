@@ -327,7 +327,7 @@ class MOrbital:
 
     def __str__(self):
         contrib_str = '\n'.join([str(contrib) for contrib in self.contributions])
-        return '{: >2d}{} {: >8.5f} {:>3.2f}\n{}'.format(self.index, self.gspin, self.energy, self.occupation, 
+        return '{: >2d}{} {: >8.5f} {:>3.2f}\n{}'.format(self.index, self.gspin, self.energy, self.occupation)
 
     def __sub__(self, other):
         if len(self) != len(other):
@@ -462,15 +462,6 @@ class AO_Contrib:
         self.ao = ao
         self.val = val
         self.spin = spin
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-    def __repr__(self):
-        return '<AOC {}{} {} {} [{}]>'.format(self.index, self.gspin, self.atom, self.ao, self.val)
-=======
->>>>>>> Fixes orbital pop for open shell species.
-=======
->>>>>>> 099cb0424b6f41737e16ef7301f5b9312461fcfa
 
     def __repr__(self):
         return '<AOC {}{} {} {} [{}]>'.format(self.index, self.gspin, self.atom, self.ao, self.val)
