@@ -37,13 +37,13 @@ class TestOrbPop(unittest.TestCase):
         self.assertEqual(op.homo, 4)
         self.assertEqual(op.lumo, 5)
         self.assertEqual(op.somo, [])
-        
+
     def test_atom_contract(self):
         op = OP('H2O.dat')
         atom_contract = op.atom_contract()
         self.assertEqual(atom_contract[5].contributions[0].val, 34.1)
         self.assertEqual(atom_contract[8].contributions[1].val, 11.5)
-        
+
     def test_am_contract(self):
         op = OP('H2O.dat')
         am_contract = op.am_contract()
@@ -110,7 +110,7 @@ class TestAO_Contrib(unittest.TestCase):
         self.aoc1_dup = AO_Contrib(1, 'Mn', 'px', 0.3)
         self.aoc2 = AO_Contrib(2, 'O', 'f-1', 0.5)
         self.aoc3 = AO_Contrib(2, 'O', 'f+2', 0.2)
-        
+
     def test_init(self):
         self.assertTrue(self.aoc1 == self.aoc1_dup)
         self.assertFalse(self.aoc1 == self.aoc2)
@@ -129,7 +129,7 @@ class TestGroup_Contrib(unittest.TestCase):
         group_contrib1_dup = Group_Contrib(1, ['Mn', 'Br'], 0.3)
         group_contrib2 = Group_Contrib(2, [], 0.5)
         group_contrib3 = Group_Contrib(2, ['Mn', 'Cs', 'Mo'], 0.2)
-        
+
         self.assertTrue(group_contrib1 == group_contrib1_dup)
         self.assertFalse(group_contrib1 == group_contrib2)
 
