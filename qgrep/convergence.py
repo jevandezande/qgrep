@@ -6,12 +6,17 @@ class Step:
     """
     An object that stores a convergence result
     """
-    def __init__(self, params):
+    def __init__(self, params, criteria):
         self.__dict__ = dict(params)
         self.params = params
+        self.criteria = criteria
 
     def __str__(self):
-        return ' '.join("{:> 9.2e}".format(value) for key, value in self.params.items())
+        out = ''
+        for (key, value), criterion in zip(self.params.items(), self.criteria):
+            out += '{:> 9.2e}'.format(value)
+            out += '*' if abs(value) < criterion else ''
+        return out
 
 
 class Convergence:
@@ -31,7 +36,12 @@ class Convergence:
 
         line = '-'*54 + '\n'
         out = header + line
-        out += ''.join('{:>3}: {}\n'.format(i, step) for i, step in enumerate(self.steps))
+        for i, step in enumerate(self.steps):
+            out += '{:>3}: '.format(i)
+            for (key, value), criterion in zip(step.params.items(), step.criteria):
+                star = '*' if abs(value) < criterion and not (i == 0 and key == 'delta_e') else ' '
+                out += '{:> 9.2e}{}'.format(value, star)
+            out = out[:-1] + '\n'
 
         return out + line + '    ' + (' {:> 9.2e}'*len(self.criteria)).format(*self.criteria)
 
