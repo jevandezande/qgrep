@@ -6,6 +6,7 @@ import argparse
 from glob import glob
 from natsort import natsorted
 import numpy as np
+import os
 from cclib import ccopen
 from cclib.parser.utils import convertor
 
