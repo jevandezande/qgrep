@@ -28,7 +28,7 @@ parser.add_argument('-l', '--latex', help='Write in latex format',
                     default=False, action='store_true')
 parser.add_argument('-f', '--format', help='Write in specified format, can use -l for latex',
                     type=str, default='str')
-parser.add_argument('-o', '--output', help='The file to be read.', type=str,
+parser.add_argument('-o', '--output', help='The file where output should be printed.', type=str,
                     default='')
 parser.add_argument('-w', '--write', help='Write to an output file',
                     default=False, action='store_true')
