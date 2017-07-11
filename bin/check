@@ -40,5 +40,12 @@ except AttributeError as e:
 conv = Convergence(steps, data.geotargets)
 print(conv)
 
+if hasattr(data, 'vibfreqs'):
+    im_freqs = data.vibfreqs[data.vibfreqs<0]
+    for freq in im_freqs:
+        print('***Imaginary frequency: {: >7.2f}i'.format(freq))
+    if not im_freqs:
+        print('No imaginary frequencies')
+
 if args.plot:
     conv.plot()
