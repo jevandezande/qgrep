@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+
+# Script that takes output files and plots their spectra
+
+import argparse
+from glob import glob
+import os
+import sys
+from matplotlib import pyplot as plt
+sys.path.insert(0, '../')
+from qgrep.spectra import Spectra, gen_spectra
+
+
+parser = argparse.ArgumentParser(description='Plot the spectra from output file(s).')
+parser.add_argument('-i', '--input', help='The file(s) to be read (accepts *).',
+                    type=str, nargs='+', default=['output.dat'])
+parser.add_argument('-n', '--name', help='The name(s) of the files to be read.',
+                    type=str, nargs='+', default='{autogenerate}')
+parser.add_argument('-t', '--spectra_type', help='Type of spectra to plot.',
+                    type=str, default='uv')
+parser.add_argument('-s', '--subtract', help='Subtract the spectra.',
+                    default=False, action='store_true')
+
+args = parser.parse_args()
+
+inps = []
+# Check for files
+for inp in args.input:
+    if os.path.isfile(inp):
+        inps.append(inp)
+    elif os.path.isfile(inp + '/output.dat'):
+        inps.append(inp + '/output.dat')
+    else:
+        raise ValueError('Cannot find output file {}.'.format(inp))
+
+names = list(range(len(inps))) if args.name == '{autogenerate}' else args.name
+
+if len(inps) == 0:
+    print('You must specify output file(s) to read from')
+elif args.subtract:
+    if len(inps) != 2:
+        raise Exception('Can only do subtraction between two spectra, given: {}'.format(len(inps)))
+    s0 = gen_spectra(inps[0], names[0])
+    s1 = gen_spectra(inps[1], names[1])
+    (s1 - s0).plot()
+    plt.show()
+else:
+    for inp, name in zip(inps, names):
+        s = gen_spectra(inp, name)
+        plt.figure()
+        s.plot()
+    plt.show()
+
