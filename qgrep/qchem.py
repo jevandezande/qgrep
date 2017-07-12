@@ -1,7 +1,5 @@
 """Source for all qchem related functions"""
-
 from os import path
-
 
 # noinspection PyPep8
 def get_geom(lines, geom_type='xyz', units='Angstrom'):

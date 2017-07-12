@@ -2,14 +2,13 @@
 
 # Script that takes an output file and writes a proper zmatrix or the reverse if
 # already proper
-
-import argparse
 import sys
+import argparse
+
 sys.path.insert(0, '../')
 
+from qgrep.orca import convert_to_orca_zmatrix, convert_zmatrix
 from qgrep.helper import read
-from qgrep.orca import convert_zmatrix, convert_to_orca_zmatrix
-
 
 parser = argparse.ArgumentParser(description='Converts the last zmatrix to a proper zmatrix or the reverse if already proper.')
 parser.add_argument('-i', '--input', help='The file to be read.', type=str,

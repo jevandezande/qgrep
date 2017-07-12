@@ -1,5 +1,4 @@
 """Molpro functions"""
-
 from .helper import BOHR_TO_ANGSTROM
 
 

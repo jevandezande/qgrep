@@ -1,10 +1,14 @@
-import unittest
-from sys import path
 import os
+import unittest
 import numpy as np
+
+from sys import path
 from numpy.testing import assert_almost_equal
+
 path.insert(0, '../../../')
-from qgrep.population.orbital_pop import OrbitalPopulation as OP, MOrbital, AO_Contrib, Group_Contrib
+
+from qgrep.population.orbital_pop import (AO_Contrib, Group_Contrib, MOrbital,
+                                          OrbitalPopulation as OP)
 
 
 class TestOrbPop(unittest.TestCase):

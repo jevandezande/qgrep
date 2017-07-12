@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 
 # Script that takes an output file and prints its geometry convergence results
-
+import os
+import sys
 import argparse
-from collections import OrderedDict
-from cclib import ccopen
-import os, sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from qgrep.convergence import Convergence, Step
 
+from cclib import ccopen
+from collections import OrderedDict
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from qgrep.convergence import Convergence, Step
 
 parser = argparse.ArgumentParser(description='Get the geometry of an output file.')
 parser.add_argument('-i', '--input', help='The file to be read.', type=str,

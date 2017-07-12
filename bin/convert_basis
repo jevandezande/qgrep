@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-
 import argparse
-from qgrep.basis import BasisSet
 
+from qgrep.basis import BasisSet
 
 parser = argparse.ArgumentParser(description='Converts a basis set from one style to another')
 parser.add_argument('-i', '--input', help='The file to be read.', type=str,

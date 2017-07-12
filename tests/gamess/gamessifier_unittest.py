@@ -1,11 +1,15 @@
 import unittest
-from collections import OrderedDict
+
 from sys import path
+from collections import OrderedDict
+
 path.insert(0, '../..')
+
+import os
+
+from qgrep.basis import Basis, BasisFunction, BasisSet
 from qgrep.gamess import Gamessifier
 from qgrep.molecule import Molecule
-from qgrep.basis import BasisFunction, Basis, BasisSet
-import os
 
 
 class TestGamessifier(unittest.TestCase):

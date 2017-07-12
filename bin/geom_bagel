@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
 # Script that takes an output file and gets the last geometry
-
+import sys
 import argparse
 import importlib
-import sys
+
 sys.path.insert(0, '../')
 
-from qgrep.helper import read
 from qgrep.bagel import convert_to_bagel_geom
-
+from qgrep.helper import read
 
 parser = argparse.ArgumentParser(description='Get the geometry from an output file.')
 parser.add_argument('-i', '--input', help='The file to be read.', type=str,

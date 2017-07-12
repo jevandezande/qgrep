@@ -1,8 +1,11 @@
 import unittest
-from sys import path
 import numpy as np
+
+from sys import path
 from numpy.testing import assert_almost_equal
+
 path.insert(0, '../../')
+
 from qgrep.population.nbo import NPA, NPA_Diff
 
 

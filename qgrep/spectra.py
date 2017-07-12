@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-
 import numpy as np
-from matplotlib import pyplot as plt
+
 from cclib import ccopen
+
+from matplotlib import pyplot as plt
 
 
 def gaussian(energy, intensity, width):

@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-
+import os
+import sys
 import argparse
-from cclib import ccopen
-import os, sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from qgrep.atom import numbers_atomic
 
+from cclib import ccopen
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from qgrep.atom import numbers_atomic
 
 parser = argparse.ArgumentParser(description='Get the geometry of an output file.')
 parser.add_argument('-i', '--input', help='The file to be read.', type=str,

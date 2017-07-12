@@ -2,14 +2,14 @@
 
 # Reads a population analysis and outputs the leading contributors for the
 # specified range of orbitals
-
+import sys
 import argparse
 import importlib
-import sys
+
 sys.path.insert(0, '../')
+
 from qgrep.helper import read
 from qgrep.population.orbital_pop import OrbitalPopulation as OP
-
 
 parser = argparse.ArgumentParser(description='Get the population analysis for specified orbitals. '\
                                 'When cropping and contracting, the contraction is performed first.')

@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 
 # Script that takes an output file and gets the last energy of specified type
-
-import argparse
-from glob import glob
-from natsort import natsorted
-import numpy as np
 import os
+import argparse
+import numpy as np
+
+from glob import glob
 from cclib import ccopen
 from cclib.parser.utils import convertor
 
+from natsort import natsorted
 
 parser = argparse.ArgumentParser(description='Get the energy from output file.')
 parser.add_argument('-i', '--input', help='The file(s) to be read (accepts *).',

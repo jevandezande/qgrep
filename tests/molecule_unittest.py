@@ -1,8 +1,12 @@
 import unittest
+
 from sys import path
+
 path.insert(0, '..')
-from qgrep.molecule import Molecule
+
 import os
+
+from qgrep.molecule import Molecule
 
 
 class TestMolecule(unittest.TestCase):

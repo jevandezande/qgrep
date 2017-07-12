@@ -1,8 +1,10 @@
 """Source for all orca related functions"""
-from .molecule import Molecule
-from .convergence import Step, Convergence
 import re
+
 from collections import OrderedDict
+
+from .molecule import Molecule
+from .convergence import Convergence, Step
 
 
 def get_geom(lines, geom_type='xyz', units='angstrom'):

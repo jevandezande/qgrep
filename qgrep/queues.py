@@ -1,12 +1,14 @@
-import subprocess
-from xml.etree import ElementTree
-from collections import OrderedDict, defaultdict
-from itertools import zip_longest, filterfalse
-import getpass
-from configparser import ConfigParser
-import os.path
 import re
+import getpass
+import subprocess
+import os.path
+
+from itertools import filterfalse, zip_longest
+from collections import OrderedDict, defaultdict
+from xml.etree import ElementTree
+
 from .helper import colors
+from configparser import ConfigParser
 
 config_file = os.path.join(os.path.expanduser("~"), '.qgrepconfig')
 config = ConfigParser()

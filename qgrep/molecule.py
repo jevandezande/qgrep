@@ -1,5 +1,6 @@
-from . import helper
 import importlib
+
+from . import helper
 
 
 class Molecule(object):

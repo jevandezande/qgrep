@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
 # Script that takes an output file and returns the orbital energies
-
 import argparse
 import numpy as np
-from cclib import ccopen
 
+from cclib import ccopen
 
 parser = argparse.ArgumentParser(description='Get orbital energies of an output file.')
 parser.add_argument('-i', '--input', help='The file to be read.', type=str,
