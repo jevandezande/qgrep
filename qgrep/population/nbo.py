@@ -1,12 +1,13 @@
 """Source for all nbo relate functions"""
 import re
 import numpy as np
+from itertools import zip_longest
 
 
 class NAOs:
     """Natural Atomic Orbitals"""
     def __init__(self, lines):
-        """      
+        """
         """
         self.vals = NAOs.read(lines)
 
@@ -83,8 +84,8 @@ class NPA:
         """
         Iterate over atoms and charges, each time returning an array of a single atom with charges
         """
-        for atom, vals in zip(self.atoms, self.charges):
-            yield [atom] + self.charges
+        for atom, atom_charges in zip(self.atoms, self.charges):
+            yield atom, atom_charges
 
     def __len__(self):
         """
@@ -111,33 +112,45 @@ class NPA:
         """
         Return a string resmbling the NPA output
         """
-        ret = 'Atom  Charge     Core     Valence   Rydberg   Total\n'
-        line_form = '{:<2} ' + '  {: >8.5f}' * 5 + '\n'
+        ret = 'Atom   Charge    Core    Valence  Rydberg   Total\n'
+        line_form = '{:<5}' + ' {: >8.5f}' * 5 + '\n'
         for atom, charge in zip(self.atoms, self.charges):
             ret += line_form.format(atom, *charge)
         return ret
 
     def __sub__(self, other):
         """
-        Subtract two NPA objects
+        Subtract two NPA objects of different sizes
         """
-        if self.atoms != other.atoms:
-            raise SyntaxError('Atoms do not match')
-        npa_diff = NPA_Diff()
-        npa_diff.atoms = self.atoms
-        npa_diff.charges = self.charges - other.charges
-        return npa_diff
+        return self._combine(other, '-')
 
     def __add__(self, other):
         """
         Add two NPA objects
         """
-        if self.atoms != other.atoms:
-            raise SyntaxError('Atoms do not match')
-        npa = NPA()
-        npa.atoms = self.atoms
-        npa.charges = self.charges + other.charges
-        return npa
+        return self._combine(other, '+')
+
+    def _combine(self, other, form):
+        """
+        Add or subtract two NPA objects
+        """
+        if form not in ['+', '-']:
+            raise ValueError("form must be '+' or '-'")
+        atoms = []
+        charges = []
+        # Allow combination even if the dimensions don't match
+        for (atom1, charges1), (atom2, charges2) in zip_longest(self, other, fillvalue=['', np.zeros(5)]):
+            atoms.append('{:>2}{:}{:<2}'.format(atom1, form, atom2))
+
+            if form == '-':
+                charges.append(charges1 - charges2)
+            else:
+                charges.append(charges1 + charges2)
+
+        if form == '-':
+            return NPA_Diff(atoms, charges)
+        return NPA_Sum(atoms, charges)
+
 
     def append(self, atom, *vals):
         """
@@ -186,6 +199,12 @@ class NPA:
         return atoms, np.array(npa)
 
 class NPA_Diff(NPA):
+    """
+    NPA class without restrictions on population
+    Currently exactly the same
+    """
+
+class NPA_Sum(NPA):
     """
     NPA class without restrictions on population
     Currently exactly the same
