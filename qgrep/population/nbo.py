@@ -7,35 +7,55 @@ class NPA:
     """Natural Population Analysis class"""
 
     def __init__(self, atoms=None, charges=None, lines=''):
+        """
+        :param atoms: a list of atoms
+        :param charges: numpy array of charges per atom (charge, core, valence, rydberg, total)
+        :param lines: line of an output file to read
+        """
         if atoms is None and charges is None and lines:
             self.atoms, self.charges = self.read(lines)
         else:
             self.atoms = atoms
             self.charges = charges
-    
+
     def __eq__(self, other):
         """
         Uses np.allclose
         """
         return self.atoms == other.atoms and np.allclose(self.charges, other.charges)
-    
+
     def __iter__(self):
+        """
+        Iterate over atoms and charges, each time returning an array of a single atom with charges
+        """
         for atom, vals in zip(self.atoms, self.charges):
             yield [atom] + self.charges
 
     def __len__(self):
+        """
+        Number of atoms
+        """
         return len(self.atoms)
 
     def __getitem__(self, index):
+        """
+        Get the atom and charges corresponding to the index
+        """
         return [self.atoms[index]] + self.charges[index]
 
     def __setitem__(self, index, value):
+        """
+        Set the atom and charges corresponding to the index
+        """
         if len(value) != 6:
             raise SyntaxError('Invalid number of charges')
         self.atoms[index] = value[0]
         self.charges[index] = value[1:]
 
     def __str__(self):
+        """
+        Return a string resmbling the NPA output
+        """
         ret = 'Atom  Charge     Core     Valence   Rydberg   Total\n'
         line_form = '{:<2} ' + '  {: >8.5f}' * 5 + '\n'
         for atom, charge in zip(self.atoms, self.charges):
@@ -43,6 +63,9 @@ class NPA:
         return ret
 
     def __sub__(self, other):
+        """
+        Subtract two NPA objects
+        """
         if self.atoms != other.atoms:
             raise SyntaxError('Atoms do not match')
         npa_diff = NPA_Diff()
@@ -51,6 +74,9 @@ class NPA:
         return npa_diff
 
     def __add__(self, other):
+        """
+        Add two NPA objects
+        """
         if self.atoms != other.atoms:
             raise SyntaxError('Atoms do not match')
         npa = NPA()
@@ -59,6 +85,9 @@ class NPA:
         return npa
 
     def append(self, atom, *vals):
+        """
+        Append an atom and charges to the population analysis
+        """
         self.atoms.append(atom)
         if not len(vals) == 5:
             raise SyntaxError('Invalid number of charges')
@@ -66,26 +95,26 @@ class NPA:
 
     @staticmethod
     def read(lines):
-        """Read the natural population analysis
+        """Read the natural population analysis from an output file
 
  Summary of Natural Population Analysis:
-                                     Natural Population 
-             Natural    --------------------------------------------- 
+                                     Natural Population
+             Natural    ---------------------------------------------
   Atom No    Charge        Core      Valence    Rydberg      Total
- -------------------------------------------------------------------- 
-   Fe  1   -0.57877     17.97641     8.54310    0.05926    26.57877 
-    C  2    0.60637      1.99951     3.34225    0.05187     5.39363 
+ --------------------------------------------------------------------
+   Fe  1   -0.57877     17.97641     8.54310    0.05926    26.57877
+    C  2    0.60637      1.99951     3.34225    0.05187     5.39363
     O  3   -0.42097      1.99976     6.38932    0.03189     8.42097
 ...
 """
 
         # Find the NPA Section
-        start = 0
+        start = -1
         for i, line in enumerate(lines):
             if line == '  Atom No    Charge        Core      Valence    Rydberg      Total\n':
                 start = i + 2
                 break
-        if start == 0:
+        if start == -1:
             raise Exception('Unable to find the start of NPA analysis')
 
         npa = []
@@ -111,6 +140,9 @@ class NBO():
     """Natural Bond Orbital class"""
 
     def __init__(self, lines):
+        """
+        :param lines: lines to be read from an output file
+        """
         self.nbos = self.read(lines)
 
     def __str__(self):
@@ -124,7 +156,6 @@ class NBO():
 
     @staticmethod
     def read(lines):
-        # noinspection PyPep8
         """
         Read the Natural Bond Orbital Analysis
 
