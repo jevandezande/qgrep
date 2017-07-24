@@ -6,7 +6,18 @@ from numpy.testing import assert_almost_equal
 
 path.insert(0, '../../')
 
-from qgrep.population.nbo import NPA, NPA_Diff
+from qgrep.population.nbo import NAOs, NPA, NPA_Diff
+
+
+class TestNAOs(unittest.TestCase):
+    """Test the NAOs class"""
+    def test_read(self):
+        with open('H2O.nbo') as f:
+            lines = f.readlines()
+        naos = NAOs(lines=lines)
+        occ = [0.58963, 0.00147, 1.99984, 1.79608, 0.00093, 1.99981, 0.00019,
+              1.50996, 0.00052, 1.50996, 0.00052, 0.58963, 0.00147]
+        assert_almost_equal([x[5] for x in naos.vals], occ)
 
 
 class TestNPA(unittest.TestCase):
@@ -21,9 +32,7 @@ class TestNPA(unittest.TestCase):
         with open('H2O.nbo') as f:
             lines = f.readlines()
         h2o = NPA(lines=lines)
-        npa = NPA_Diff()
-        npa.atoms = h2o.atoms
-        npa.charges = np.zeros(h2o.charges.shape)
+        npa = NPA_Diff(h2o.atoms, np.zeros(h2o.charges.shape))
         self.assertEqual((h2o - h2o), npa)
 
         with open('H2O_stretched.nbo') as f:
@@ -53,7 +62,13 @@ class TestNPA(unittest.TestCase):
                         [ 0.49957, 0.00000,  1.49891, 0.00152,  1.50043]])
 
         assert_almost_equal((h2o + h2o_stretched).charges, add)
-        
+
+class TestNBO(unittest.TestCase):
+    """Tests the NBO class"""
+
+    def test_read(self):
+        pass
+
 
 if __name__ == '__main__':
     unittest.main()

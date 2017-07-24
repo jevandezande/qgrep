@@ -3,6 +3,61 @@ import re
 import numpy as np
 
 
+class NAOs:
+    """Natural Atomic Orbitals"""
+    def __init__(self, lines):
+        """      
+        """
+        self.vals = NAOs.read(lines)
+
+    def __len__(self):
+        return len(self.vals)
+
+    def __iter__(self):
+        for ao_vals in self.vals:
+            yield ao_vals
+
+    def __sub__(self, other):
+        """
+        Difference of two NAO objects
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    def read(lines):
+        """ Reads the lines of a NAO output
+  NAO Atom No lang   Type(AO)    Occupancy      Energy
+ ---------------------------------------------------------
+   1    C  1  s      Cor( 1s)     1.99916     -10.15626
+   2    C  1  s      Val( 2s)     0.94193      -0.30622
+"""
+        start = -1
+        for i, line in enumerate(lines):
+            if line.strip() == 'NAO Atom No lang   Type(AO)    Occupancy      Energy':
+                start = i + 2
+        if start == -1:
+            raise Exception('Cannot find the start of NAO')
+
+        vals = []
+        atom = ''
+        for line in lines[start:]:
+            if not line.strip():
+                continue
+            try:
+                idx, atom, num, orb, orb_type, *shell, occupancy, energy = line.split()
+            except ValueError as e:
+                break
+            if not shell:
+                orb_type, shell = orb_type.split('(')
+            else:
+                shell = shell[0]
+                orb_type = orb_type.strip('(')
+            shell = shell.strip(')')
+            vals.append([atom, int(num), orb, orb_type, shell, float(occupancy), float(energy)])
+
+        return vals
+
+
 class NPA:
     """Natural Population Analysis class"""
 
