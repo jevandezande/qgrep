@@ -210,22 +210,106 @@ class NPA_Sum(NPA):
     NPA class without restrictions on population
     Currently exactly the same
     """
+    pass
 
-class NBO:
+
+class Orbital:
+    """
+    Base class for all orbitals
+    """
+    def __init__(self, occupation, atom, atom_n):
+        """
+        :param occupation: orbital occupation
+        :param atom: the primary atom of the orbital (more atoms allowed in subclasses)
+        :param atom_n: index of the primary atom
+        """
+        self.occupation = occupation
+        self.atom = atom
+        self.atom_n = atom_n
+        self.type = self.__class__.__name__
+
+    def __repr__(self):
+        return f'<{self.type} {self.atom}{self.atom_n}>'
+
+    def __str__(self):
+        return f'{self.type:4} {self.occupation:>7.5f} {self.atom_n:>3} {self.atom:2}'
+
+
+class LP(Orbital):
+    """ Lone Pair """
+    pass
+class CR(Orbital):
+    """Core Orbital"""
+    pass
+class LV(Orbital):
+    """ TODO: Figure out what type of orbital this is """
+    pass
+class RY(Orbital):
+    """Rydberg Orbital"""
+    pass
+class RYs(Orbital):
+    """Rydberg* Orbital"""
+    def __init__(self):
+        super().__init__(occupation, atom, atom_n)
+        self.type = "RY*"
+
+
+class NBO(Orbital):
+    """
+    Natural Bond Orbital
+    """
+    def __init__(self, occupation, atom1, atom1_n, atom2, atom2_n, hybrids, densities):
+        """
+        :param occupation: orbital occupation
+        :param atom1: the first atom in the NBO
+        :param atom1_n: index of the first atom
+        :param atom2: the second atom in the NBO
+        :param atom2_n: index of the second atom
+        :param hybrids: hybridization of both atoms
+        :param densities: densities of both atoms
+        """
+        super().__init__(occupation, atom1, atom1_n)
+        self.atom2 = atom2
+        self.atom2_n = atom2_n
+        self.hybrids = hybrids
+        self.densities = densities
+
+    def __repr__(self):
+        return f'<NBO {self.atom1}{self.atom1_n}--{self.atom2}{self.atom2_n}>'
+
+    def __str__(self):
+        return f'{self.type:4} {self.occupation:>7.5f} {self.atom_n:>3} {self.atom:2}--{self.atom2_n:>3} {self.atom:2}'
+
+
+class NBOs(NBO):
+    def __init__(self):
+        super().__init__(occupation, atom1, atom1_n, atom2, atom2_n)
+        self.type = "NBO*"
+
+
+class NBOSet:
     """Natural Bond Orbital class"""
 
     def __init__(self, file_iter):
         """
         :param file_iter: file to be read from an output file
         """
-        self.nbos = self.read(file_iter)
+        self.orbitals = self.read(file_iter)
 
     def __str__(self):
-        ret      = 'Index  Order  type  sub  atom1  #  Other info \n'
-        nbo_form = '{:>4d}  {:>7.5f}  {:3}   {:>2d}    {:2} {:>3}    {}\n'
-        for nbo in self.nbos:
-            ret += nbo_form.format(*nbo[:6], nbo[6:])
-        return ret
+        out = 'Index Type  Occup   atom   Other info \n'
+        for i, nbo in enumerate(self.orbitals):
+            out += f'{i:>5} {nbo}\n'
+        return out
+
+    def bond_orders(self):
+        """
+        Determines the bond orders of all bonds based on occ x BD - occ x BD*
+        """
+        for orbital in self.orbitals:
+            pass
+
+        return bond_orders
 
     @staticmethod
     def read(file_iter):
@@ -262,7 +346,9 @@ class NBO:
         except StopIteration:
             raise Exception('Could not find NBO section.')
 
-        nbos = []
+        single_center = {'CR': CR, 'LP': LP, 'LV': LV, 'RY': RY, 'RY*': RYs}
+
+        orbitals = []
         while line:
             # Start of a new block for parsing
             if re.search('\s*\d+\. \(', line):
@@ -288,27 +374,35 @@ class NBO:
                     regex = fr'\(\s*(\d+\.\d+)%\)\s+(-?\d\.\d+)\*{atom_re}\s+(\w)\(\s*(\d+\.\d+)'
                     # For each atom block within the BD/BD*
                     #while not re.search('\s*\d+\.\s', file_iter.peek()):
+                    hybrids = []
+                    densities = [] # TODO: Figure out what this actually is
+                    # TODO: Adapt for three atom bonds?
                     for i in range(2):
                         line = next(file_iter)
                         percent, val, atom, atom_n, orbital1, percent = re.search(regex, line).groups()
                         assert (atom in [atom1, atom2]) and (atom_n in [atom1_n, atom2_n])
 
-                        hybrids = [(orbital1, 1.0, float(percent))]
+                        hybrids.append([(orbital1, 1.0, float(percent))])
                         finder = lambda l: re.findall(hybridicity_regex, l)
-                        matches = finder(line) + finder(file_iter.peek())
-                        for orbital, hybridicity, percent in matches:
-                            hybrids.append((orbital, float(hybridicity), float(percent)))
+                        matches = finder(line)
+                        while matches:
+                            for orbital, hybridicity, percent in matches:
+                                hybrids[i].append((orbital, float(hybridicity), float(percent)))
+                            matches = finder(file_iter.peek())
+                            if not matches:
+                                break
+                            next(file_iter)
 
-                        matches = []
+                        densities.append([])
                         line = file_iter.peek()
-                        while line[:40] != ' '*40:
-                            matches += map(float, re.findall('-?\d\.\d+', line))
+                        while line[:40] == ' '*40:
+                            densities[i] += map(float, re.findall('-?\d\.\d+', line))
                             next(file_iter)
                             line = file_iter.peek()
 
-                    nbos.append([idx, occup, nbo_type, int(number), atom1, int(atom1_n), atom2, int(atom2_n), hybrids, matches])
+                    orbitals.append(NBO(occup, atom1, atom1_n, atom2, atom2_n, hybrids, densities)) #[idx, occup, nbo_type, int(number), atom1, int(atom1_n), atom2, int(atom2_n), hybrids, densities])
 
-                elif nbo_type in ['CR', 'LP', 'LV', 'RY', 'RY*']:
+                elif nbo_type in single_center:
                     """90. (0.01241) RY*( 1)Fe  1             s(  0.00%)p 1.00(  3.05%)d31.77( 96.89%)"""
                     regex = fr'\( ?(\d+)\){atom_re}\s+(\w)\(\s*(\d+\.\d+)'
                     try:
@@ -320,10 +414,10 @@ class NBO:
                             hybrids.append((orbital, float(hybridicity), float(percent)))
                     except Exception as e:
                         raise ValueError from e
-                    nbos.append([idx, occup, nbo_type, int(number), atom, int(atom_n), *hybrids])
+                    orbitals.append(single_center[nbo_type](occup, atom, atom_n))
                 else:
                     raise Exception(f'Cannot parse nbo type {nbo_type}')
             line = next(file_iter).strip()
 
-        return nbos
+        return orbitals
 
