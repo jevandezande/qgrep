@@ -3,6 +3,7 @@ import re
 import numpy as np
 from itertools import zip_longest
 from more_itertools import peekable
+from collections import defaultdict
 
 
 class NAOs:
@@ -225,7 +226,7 @@ class Orbital:
         """
         self.occupation = occupation
         self.atom = atom
-        self.atom_n = atom_n
+        self.atom_n = int(atom_n)
         self.type = self.__class__.__name__
 
     def __repr__(self):
@@ -270,7 +271,7 @@ class NBO(Orbital):
         """
         super().__init__(occupation, atom1, atom1_n)
         self.atom2 = atom2
-        self.atom2_n = atom2_n
+        self.atom2_n = int(atom2_n)
         self.hybrids = hybrids
         self.densities = densities
 
@@ -304,12 +305,16 @@ class NBOSet:
 
     def bond_orders(self):
         """
-        Determines the bond orders of all bonds based on occ x BD - occ x BD*
+        Determines the bond orders of all bonds based on (occ x BD - occ x BD*)/2
         """
+        bos = defaultdict(int)
         for orbital in self.orbitals:
-            pass
+            if isinstance(orbital, NBOs):
+                bos[(orbital.atom_n, orbital.atom2_n)] -= orbital.occupation/2
+            elif isinstance(orbital, NBO):
+                bos[(orbital.atom_n, orbital.atom2_n)] += orbital.occupation/2
 
-        return bond_orders
+        return bos
 
     @staticmethod
     def read(file_iter):
