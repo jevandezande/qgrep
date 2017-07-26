@@ -2,6 +2,7 @@
 import re
 import numpy as np
 from itertools import zip_longest
+from more_itertools import peekable
 
 
 class NAOs:
@@ -112,10 +113,10 @@ class NPA:
         """
         Return a string resmbling the NPA output
         """
-        ret = 'Atom   Charge    Core    Valence  Rydberg   Total\n'
-        line_form = '{:<5}' + ' {: >8.5f}' * 5 + '\n'
-        for atom, charge in zip(self.atoms, self.charges):
-            ret += line_form.format(atom, *charge)
+        ret = 'Idx Atom   Charge    Core    Valence  Rydberg   Total\n'
+        line_form = '{:>3} {:<5}' + ' {: >8.5f}' * 5 + '\n'
+        for i, (atom, charge) in enumerate(zip(self.atoms, self.charges)):
+            ret += line_form.format(i, atom, *charge)
         return ret
 
     def __sub__(self, other):
@@ -210,26 +211,24 @@ class NPA_Sum(NPA):
     Currently exactly the same
     """
 
-class NBO():
+class NBO:
     """Natural Bond Orbital class"""
 
-    def __init__(self, lines):
+    def __init__(self, file_iter):
         """
-        :param lines: lines to be read from an output file
+        :param file_iter: file to be read from an output file
         """
-        self.nbos = self.read(lines)
+        self.nbos = self.read(file_iter)
 
     def __str__(self):
-        ret = 'Bond #, Bond Order, type, sub bond #, atom1, atom1 #, atom2,' \
-              'atom2 #\n'
-        nbo_form = ' {:>3d}     {:6.5f}     {:<3s}      {:d}        {:<2s}' \
-                   '     {:>3d}       {:<2s}    {:>3d}\n'
+        ret      = 'Index  Order  type  sub  atom1  #  Other info \n'
+        nbo_form = '{:>4d}  {:>7.5f}  {:3}   {:>2d}    {:2} {:>3}    {}\n'
         for nbo in self.nbos:
-            ret += nbo_form.format(*nbo)
+            ret += nbo_form.format(*nbo[:6], nbo[6:])
         return ret
 
     @staticmethod
-    def read(lines):
+    def read(file_iter):
         """
         Read the Natural Bond Orbital Analysis
 
@@ -254,34 +253,77 @@ class NBO():
                                                   f 0.00(  0.00%)
     ...
         """
-        for i, line in enumerate(lines):
-            if line == '     (Occupancy)   Bond orbital/ Coefficients/ Hybrids\n':
-                start = i + 2
+        file_iter = peekable(iter(file_iter))
+        for line in file_iter:
+            if line == '     (Occupancy)   Bond orbital / Coefficients / Hybrids\n':
                 break
-
-        atom1 = 'C'
-        num1 = 26
-        atom2 = 'O'
-        num2 = 27
-        types = '(BD |BD\*|CR |LP |RY |RY\*)'
-
-        #atom_label_1 = atom1.rjust(2) + str(num1).rjust(3)
-        atom_label = ' ?(\w+) +(\d+)'
-        #atom_label_2 = atom2.rjust(2) + str(num2).rjust(3)
-
-        regex = r'(\d+)\. \((\d\.\d*)\) {}\( ?(\d+)\){}-{}'
-
-        regex = regex.format(types, atom_label, atom_label)
-
-        # TODO: Actually use starting coordinates
-        out_string = open('output.dat').read()
-        results = re.findall(regex, out_string)
+        try:
+            file_iter.peek()
+        except StopIteration:
+            raise Exception('Could not find NBO section.')
 
         nbos = []
-        for nbo in results:
-            bond_num, b_order, b_type, b_sub, a1, a1_n, a2, a2_n = nbo
-            nbos.append([int(bond_num), float(b_order), str(b_type), int(b_sub),
-                         str(a1), int(a1_n), str(a2), int(a2_n)])
+        while line:
+            # Start of a new block for parsing
+            if re.search('\s*\d+\. \(', line):
+                idx, occup, nbo_type, *other = line.split()
+                idx = int(idx[:-1])
+                occup = float(occup[1:-1])
+                nbo_type = nbo_type.strip('(')
+
+                atom_re = ' ?(\w{1,2})\s+(\d+)'
+                hybridicity_regex = '(\w)\s*(\d+\.\d+)\(\s*(\d+\.\d+)'
+
+                if nbo_type in ['BD', 'BD*']:
+                    """
+   4. (1.99999) BD ( 1) H  1- O  2
+               ( 41.34%)   0.6429* H  1 s(100.00%)
+                                         1.0000
+               ( 58.66%)   0.7659* O  2 s( 12.16%)p 7.22( 87.84%)
+                                         0.0000  0.3487  0.0000 -0.0650 -0.9350
+"""
+                    regex = fr'\( ?(\d+)\){atom_re}-{atom_re}'
+                    number, atom1, atom1_n, atom2, atom2_n = re.search(regex, line).groups()
+
+                    regex = fr'\(\s*(\d+\.\d+)%\)\s+(-?\d\.\d+)\*{atom_re}\s+(\w)\(\s*(\d+\.\d+)'
+                    # For each atom block within the BD/BD*
+                    #while not re.search('\s*\d+\.\s', file_iter.peek()):
+                    for i in range(2):
+                        line = next(file_iter)
+                        percent, val, atom, atom_n, orbital1, percent = re.search(regex, line).groups()
+                        assert (atom in [atom1, atom2]) and (atom_n in [atom1_n, atom2_n])
+
+                        hybrids = [(orbital1, 1.0, float(percent))]
+                        finder = lambda l: re.findall(hybridicity_regex, l)
+                        matches = finder(line) + finder(file_iter.peek())
+                        for orbital, hybridicity, percent in matches:
+                            hybrids.append((orbital, float(hybridicity), float(percent)))
+
+                        matches = []
+                        line = file_iter.peek()
+                        while line[:40] != ' '*40:
+                            matches += map(float, re.findall('-?\d\.\d+', line))
+                            next(file_iter)
+                            line = file_iter.peek()
+
+                    nbos.append([idx, occup, nbo_type, int(number), atom1, int(atom1_n), atom2, int(atom2_n), hybrids, matches])
+
+                elif nbo_type in ['CR', 'LP', 'LV', 'RY', 'RY*']:
+                    """90. (0.01241) RY*( 1)Fe  1             s(  0.00%)p 1.00(  3.05%)d31.77( 96.89%)"""
+                    regex = fr'\( ?(\d+)\){atom_re}\s+(\w)\(\s*(\d+\.\d+)'
+                    try:
+                        number, atom, atom_n, orbital1, percent = re.search(regex, line).groups()
+                        hybrids = [(orbital1, 1.0, float(percent))]
+                        finder = lambda l: re.findall(hybridicity_regex, l)
+                        matches = finder(line) + finder(file_iter.peek())
+                        for orbital, hybridicity, percent in matches:
+                            hybrids.append((orbital, float(hybridicity), float(percent)))
+                    except Exception as e:
+                        raise ValueError from e
+                    nbos.append([idx, occup, nbo_type, int(number), atom, int(atom_n), *hybrids])
+                else:
+                    raise Exception(f'Cannot parse nbo type {nbo_type}')
+            line = next(file_iter).strip()
 
         return nbos
 
