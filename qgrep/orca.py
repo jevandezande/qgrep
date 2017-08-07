@@ -248,7 +248,7 @@ def get_energy(lines, energy_type='sp'):
         energy_line = 'FINAL SINGLE POINT ENERGY'
         for line in reversed(lines):
             if energy_line == line[:25]:
-                energy = line.split()[-1]
+                energy = line.split()[4]
                 break
     elif energy_type == 'gibbs':
         energy_line = 'Final Gibbs free enthalpy'
@@ -287,7 +287,7 @@ def get_energies(lines, energy_type='sp'):
         energy_line = 'FINAL SINGLE POINT ENERGY'
         for line in lines:
             if energy_line == line[:25]:
-                energies.append(float(line.split()[-1]))
+                energies.append(float(line.split()[4]))
     elif energy_type == 'gibbs':
         energy_line = 'Final Gibbs free enthalpy'
         for line in lines:
