@@ -1,10 +1,30 @@
 import re
 
+from more_itertools import collapse
+
 
 class RedundantInternals:
     """Redundant Internal Coordinates"""
     def __init__(self, lines):
-        self.bond_vals, self.angle_vals = RedundantInternals.read(lines)
+        self.bond_vals, self.angle_vals, self.linear_vals, self.dihredal_vals = RedundantInternals.read(lines)
+
+    def print(self, bonds=True, angles=False, dihedrals=False):
+        """ Print values """
+        out = ''
+        if bonds:
+            for *atoms, final in self.bond_vals:
+                f = '-'.join(['{:>3} {:<2}']*int(len(atoms))) + f' = {final:> 5.4f}\n'
+                out += f.format(*collapse(atoms))
+
+        if angles:
+            for val in self.angle_vals + self.linear_vals:
+                pass
+        if dihedrals:
+            for val in self.dihedral_vals:
+                pass
+
+        return out
+
 
     def diffs(self, other, thresh=(3, 2, 2)):
         """
@@ -21,8 +41,8 @@ class RedundantInternals:
                     mismatch += 1
                     continue
                 if thresh is None or abs(final2 - final1) > 10**-thresh:
-                    f = '-'.join(['{:>3} {:<2}']*int(len(atoms1)/2)) + f' = {final2 - final1:> 5.3f}'
-                    print(f.format(*atoms1))
+                    f = '-'.join(['{:>3} {:<2}']*int(len(atoms1))) + f' = {final2 - final1:> 5.3f}'
+                    print(f.format(*collapse(atoms1)))
             return mismatch
         print('Bonds')
         mismatch = check(self.bond_vals, other.bond_vals, thresh=thresh[0])
@@ -32,7 +52,7 @@ class RedundantInternals:
         #print(f'Angle Mismatch: {mismatch}')
 
 
-    def read(lines):
+    def read(lines, sort=True):
         """
         Parse the Redundant Internal Coordinates from an Orca output file
         TODO: Make work for Dihedrals
@@ -72,7 +92,7 @@ class RedundantInternals:
                 break
 
             try:
-                t, idx1, atom1, idx2, atom2, atom_idx3, atom_idx4, other, old, slope, step, final = re.search(regex, line).groups()
+                t, atom1, idx1, atom2, idx2, atom_idx3, atom_idx4, other, old, slope, step, final = re.search(regex, line).groups()
             except AttributeError as e:
                 pass
 
@@ -84,14 +104,23 @@ class RedundantInternals:
                         other = other[1:].strip()
 
             if t == 'B':
-                bond_vals.append([idx1, atom1, idx2, atom2, float(final)])
+                pair1, pair2 = sorted(((int(idx1), atom1), (int(idx2), atom2)))
+                bond_vals.append([pair1, pair2, float(final)])
             elif t == 'A':
-                angle_vals.append([idx1, atom1, idx2, atom2, idx3, atom3, float(final)])
+                pair1, pair2, pair3 = sorted(((int(idx1), atom1), (int(idx2), atom2), (int(idx3), atom3)))
+                angle_vals.append([pair1, pair2, pair3, float(final)])
             elif t == 'L':
-                linear_vals.append([idx1, atom1, idx2, atom2, idx3, atom3, atom4, idx4, other, float(final)])
+                pair1, pair2, pair3, pair4 = sorted(((int(idx1), atom1), (int(idx2), atom2), (int(idx3), atom3), (int(idx4), atom4)))
+                linear_vals.append([pair1, pair2, pair3, pair4, other, float(final)])
             elif t == 'D':
-                dihedral_vals.append([idx1, atom1, idx2, atom2, idx3, atom3, atom4, idx4, float(final)])
+                pair1, pair2, pair3, pair4 = sorted(((int(idx1), atom1), (int(idx2), atom2), (int(idx3), atom3), (int(idx4), atom4)))
+                dihedral_vals.append([pair1, pair2, pair3, pair4, float(final)])
             else:
                 raise ValueError('Cannot identify coordinate type')
 
-        return bond_vals, angle_vals
+        #bond_vals = sorted(bond_vals)
+        #angle_vals = sorted(angle_vals)
+        #linear_vals = sorted(linear_vals)
+        #dihedral_vals = sorted(dihedral_vals)
+
+        return bond_vals, angle_vals, linear_vals, dihedral_vals
