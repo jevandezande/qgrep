@@ -46,7 +46,7 @@ if hasattr(data, 'vibfreqs'):
     im_freqs = data.vibfreqs[data.vibfreqs<0]
     for freq in im_freqs:
         print('***Imaginary frequency: {: >7.2f}i'.format(freq))
-    if not im_freqs:
+    if len(im_freqs) == 0:
         print('No imaginary frequencies')
 
 if args.plot:
