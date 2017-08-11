@@ -20,7 +20,7 @@ geom = '    ' + '\n    '.join(data.writexyz().splitlines()[2:])
 with open(args.output) as f:
     input_file = f.read()
 
-regex = r'\*\s*(xyz)\s*(\d+)\s+(\d+)\n(.*?)\*'
+regex = r'\*\s*(xyz|int|gzmat)\s+(-?\d+)\s+(\d+)\n(.*?)\*'
 match = re.search(regex, input_file, flags=re.DOTALL)
 style, charge, multiplicity, xyz = match.groups()
 
