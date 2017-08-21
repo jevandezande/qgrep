@@ -14,13 +14,24 @@ parser.add_argument('-o', '--output', help='Which input file to update.',
 
 args = parser.parse_args()
 
-data = ccopen(args.input).parse()
-# Strip the number of atoms and comment lines
-geom = '    ' + '\n    '.join(data.writexyz().splitlines()[2:])
+if args.input.split('.')[-1] == 'xyz':
+    with open(args.input) as f:
+        next(f), next(f)
+        val_form = '    {:<2}' + '  {:> 10.7f}'*3 + '\n'
+        geom = ''
+        for line in f:
+            atom, x, y, z, *other = line.split()
+            geom += val_form.format(atom, float(x), float(y), float(z))
+    geom = geom[:-1]
+else:
+    data = ccopen(args.input).parse()
+    # Strip the number of atoms and comment lines
+    geom = '    ' + '\n    '.join(data.writexyz().splitlines()[2:])
+
 with open(args.output) as f:
     input_file = f.read()
 
-regex = r'\*\s*(xyz|int|gzmat)\s+(-?\d+)\s+(\d+)\n(.*?)\*'
+regex = r'\*\s*(xyz|int|gzmt)\s+(-?\d+)\s+(\d+)\n(.*?)\*'
 match = re.search(regex, input_file, flags=re.DOTALL)
 style, charge, multiplicity, xyz = match.groups()
 
