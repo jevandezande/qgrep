@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+import pybel
+import argparse
+import numpy as np
+import openbabel as ob
+
+from cclib.io import ccread
+
+parser = argparse.ArgumentParser(description='Find the NICS 0 and 1 points for all rings in a molecule.')
+parser.add_argument('-i', '--input', help='The file to read the molecule from.', type=str,
+                    default='output.dat')
+parser.add_argument('-f', '--format', help='Format to output the ghost atoms.',
+                    type=str, default='orca')
+
+args = parser.parse_args()
+
+try:
+    mol = ccread(args.input).writexyz()
+except AttributeError as e:
+    # Maybe it is an xyz file
+    with open(args.input) as f:
+        mol = f.read()
+mol = pybel.readstring('xyz', mol)
+
+# Find centers and normal vectors of rings to generate ghost atom positions
+c, n1, n2 = ob.vector3(), ob.vector3(), ob.vector3()
+ghost_atoms = []
+for i, ring in enumerate(mol.sssr):
+    atoms = [a for a in range(len(mol.atoms)) if ring.IsInRing(a + 1)]
+    ring.findCenterAndNormal(c, n1, n2)
+    center = np.array([ c.GetX(),  c.GetY(),  c.GetZ()])
+    normal = np.array([n1.GetX(), n1.GetY(), n1.GetZ()])
+    normal /= np.linalg.norm(normal)
+    print('-'*51)
+    print('Ring {}'.format(i))
+    print('Atoms {}'.format(atoms))
+    print("C:  {:>15.10f} {:>15.10f} {:>15.10f}".format(*center))
+    print("N1: {:>15.10f} {:>15.10f} {:>15.10f}".format(*normal))
+    ghost_atoms += center, center + normal
+
+# Print ghost atoms
+args.format = args.format.lower()
+if args.format == 'orca':
+    newgto = 'newgto S 1 1 100000 1 end newauxJKgto S 1 1 200000 1 end'
+    print('-'*51)
+    print('Ghost atoms for NICS')
+    for atom in ghost_atoms:
+        print('H:  {:>15.10f} {:>15.10f} {:>15.10f} {}'.format(*atom, newgto))
+else:
+    print('{} is not currently supported.'.format(args.format))
