@@ -33,7 +33,6 @@ class RedundantInternals:
         :param thresh: list of threshold values for comparison printing
                         if thresh[i] = None, no cutting will be done
         """
-        mismatch = 0
         def check(vals1, vals2, thresh=3):
             mismatch = 0
             for (*atoms1, final1), (*atoms2, final2) in zip(vals1, vals2):
@@ -41,7 +40,7 @@ class RedundantInternals:
                     mismatch += 1
                     continue
                 if thresh is None or abs(final2 - final1) > 10**-thresh:
-                    f = '-'.join(['{:>3} {:<2}']*int(len(atoms1))) + f' = {final2 - final1:> 5.3f}'
+                    f = '-'.join(['{:>3} {:<2}']*int(len(atoms1))) + (' = {:> 5.' + str(thresh) + 'f}').format(final2 - final1)
                     print(f.format(*collapse(atoms1)))
             return mismatch
         print('Bonds')
@@ -50,6 +49,19 @@ class RedundantInternals:
         #print('\nAngles')
         #mistmatch = check(self.angle_vals, other.angle_vals, thresh=thresh[1])
         #print(f'Angle Mismatch: {mismatch}')
+
+    def diff_metric(self, other, metric='sad'):
+        mismatch = 0
+        diff = 0
+        for (*atoms1, final1), (*atoms2, final2) in zip(self.bond_vals, other.bond_vals):
+            if atoms1 != atoms2:
+                mismatch += 1
+                continue
+            # Sum of absolute deviation
+            if metric == 'sad':
+                diff += abs(final2 - final1)
+        print(diff)
+        print(f'Bond Mismatch: {mismatch}')
 
 
     def read(lines, sort=True):
