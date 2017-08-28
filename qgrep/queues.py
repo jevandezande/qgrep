@@ -3,11 +3,11 @@ import getpass
 import subprocess
 import os.path
 
-from itertools import filterfalse, zip_longest
 from collections import OrderedDict, defaultdict
 from xml.etree import ElementTree
 
 from .helper import colors
+from itertools import zip_longest
 from configparser import ConfigParser
 
 config_file = os.path.join(os.path.expanduser("~"), '.qgrepconfig')
@@ -276,7 +276,11 @@ class Queues:
                 if job.state == 'r':
                     self.queues[queue].running[job.id] = job
                 else:
-                    self.queues[queue].queueing[job.id] = job
+                    try:
+                        self.queues[queue].queueing[job.id] = job
+                    except:
+                        print(job)
+                        raise
         else:
             raise Exception('Could not read XML, only PBS and SGE currently supported.')
 
@@ -530,8 +534,13 @@ class Job:
                 pass
             return jid, name, state2, owner, queue
         elif grid_engine == 'pbs':
-            jid = int(job_xml.find('Job_Id').text.split('.')[0])
-            # TODO: deal with job_arrays
+            jid = job_xml.find('Job_Id').text.split('.')[0]
+            try:
+                jid = int(jid)
+            except ValueError as e:
+                # Part of a job_array
+                jid = jid.split('[')
+
             name = job_xml.find('Job_Name').text
             state = job_xml.find('job_state').text.lower()
             owner = job_xml.find('Job_Owner').text.split('@')[0]
