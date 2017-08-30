@@ -213,7 +213,7 @@ class Queues:
     ...
 </Data>
         """
-        cmds = [('sge', 'qstat -u "*" -r -f -xml'), ('pbs', 'qstat -x')]
+        cmds = [('sge', 'qstat -u "*" -r -f -xml'), ('pbs', 'qstat -x -t')]
         for grid_engine, cmd in cmds:
             try:
                 xml = subprocess.check_output(cmd, shell=True, stderr=subprocess.DEVNULL)
@@ -533,13 +533,19 @@ class Job:
             (state == 'pending' and state2 != 'qw'):
                 pass
             return jid, name, state2, owner, queue
+
         elif grid_engine == 'pbs':
             jid = job_xml.find('Job_Id').text.split('.')[0]
             try:
                 jid = int(jid)
             except ValueError as e:
-                # Part of a job_array
-                jid = jid.split('[')
+                # Must be part of a job_array
+                jid, task_id = jid[:-1].split('[')
+                if task_id:
+                    jid = float(jid + '.' + task_id)
+                else:
+                    # -t must not be supported
+                    jid = int(jid)
 
             name = job_xml.find('Job_Name').text
             state = job_xml.find('job_state').text.lower()
