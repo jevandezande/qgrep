@@ -29,10 +29,17 @@ except AttributeError as e:
 package = data.metadata['package']
 steps = []
 try:
-    for vals in data.geovalues:
+    for (delta_e, rms_grad, max_grad, rms_step, max_step), scfvalues in zip(data.geovalues, data.scfvalues):
         if package == 'ORCA':
-            params = OrderedDict((('delta_e', vals[0]), ('rms_grad', vals[1]), ('max_grad', vals[2]), ('rms_step', vals[3]), ('max_step', vals[4])))
-            steps.append(Step(params, data.geotargets))
+            params = OrderedDict((
+                ('delta_e', delta_e),
+                ('rms_grad', rms_grad),
+                ('max_grad', max_grad),
+                ('rms_step', rms_step),
+                ('max_step', max_step),
+                ('scf_steps', len(scfvalues)),
+            ))
+            steps.append(Step(params, list(data.geotargets) + [0]))
         else:
             raise NotImplementedError('Only ORCA check_convergence has been implemented so far.')
 except AttributeError as e:

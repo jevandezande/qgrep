@@ -8,15 +8,20 @@ class Step:
     An object that stores a convergence result
     """
     def __init__(self, params, criteria):
-        self.__dict__ = dict(params)
+        self.__dict__.update(params)
         self.params = params
         self.criteria = criteria
 
     def __str__(self):
         out = ''
         for (key, value), criterion in zip(self.params.items(), self.criteria):
+            # integers
+            if key in ['scf_steps']:
+                pass
             out += '{:> 9.2e}'.format(value)
-            out += '*' if abs(value) < criterion else ''
+            out += '*' if abs(value) < criterion else ' '
+
+        out += '|{:> 7d}'.format(value)
         return out
 
 
@@ -31,18 +36,22 @@ class Convergence:
 
     def __str__(self):
         if self.program == 'orca':
-            header = "      Δ energy  RMS grad  MAX grad  RMS step  MAX Step\n"
+            header = "      Δ energy  RMS grad  MAX grad  RMS step  MAX Step | SCF Steps\n"
         else:
             raise NotImplementedError('Congervence currently only implemented for ORCA')
 
-        line = '-'*54 + '\n'
+        line = '-'*66 + '\n'
         out = header + line
         for i, step in enumerate(self.steps):
             out += '{:>3}: '.format(i)
             for (key, value), criterion in zip(step.params.items(), step.criteria):
-                star = '*' if abs(value) < criterion and not (i == 0 and key == 'delta_e') else ' '
-                out += '{:> 9.2e}{}'.format(value, star)
-            out = out[:-1] + '\n'
+                # integers
+                if key in ['scf_steps']:
+                    pass
+                else:
+                    star = '*' if abs(value) < criterion and not (i == 0 and key == 'delta_e') else ' '
+                    out += '{:> 9.2e}{}'.format(value, star)
+            out += '|{:> 7d}\n'.format(step.scf_steps)
 
         return out + line + '    ' + (' {:> 9.2e}'*len(self.criteria)).format(*self.criteria)
 
@@ -60,7 +69,7 @@ class Convergence:
         ax0.legend()
 
         ax1.set_ylim(0, 1)
-        ax1.set_yscale('symlog', linthreshy=1e-6)
+        ax1.set_yscale('symlog', linthreshy=1e-4)
         ax1.set_title('Convergence Parameters')
         ax1.plot(x, self.rms_grad, 'b-' , label='RMS Grad')
         ax1.plot(x, self.max_grad, 'b--', label='Max Grad')
