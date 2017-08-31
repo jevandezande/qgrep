@@ -20,6 +20,7 @@ parser.add_argument('-d', '--debug', help="Generate but don't submit the optimiz
 args = parser.parse_args()
 
 method = ' '.join(args.method.split('/'))
+name = '_'.join(args.method.split('/'))
 
 charge = 0
 multiplicity = 1
@@ -50,8 +51,11 @@ input_file = f"""%pal nprocs 8 end
 """
 
 os.makedirs(args.method, exist_ok=True)
-with open(f'{args.method}/input.dat', 'w') as f:
+with open(f'{name}/input.dat', 'w') as f:
     f.write(input_file)
 
+cwd = os.getcwd()
+os.chdir(name)
 job = SubmitJob({'debug': args.debug})
 job.submit()
+os.chdir(cwd)
