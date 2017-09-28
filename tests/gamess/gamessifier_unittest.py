@@ -18,7 +18,10 @@ class TestGamessifier(unittest.TestCase):
     def setUp(self):
         """Set up for every test"""
         self.g = Gamessifier()
-        self.formaldehyde_xyz = Molecule([['O', 0, 1.394, 0], ['C', 0, 0, 0], ['H', 0.994, -0.492, 0], ['H', -0.994, -0.492, 0]])
+        self.formaldehyde_xyz = Molecule([['O', [0, 1.394, 0]],
+                                          ['C', [0, 0, 0]],
+                                          ['H', [0.994, -0.492, 0]],
+                                          ['H', [-0.994, -0.492, 0]]])
 
     def test_read_mol(self):
         """Test reading a molecule from a file"""

@@ -400,6 +400,10 @@ def energy_levels(lines):
 
 
 def get_molecule(lines):
+    """
+    !Deprecated!
+    Read geometry and convert to a Molecule
+    """
     start = 'CARTESIAN COORDINATES (ANGSTROEM)\n'
     end = '\n'
     geom_start = -1
@@ -411,11 +415,11 @@ def get_molecule(lines):
         return ''
 
     mol = Molecule()
-    for i in range(geom_start, len(lines)):
-        if end == lines[i]:
+    for line in lines[geom_start:]:
+        if end == line:
             break
-        data = lines[i].split()
-        mol.append([data[0]] + list(map(float, data[1:4])))
+        atom, x, y, z = line.split()[:4]
+        mol.append([atom, [float(x), float(y), float(z)]])
 
     return mol
 

@@ -1,10 +1,8 @@
 """Source for all orca related functions"""
 import numpy as np
 
-from operator import itemgetter
-
 from .helper import BOHR_TO_ANGSTROM
-from .molecule import Molecule
+from operator import itemgetter
 
 
 def get_geom(lines, type='xyz', units='angstrom'):

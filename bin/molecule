@@ -25,7 +25,5 @@ args = parser.parse_args()
 
 lines, program = read(args.input)
 
-mol = Molecule()
-mol.read(args.input)
+mol = Molecule.read_from(args.input)
 mol.write(args.output, style=args.style)
-
