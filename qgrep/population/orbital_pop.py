@@ -327,7 +327,7 @@ class MOrbital:
 
     def __str__(self):
         contrib_str = '\n'.join([str(contrib) for contrib in self.contributions])
-        return '{: >2d}{} {: >8.5f} {:>3.2f}\n{}'.format(self.index, self.gspin, self.energy, self.occupation)
+        return '{: >2d}{} {: >8.5f} {:>3.2f}\n{}'.format(self.index, self.gspin, self.energy, self.occupation, contrib_str)
 
     def __sub__(self, other):
         if len(self) != len(other):
