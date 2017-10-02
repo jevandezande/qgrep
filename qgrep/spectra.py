@@ -69,13 +69,19 @@ class Spectra:
         """
         return SpectralSum(self.energies, other)
 
-    def plot(self, npoints=10001, fwhh=1):
+    def plot(self, npoints=10001, fwhh=1, units='eV'):
         """
         Plots the transitions
         :param npoints: the number of points to use in the expansion
         :param fwhh: the width of the gaussian
+        :param units: what units to plot with
         """
         energies, intensities = self.energies, self.intensities
+
+        if units == 'eV':
+            pass
+        else:
+            energies = convertor(energies, 'eV', units)
 
         # Make all of the peak functions functions
         peak_function = peak_functions[self.options['peak_function']]
@@ -143,19 +149,23 @@ class CombinedSpectra:
     def __repr__(self):
         return '<CombinedSpectra {} : {}>'.format(self.spectra1.name, self.spectra2.name)
 
-    def plot(self, npoints=10001, fwhh=1):
+    def plot(self, npoints=1001, fwhh=1, units='eV'):
         """
         Plot the difference of two spectra on top of the spectras
         of the individual spectra, with the second flipped
+        :param units: what units to plot with
         TODO: deal with conflicting option values
         TODO: make better
         """
         spectra1, spectra2 = self.spectra1, self.spectra2
         es1, ints1 = spectra1.energies, spectra1.intensities
         es2, ints2 = spectra2.energies, spectra2.intensities
-        # K1, L1 = 6764.83
-        # K1, M1 = 7563
-        # L23, M23 =  701
+
+        if units == 'eV':
+            pass
+        else:
+            es1 = convertor(es1, 'eV', units)
+            es2 = convertor(es2, 'eV', units)
 
         # Make all of the peak functions functions
         peak_function = peak_functions[self.options['peak_function']]
@@ -243,7 +253,7 @@ def gen_spectra(file_name, name, thresh=9):
     energies, intensities = convertor(data.etenergies, 'cm-1', 'eV'), data.etoscs
     #intensities = abs(intensities)
 
-    print(len(energies))
+    #print(len(energies))
     #energies, intensities = energies[intensities > 10**-thresh], intensities[intensities > 10**-thresh]
     #print(len(energies))
     #energies, intensities = energies[intensities > 10**-8], intensities[intensities > 10**-8]

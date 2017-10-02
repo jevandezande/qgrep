@@ -24,6 +24,8 @@ parser.add_argument('-s', '--subtract', help='Subtract the spectra.',
                     default=False, action='store_true')
 parser.add_argument('-w', '--width', help='Gaussian width.',
                     default=1, type=float)
+parser.add_argument('-u', '--units', help='Units to plot with',
+                    default='eV', type=str)
 
 args = parser.parse_args()
 
@@ -46,12 +48,12 @@ elif args.subtract:
         raise Exception('Can only do subtraction between two spectra, given: {}'.format(len(inps)))
     s0 = gen_spectra(inps[0], names[0])
     s1 = gen_spectra(inps[1], names[1])
-    (s1 - s0).plot(fwhh=args.width)
+    (s1 - s0).plot(fwhh=args.width, units=args.units)
     plt.show()
 else:
     for inp, name in zip(inps, names):
         s = gen_spectra(inp, name)
         plt.figure()
-        s.plot(fwhh=args.width)
+        s.plot(fwhh=args.width, units=args.units)
     plt.show()
 
