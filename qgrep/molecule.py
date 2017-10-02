@@ -86,8 +86,6 @@ class Molecule:
             raise SyntaxError('Atom name must be a string: {}'.format(atom))
         if len(xyz) != 3:
             raise SyntaxError('Only 3 coordinates supported.')
-        if not all(isinstance(q, (int, float)) for q in xyz):
-            raise SyntaxError('Positions must be numbers')
         return True
 
     @staticmethod
