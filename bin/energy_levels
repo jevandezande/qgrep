@@ -35,7 +35,7 @@ if levels.shape[0] == 1:
  HOMO │  {:>3}  │ {:>9.5f} │
 ──────┼───────┼───────────┤
  GAP  │       │ {:>9.5f} │
-""".format(i, lumo, i, homo, homo-lumo)
+""".format(i+1, lumo, i, homo, homo-lumo)
 else:
     ia, ib = homos[0], homos[1]
     ha, hb = levels[0][ia],   levels[1][ib]
@@ -49,8 +49,8 @@ else:
  HOMOS │ {:>3} {:>3} │ {:>9.5f} {:>9.5f} │    Spin-Flip Gap
 ───────┼─────────┼─────────────────────┤    ─────────────
  GAPS  │         │ {:>9.5f} {:>9.5f} │       {:^8.5f}
-""".format(ia,   ib,   la, lb,
-           ia+1, ib+1, ha, hb,
+""".format(ia+1, ib+1, la, lb,
+           ia,   ib1,  ha, hb,
            ha-la, hb-lb, spin_flip)
 print(out)
 
