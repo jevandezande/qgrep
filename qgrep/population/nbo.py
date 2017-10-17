@@ -1,64 +1,163 @@
 """Source for all nbo relate functions"""
 import re
 import numpy as np
+from itertools import zip_longest
+from more_itertools import peekable
+from collections import defaultdict
+
+
+class NAOs:
+    """Natural Atomic Orbitals"""
+    def __init__(self, lines):
+        """
+        """
+        self.vals = NAOs.read(lines)
+
+    def __len__(self):
+        return len(self.vals)
+
+    def __iter__(self):
+        for ao_vals in self.vals:
+            yield ao_vals
+
+    def __sub__(self, other):
+        """
+        Difference of two NAO objects
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    def read(lines):
+        """ Reads the lines of a NAO output
+  NAO Atom No lang   Type(AO)    Occupancy      Energy
+ ---------------------------------------------------------
+   1    C  1  s      Cor( 1s)     1.99916     -10.15626
+   2    C  1  s      Val( 2s)     0.94193      -0.30622
+"""
+        start = -1
+        for i, line in enumerate(lines):
+            if line.strip() == 'NAO Atom No lang   Type(AO)    Occupancy      Energy':
+                start = i + 2
+        if start == -1:
+            raise Exception('Cannot find the start of NAO')
+
+        vals = []
+        atom = ''
+        for line in lines[start:]:
+            if not line.strip():
+                continue
+            try:
+                idx, atom, num, orb, orb_type, *shell, occupancy, energy = line.split()
+            except ValueError as e:
+                break
+            if not shell:
+                orb_type, shell = orb_type.split('(')
+            else:
+                shell = shell[0]
+                orb_type = orb_type.strip('(')
+            shell = shell.strip(')')
+            vals.append([atom, int(num), orb, orb_type, shell, float(occupancy), float(energy)])
+
+        return vals
 
 
 class NPA:
     """Natural Population Analysis class"""
 
     def __init__(self, atoms=None, charges=None, lines=''):
+        """
+        :param atoms: a list of atoms
+        :param charges: numpy array of charges per atom (charge, core, valence, rydberg, total)
+        :param lines: line of an output file to read
+        """
         if atoms is None and charges is None and lines:
             self.atoms, self.charges = self.read(lines)
         else:
             self.atoms = atoms
             self.charges = charges
-    
+
     def __eq__(self, other):
         """
         Uses np.allclose
         """
         return self.atoms == other.atoms and np.allclose(self.charges, other.charges)
-    
+
     def __iter__(self):
-        for atom, vals in zip(self.atoms, self.charges):
-            yield [atom] + self.charges
+        """
+        Iterate over atoms and charges, each time returning an array of a single atom with charges
+        """
+        for atom, atom_charges in zip(self.atoms, self.charges):
+            yield atom, atom_charges
 
     def __len__(self):
+        """
+        Number of atoms
+        """
         return len(self.atoms)
 
     def __getitem__(self, index):
+        """
+        Get the atom and charges corresponding to the index
+        """
         return [self.atoms[index]] + self.charges[index]
 
     def __setitem__(self, index, value):
+        """
+        Set the atom and charges corresponding to the index
+        """
         if len(value) != 6:
             raise SyntaxError('Invalid number of charges')
         self.atoms[index] = value[0]
         self.charges[index] = value[1:]
 
     def __str__(self):
-        ret = 'Atom  Charge     Core     Valence   Rydberg   Total\n'
-        line_form = '{:<2} ' + '  {: >8.5f}' * 5 + '\n'
-        for atom, charge in zip(self.atoms, self.charges):
-            ret += line_form.format(atom, *charge)
+        """
+        Return a string resmbling the NPA output
+        """
+        ret = 'Idx Atom   Charge    Core    Valence  Rydberg   Total\n'
+        line_form = '{:>3} {:<5}' + ' {: >8.5f}' * 5 + '\n'
+        for i, (atom, charge) in enumerate(zip(self.atoms, self.charges)):
+            ret += line_form.format(i, atom, *charge)
         return ret
 
     def __sub__(self, other):
-        if self.atoms != other.atoms:
-            raise SyntaxError('Atoms do not match')
-        npa_diff = NPA_Diff()
-        npa_diff.atoms = self.atoms
-        npa_diff.charges = self.charges - other.charges
-        return npa_diff
+        """
+        Subtract two NPA objects of different sizes
+        """
+        return self._combine(other, '-')
 
     def __add__(self, other):
-        if self.atoms != other.atoms:
-            raise SyntaxError('Atoms do not match')
-        npa = NPA()
-        npa.atoms = self.atoms
-        npa.charges = self.charges + other.charges
-        return npa
+        """
+        Add two NPA objects
+        """
+        return self._combine(other, '+')
+
+    def _combine(self, other, form):
+        """
+        Add or subtract two NPA objects
+        """
+        if form not in ['+', '-']:
+            raise ValueError("form must be '+' or '-'")
+        atoms = []
+        charges = []
+        # Allow combination even if the dimensions don't match
+        for (atom1, charges1), (atom2, charges2) in zip_longest(self, other, fillvalue=['', np.zeros(5)]):
+            atoms.append('{:>2}{:}{:<2}'.format(atom1, form, atom2))
+
+            if form == '-':
+                charges.append(charges1 - charges2)
+            else:
+                charges.append(charges1 + charges2)
+
+        if form == '-':
+            return NPA_Diff(atoms, charges)
+        return NPA_Sum(atoms, charges)
+
 
     def append(self, atom, *vals):
+        """
+        Append an atom and charges to the population analysis
+        """
         self.atoms.append(atom)
         if not len(vals) == 5:
             raise SyntaxError('Invalid number of charges')
@@ -66,26 +165,26 @@ class NPA:
 
     @staticmethod
     def read(lines):
-        """Read the natural population analysis
+        """Read the natural population analysis from an output file
 
  Summary of Natural Population Analysis:
-                                     Natural Population 
-             Natural    --------------------------------------------- 
+                                     Natural Population
+             Natural    ---------------------------------------------
   Atom No    Charge        Core      Valence    Rydberg      Total
- -------------------------------------------------------------------- 
-   Fe  1   -0.57877     17.97641     8.54310    0.05926    26.57877 
-    C  2    0.60637      1.99951     3.34225    0.05187     5.39363 
+ --------------------------------------------------------------------
+   Fe  1   -0.57877     17.97641     8.54310    0.05926    26.57877
+    C  2    0.60637      1.99951     3.34225    0.05187     5.39363
     O  3   -0.42097      1.99976     6.38932    0.03189     8.42097
 ...
 """
 
         # Find the NPA Section
-        start = 0
+        start = -1
         for i, line in enumerate(lines):
             if line == '  Atom No    Charge        Core      Valence    Rydberg      Total\n':
                 start = i + 2
                 break
-        if start == 0:
+        if start == -1:
             raise Exception('Unable to find the start of NPA analysis')
 
         npa = []
@@ -107,24 +206,118 @@ class NPA_Diff(NPA):
     Currently exactly the same
     """
 
-class NBO():
-    """Natural Bond Orbital class"""
+class NPA_Sum(NPA):
+    """
+    NPA class without restrictions on population
+    Currently exactly the same
+    """
+    pass
 
-    def __init__(self, lines):
-        self.nbos = self.read(lines)
+
+class Orbital:
+    """
+    Base class for all orbitals
+    """
+    def __init__(self, occupation, atom, atom_n):
+        """
+        :param occupation: orbital occupation
+        :param atom: the primary atom of the orbital (more atoms allowed in subclasses)
+        :param atom_n: index of the primary atom
+        """
+        self.occupation = occupation
+        self.atom = atom
+        self.atom_n = int(atom_n)
+        self.type = self.__class__.__name__
+
+    def __repr__(self):
+        return f'<{self.type} {self.atom}{self.atom_n}>'
 
     def __str__(self):
-        ret = 'Bond #, Bond Order, type, sub bond #, atom1, atom1 #, atom2,' \
-              'atom2 #\n'
-        nbo_form = ' {:>3d}     {:6.5f}     {:<3s}      {:d}        {:<2s}' \
-                   '     {:>3d}       {:<2s}    {:>3d}\n'
-        for nbo in self.nbos:
-            ret += nbo_form.format(*nbo)
-        return ret
+        return f'{self.type:4} {self.occupation:>7.5f} {self.atom_n:>3} {self.atom:2}'
+
+
+class LP(Orbital):
+    """ Lone Pair """
+    pass
+class CR(Orbital):
+    """Core Orbital"""
+    pass
+class LV(Orbital):
+    """ TODO: Figure out what type of orbital this is """
+    pass
+class RY(Orbital):
+    """Rydberg Orbital"""
+    pass
+class RYs(Orbital):
+    """Rydberg* Orbital"""
+    def __init__(self):
+        super().__init__(occupation, atom, atom_n)
+        self.type = "RY*"
+
+
+class NBO(Orbital):
+    """
+    Natural Bond Orbital
+    """
+    def __init__(self, occupation, atom1, atom1_n, atom2, atom2_n, hybrids, densities):
+        """
+        :param occupation: orbital occupation
+        :param atom1: the first atom in the NBO
+        :param atom1_n: index of the first atom
+        :param atom2: the second atom in the NBO
+        :param atom2_n: index of the second atom
+        :param hybrids: hybridization of both atoms
+        :param densities: densities of both atoms
+        """
+        super().__init__(occupation, atom1, atom1_n)
+        self.atom2 = atom2
+        self.atom2_n = int(atom2_n)
+        self.hybrids = hybrids
+        self.densities = densities
+
+    def __repr__(self):
+        return f'<NBO {self.atom1}{self.atom1_n}--{self.atom2}{self.atom2_n}>'
+
+    def __str__(self):
+        return f'{self.type:4} {self.occupation:>7.5f} {self.atom_n:>3} {self.atom:2}--{self.atom2_n:>3} {self.atom:2}'
+
+
+class NBOs(NBO):
+    def __init__(self):
+        super().__init__(occupation, atom1, atom1_n, atom2, atom2_n)
+        self.type = "NBO*"
+
+
+class NBOSet:
+    """Natural Bond Orbital class"""
+
+    def __init__(self, file_iter):
+        """
+        :param file_iter: file to be read from an output file
+        """
+        self.orbitals = self.read(file_iter)
+
+    def __str__(self):
+        out = 'Index Type  Occup   atom   Other info \n'
+        for i, nbo in enumerate(self.orbitals):
+            out += f'{i:>5} {nbo}\n'
+        return out
+
+    def bond_orders(self):
+        """
+        Determines the bond orders of all bonds based on (occ x BD - occ x BD*)/2
+        """
+        bos = defaultdict(int)
+        for orbital in self.orbitals:
+            if isinstance(orbital, NBOs):
+                bos[(orbital.atom_n, orbital.atom2_n)] -= orbital.occupation/2
+            elif isinstance(orbital, NBO):
+                bos[(orbital.atom_n, orbital.atom2_n)] += orbital.occupation/2
+
+        return bos
 
     @staticmethod
-    def read(lines):
-        # noinspection PyPep8
+    def read(file_iter):
         """
         Read the Natural Bond Orbital Analysis
 
@@ -149,34 +342,87 @@ class NBO():
                                                   f 0.00(  0.00%)
     ...
         """
-        for i, line in enumerate(lines):
-            if line == '     (Occupancy)   Bond orbital/ Coefficients/ Hybrids\n':
-                start = i + 2
+        file_iter = peekable(iter(file_iter))
+        for line in file_iter:
+            if line == '     (Occupancy)   Bond orbital / Coefficients / Hybrids\n':
                 break
+        try:
+            file_iter.peek()
+        except StopIteration:
+            raise Exception('Could not find NBO section.')
 
-        atom1 = 'C'
-        num1 = 26
-        atom2 = 'O'
-        num2 = 27
-        types = '(BD |BD\*|CR |LP |RY |RY\*)'
+        single_center = {'CR': CR, 'LP': LP, 'LV': LV, 'RY': RY, 'RY*': RYs}
 
-        #atom_label_1 = atom1.rjust(2) + str(num1).rjust(3)
-        atom_label = ' ?(\w+) +(\d+)'
-        #atom_label_2 = atom2.rjust(2) + str(num2).rjust(3)
+        orbitals = []
+        while line:
+            # Start of a new block for parsing
+            if re.search('\s*\d+\. \(', line):
+                idx, occup, nbo_type, *other = line.split()
+                idx = int(idx[:-1])
+                occup = float(occup[1:-1])
+                nbo_type = nbo_type.strip('(')
 
-        regex = r'(\d+)\. \((\d\.\d*)\) {}\( ?(\d+)\){}-{}'
+                atom_re = ' ?(\w{1,2})\s+(\d+)'
+                hybridicity_regex = '(\w)\s*(\d+\.\d+)\(\s*(\d+\.\d+)'
 
-        regex = regex.format(types, atom_label, atom_label)
+                if nbo_type in ['BD', 'BD*']:
+                    """
+   4. (1.99999) BD ( 1) H  1- O  2
+               ( 41.34%)   0.6429* H  1 s(100.00%)
+                                         1.0000
+               ( 58.66%)   0.7659* O  2 s( 12.16%)p 7.22( 87.84%)
+                                         0.0000  0.3487  0.0000 -0.0650 -0.9350
+"""
+                    regex = fr'\( ?(\d+)\){atom_re}-{atom_re}'
+                    number, atom1, atom1_n, atom2, atom2_n = re.search(regex, line).groups()
 
-        # TODO: Actually use starting coordinates
-        out_string = open('output.dat').read()
-        results = re.findall(regex, out_string)
+                    regex = fr'\(\s*(\d+\.\d+)%\)\s+(-?\d\.\d+)\*{atom_re}\s+(\w)\(\s*(\d+\.\d+)'
+                    # For each atom block within the BD/BD*
+                    #while not re.search('\s*\d+\.\s', file_iter.peek()):
+                    hybrids = []
+                    densities = [] # TODO: Figure out what this actually is
+                    # TODO: Adapt for three atom bonds?
+                    for i in range(2):
+                        line = next(file_iter)
+                        percent, val, atom, atom_n, orbital1, percent = re.search(regex, line).groups()
+                        assert (atom in [atom1, atom2]) and (atom_n in [atom1_n, atom2_n])
 
-        nbos = []
-        for nbo in results:
-            bond_num, b_order, b_type, b_sub, a1, a1_n, a2, a2_n = nbo
-            nbos.append([int(bond_num), float(b_order), str(b_type), int(b_sub),
-                         str(a1), int(a1_n), str(a2), int(a2_n)])
+                        hybrids.append([(orbital1, 1.0, float(percent))])
+                        finder = lambda l: re.findall(hybridicity_regex, l)
+                        matches = finder(line)
+                        while matches:
+                            for orbital, hybridicity, percent in matches:
+                                hybrids[i].append((orbital, float(hybridicity), float(percent)))
+                            matches = finder(file_iter.peek())
+                            if not matches:
+                                break
+                            next(file_iter)
 
-        return nbos
+                        densities.append([])
+                        line = file_iter.peek()
+                        while line[:40] == ' '*40:
+                            densities[i] += map(float, re.findall('-?\d\.\d+', line))
+                            next(file_iter)
+                            line = file_iter.peek()
+
+                    orbitals.append(NBO(occup, atom1, atom1_n, atom2, atom2_n, hybrids, densities)) #[idx, occup, nbo_type, int(number), atom1, int(atom1_n), atom2, int(atom2_n), hybrids, densities])
+
+                elif nbo_type in single_center:
+                    """90. (0.01241) RY*( 1)Fe  1             s(  0.00%)p 1.00(  3.05%)d31.77( 96.89%)"""
+                    regex = fr'\( ?(\d+)\){atom_re}\s+(\w)\(\s*(\d+\.\d+)'
+                    try:
+                        number, atom, atom_n, orbital1, percent = re.search(regex, line).groups()
+                        hybrids = [(orbital1, 1.0, float(percent))]
+                        finder = lambda l: re.findall(hybridicity_regex, l)
+                        matches = finder(line) + finder(file_iter.peek())
+                        for orbital, hybridicity, percent in matches:
+                            hybrids.append((orbital, float(hybridicity), float(percent)))
+                    except Exception as e:
+                        raise ValueError from e
+                    orbitals.append(single_center[nbo_type](occup, atom, atom_n))
+                else:
+                    raise Exception(f'Cannot parse nbo type {nbo_type}')
+            line = next(file_iter).strip()
+
+        return orbitals
 

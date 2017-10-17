@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
 # Script that takes an output file and gets the last geometry
-
-import argparse
 import sys
+import argparse
+
 sys.path.insert(0, '../')
 
 from qgrep.helper import read
 from qgrep.molecule import Molecule
-
 
 parser = argparse.ArgumentParser(description='Get the geometry of an output file.')
 parser.add_argument('-i', '--input', help='The file to be read.', type=str,
@@ -26,7 +25,5 @@ args = parser.parse_args()
 
 lines, program = read(args.input)
 
-mol = Molecule()
-mol.read(args.input)
+mol = Molecule.read_from(args.input)
 mol.write(args.output, style=args.style)
-

@@ -1,37 +1,60 @@
 #!/usr/bin/env python3
 
-# Script that takes an output file and gets the last geometry
-
+# Script that takes an output file and gets the last energy of specified type
+import os
 import argparse
-import importlib
-import sys
-sys.path.insert(0, '../')
+import numpy as np
 
-from qgrep.helper import read
+from glob import glob
+from cclib import ccopen
+from cclib.parser.utils import convertor
 
+from natsort import natsorted
 
 parser = argparse.ArgumentParser(description='Get the energy from output file.')
-parser.add_argument('-i', '--input', help='The file to be read.', type=str,
-                    default='output.dat')
-parser.add_argument('-t', '--energy_type', help='Output the specified energy',
-                    type=str, default='sp')
+parser.add_argument('-i', '--input', help='The file(s) to be read (accepts *).',
+                    type=str, nargs='+', default=['output.dat'])
+parser.add_argument('-t', '--energy_type', help='Output the specified energy.',
+                    type=str, default='scf')
+parser.add_argument('-u', '--units', help='Units to output energy in.',
+                    type=str, default='hartree')
+parser.add_argument('-l', '--list', help='Print a list of the energies',
+                    default=False, action='store_true')
 
 args = parser.parse_args()
 
-lines, program = read(args.input)
-
-if program:
+def grab_energies(inp, units='hartree'):
+    """
+    Grab the energies list from the input file
+    """
+    data = ccopen(inp).parse()
     try:
-        mod = importlib.import_module('qgrep.' + program)
-        if hasattr(mod, 'get_energy'):
-            energy = mod.get_energy(lines, args.energy_type)
-            if energy == 0:
-                print('No energy output by {}, (may still be running)'.format(program))
-            else:
-                print(energy)
+        if args.energy_type == 'free':
+            energies = [data.freeenergy]
         else:
-            print(program + ' does not yet have get_energy implemented.')
-    except ImportError:
-        print(program + ' is not yet supported.')
+            energies = getattr(data, args.energy_type + 'energies')
+        convert = lambda x: convertor(x, 'eV', units)
+        return list(map(convert, energies))
+
+    except AttributeError as e:
+        print("Invalid energy type, perhaps it hasn't been run?")
+        return [0]
+
+# Find all matches, delete duplicates
+inps = set()
+for inp_arg in args.input:
+    inps |= set(inp for inp in glob(inp_arg) if os.path.isfile(inp))
+    inps |= set(inp for inp in glob(inp_arg + '/output.dat') if os.path.isfile(inp))
+
+if len(inps) == 0:
+    print('Could not find input file(s)')
 else:
-    print('Cannot determine what program made this output file.')
+    inps = natsorted(inps)
+    length = len(max(inps, key=len))
+    all_energies = []
+    for inp in inps:
+        energy = grab_energies(inp, args.units)[-1]
+        all_energies.append(energy)
+        print(('{:' + str(length) + 's}: {: >.8f}').format(inp, energy))
+    if args.list:
+        print(all_energies)

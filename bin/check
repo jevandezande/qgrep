@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+
+# Script that takes an output file and prints its geometry convergence results
+import os
+import sys
+import argparse
+
+from glob import glob
+from cclib import ccopen
+from collections import OrderedDict
+
+from natsort import natsorted
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from qgrep.convergence import Convergence, Step
+
+parser = argparse.ArgumentParser(description='Get the geometry of an output file.')
+parser.add_argument('-i', '--input', help='The file(s) to be read.',
+                    type=str, nargs='+', default=['output.dat'])
+parser.add_argument('-p', '--plot', help='Plot the convergence.',
+                    action='store_true', default=False)
+parser.add_argument('-a', '--all', help='Find all files named output.dat. If \
+input is specified the search starts from that directory, otherwise the \
+current directory.', action='store_true', default=False)
+
+args = parser.parse_args()
+
+
+def check(inp, args):
+    try:
+        data = ccopen(inp).parse()
+    except AttributeError as e:
+        print("No such data available, has the program not run that yet?")
+        return False
+
+    package = data.metadata['package']
+    steps = []
+    try:
+        for (delta_e, rms_grad, max_grad, rms_step, max_step), scfvalues in zip(data.geovalues, data.scfvalues):
+            if package == 'ORCA':
+                params = OrderedDict((
+                    ('delta_e', delta_e),
+                    ('rms_grad', rms_grad),
+                    ('max_grad', max_grad),
+                    ('rms_step', rms_step),
+                    ('max_step', max_step),
+                    ('scf_steps', len(scfvalues)),
+                ))
+                steps.append(Step(params, list(data.geotargets) + [0]))
+            else:
+                raise NotImplementedError('Only ORCA check_convergence has been implemented so far.')
+    except AttributeError as e:
+        print("No such data available, has the program not run that yet?")
+        return False
+
+    conv = Convergence(steps, data.geotargets)
+    print(conv)
+
+    converged = False
+    if hasattr(data, 'vibfreqs'):
+        im_freqs = data.vibfreqs[data.vibfreqs < 0]
+        for freq in im_freqs:
+            print('***Imaginary frequency: {: >7.2f}i'.format(freq))
+        if len(im_freqs) == 0:
+            print('No imaginary frequencies')
+            converged = True
+
+    if args.plot:
+        conv.plot()
+
+    return converged
+
+if args.all:
+    # assume default argument and search
+    path = args.input[0]
+    if path == 'output.dat':
+        path = '.'
+    elif not os.path.isdir(path):
+        raise ValueError('Input must be a path when used with --all.')
+    inputs = []
+    for root, dirs, files in os.walk(path):
+        if 'output.dat' in files:
+            inputs.append(os.path.join(root, 'output.dat'))
+else:
+    # Find all matches, delete duplicates
+    inputs = set()
+    for inp_arg in args.input:
+        inputs |= set(inp for inp in glob(inp_arg) if os.path.isfile(inp))
+        inputs |= set(inp for inp in glob(inp_arg + '/output.dat') if os.path.isfile(inp))
+
+if len(inputs) == 0:
+    print('Could not find input file(s)')
+else:
+    inputs = natsorted(inputs)
+    results = []
+    for inp in inputs:
+        print(inp)
+        results.append(check(inp, args))
+    # Print a summary if more than two inputs
+    if len(inputs) > 2:
+        length = len(max(inputs, key=len))
+        print('Summary')
+        for inp, res in zip(inputs, results):
+            print(inp.ljust(length) + ': ' + ('✓' if res else 'x'))

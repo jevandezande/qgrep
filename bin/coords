@@ -2,13 +2,12 @@
 
 # Script that takes a geometry in zmatrix or Cartesian coordinates and converts
 # it to the other
-
-import argparse
 import sys
+import argparse
+
 sys.path.insert(0, '../')
 
 from qgrep.coordinate_converter import CoordinateConverter
-
 
 parser = argparse.ArgumentParser(description='Convert coordinates between Cartesian and zmatrix.')
 parser.add_argument('-i', '--input', help='The file to be read.', type=str,

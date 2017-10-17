@@ -1,11 +1,15 @@
 import unittest
-from collections import OrderedDict
+
 from sys import path
+from collections import OrderedDict
+
 path.insert(0, '../..')
+
+import os
+
+from qgrep.basis import Basis, BasisFunction, BasisSet
 from qgrep.gamess import Gamessifier
 from qgrep.molecule import Molecule
-from qgrep.basis import BasisFunction, Basis, BasisSet
-import os
 
 
 class TestGamessifier(unittest.TestCase):
@@ -14,7 +18,10 @@ class TestGamessifier(unittest.TestCase):
     def setUp(self):
         """Set up for every test"""
         self.g = Gamessifier()
-        self.formaldehyde_xyz = Molecule([['O', 0, 1.394, 0], ['C', 0, 0, 0], ['H', 0.994, -0.492, 0], ['H', -0.994, -0.492, 0]])
+        self.formaldehyde_xyz = Molecule([['O', [0, 1.394, 0]],
+                                          ['C', [0, 0, 0]],
+                                          ['H', [0.994, -0.492, 0]],
+                                          ['H', [-0.994, -0.492, 0]]])
 
     def test_read_mol(self):
         """Test reading a molecule from a file"""
@@ -95,7 +102,7 @@ O-ECP NONE"""
         basis_set = BasisSet()
         basis_set['H'] = Basis('H', [BasisFunction('S', [1], [1])])
         basis_set['O'] = Basis('O', [BasisFunction('S', [1], [1]), BasisFunction('S', [2], [1])])
-        basis_set['C'] = Basis('C', [BasisFunction('S', [1], [1]), BasisFunction('SP', [1, 2], [0.4, 0.6], [0.1, 0.9])])
+        basis_set['C'] = Basis('C', [BasisFunction('S', [1], [1]), BasisFunction('SP', [1, 2], [[0.4, 0.6], [0.1, 0.9]])])
         open(tmp_basis_file, 'w').write(basis_set.print('gamess'))
         tmp_geom_file = 'geom.xyz.tmp'
         self.formaldehyde_xyz.write(tmp_geom_file)

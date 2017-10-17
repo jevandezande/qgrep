@@ -1,7 +1,10 @@
 import unittest
-from sys import path
 import numpy as np
+
+from sys import path
+
 path.insert(0, '..')
+
 from qgrep import helper
 
 

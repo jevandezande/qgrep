@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
 # Script that takes an output file and plots the energies
-
+import sys
 import argparse
 import importlib
-from matplotlib import pyplot as plt
 import numpy as np
-import sys
+
+from matplotlib import pyplot as plt
+
 sys.path.insert(0, '../')
 
 from qgrep.helper import read
-
 
 parser = argparse.ArgumentParser(description='Plots the energies from output file.')
 parser.add_argument('-i', '--input', help='The file to be read.', type=str,

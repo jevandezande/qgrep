@@ -1,12 +1,16 @@
 import unittest
+
 from sys import path
+
 path.insert(0, '..')
-from qgrep.basis import BasisFunction, Basis, BasisSet
-import numpy as np
-from numpy.testing import assert_array_almost_equal as aaa_equal
-from collections import OrderedDict
+
 import os
+import numpy as np
+
 from glob import glob
+from collections import OrderedDict
+from qgrep.basis import Basis, BasisFunction, BasisSet
+from numpy.testing import assert_array_almost_equal as aaa_equal
 
 
 class TestBasisFunction(unittest.TestCase):

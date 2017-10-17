@@ -1,7 +1,6 @@
 """A repository for various helper functions"""
 import numpy as np
 
-
 BOHR_TO_ANGSTROM=0.52917721067
 
 
@@ -117,3 +116,11 @@ class colors:
     yellow = '\033[93m'
     blue = '\033[94m'
     purple = '\033[95m'
+
+
+box_drawing = """\
+┌┬─┐
+││ │
+├┼─┤
+└┴─┘
+"""

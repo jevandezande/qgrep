@@ -4,7 +4,7 @@ import numpy as np
 from copy import deepcopy
 from re import search
 
-am_types = ['s', 'p', 'd', 'f', 'g', 'h']
+am_types = 'spdfghi'
 
 class OrbitalPopulation:
     """Löwdin Orbital Population class (OP for short)"""
@@ -83,6 +83,8 @@ class OrbitalPopulation:
             sort_key = lambda x: x.ao
         elif key == 'contribution':
             sort_key = lambda x: x.val
+        elif key == 'spin':
+            sort_key = lambda x: x.spin
         else:
             raise SyntaxError('Invalid key given to sorted.')
 
@@ -91,7 +93,7 @@ class OrbitalPopulation:
             contribs = []
             for contrib in sorted(mo.contributions, key=sort_key, reverse=True):
                 contribs.append(contrib)
-            orb_list.append(MOrbital(mo.index, mo.energy, mo.occupation, contribs))
+            orb_list.append(MOrbital(mo.index, mo.spin, mo.energy, mo.occupation, contribs))
 
         return OrbitalPopulation(orb_list=orb_list)
 
@@ -172,7 +174,7 @@ class OrbitalPopulation:
 
                 if len(contribs) == max_num:
                     break
-            orb_list.append(MOrbital(mo.index, mo.energy, mo.occupation, contribs))
+            orb_list.append(MOrbital(mo.index, mo.spin, mo.energy, mo.occupation, contribs))
 
         return OrbitalPopulation(orb_list=orb_list)
 
@@ -212,6 +214,7 @@ SPIN UP
 Three blank lines
 """
         orb_list = []
+        spin = None
 
         lowdin_re = r'''LOEWDIN REDUCED ORBITAL POPULATIONS PER MO.*?\n\n\n'''
         if method == 'lowdin':
@@ -233,12 +236,15 @@ Three blank lines
 
                 # Remove excess from the first block
                 if first:
-                    # If open shell, an extra line is printed
-                    if lines[3] == 'SPIN UP':
-                        lines = lines[4:]
-                    else:
-                        lines = lines[3:]
+                    lines = lines[3:]
                     first = False
+                # If open shell, an extra line is printed
+                if lines[0] == 'SPIN UP':
+                    spin = 1
+                    lines = lines[1:]
+                elif lines[0] == 'SPIN DOWN':
+                    spin = -1
+                    lines = lines[1:]
 
                 # Parse out the header
                 indexes = lines[0].split()
@@ -248,7 +254,7 @@ Three blank lines
                 for i in range(len(indexes)):
                     index, orb_e, occ = int(indexes[i]), float(orb_es[i]), round(float(occs[i]))
                     # Add orbitals without occupations (added in next section)
-                    orbs.append(MOrbital(index, orb_e, occ))
+                    orbs.append(MOrbital(index, spin, orb_e, occ))
 
                 # Parse out the orbital contributions
                 for line in lines[4:]:
@@ -259,7 +265,7 @@ Three blank lines
                         # Due to rounding, the occupations will not add up to 100
                         val = float(val)
                         if val > 0:
-                            ao_contrib = AO_Contrib(index, atom, ao, val)
+                            ao_contrib = AO_Contrib(index, atom, ao, val, spin)
                             orbs[i].contributions.append(ao_contrib)
 
                 orb_list += orbs
@@ -275,14 +281,14 @@ Three blank lines
         orb_list = []
         for block in csv.split('\n\n'):
             lines = block.strip().split('\n')
-            mo_index, orb_e, occ = lines[0].split(',')
+            mo_index, spin, orb_e, occ = lines[0].split(',')
             mo_index, orb_e, occ = int(mo_index), float(orb_e), round(float(occ))
             aocs = []
             for line in lines[1:]:
                 index, atom, ao, val = line.split(',')
                 index, atom, ao, val = int(index), atom.strip(), ao.strip(), float(val)
-                aocs.append(AO_Contrib(index, atom, ao, val))
-            orb_list.append(MOrbital(mo_index, orb_e, occ, aocs))
+                aocs.append(AO_Contrib(index, atom, ao, val, spin))
+            orb_list.append(MOrbital(mo_index, spin, orb_e, occ, aocs))
 
         return orb_list
 
@@ -292,13 +298,12 @@ class MOrbital:
     Simple orbital class that holds the contributions from AOs as well as a
     little more necessary information
     """
-    def __init__(self, index=0, energy=0, occupation=0, contributions=None):
+    def __init__(self, index=0, spin=None, energy=0, occupation=0, contributions=None):
         self.index = index
+        self.spin = spin
         self.energy = energy
         self.occupation = occupation
-        self.contributions = []
-        if contributions is not None:
-            self.contributions = contributions
+        self.contributions = contributions if contributions is not None else []
 
     def __eq__(self, other):
         """
@@ -317,9 +322,12 @@ class MOrbital:
     def __len__(self):
         return len(self.contributions)
 
+    def __repr__(self):
+        return '<MO {}{} {: >8.5f} [{}]>'.format(self.index, self.gspin, self.energy, self.occupation)
+
     def __str__(self):
         contrib_str = '\n'.join([str(contrib) for contrib in self.contributions])
-        return '{: >2d} {: > 7.5f} {:>3.2f}\n{}'.format(self.index, self.energy, self.occupation, contrib_str)
+        return '{: >2d}{} {: >8.5f} {:>3.2f}\n{}'.format(self.index, self.gspin, self.energy, self.occupation, contrib_str)
 
     def __sub__(self, other):
         if len(self) != len(other):
@@ -337,11 +345,20 @@ class MOrbital:
         # Only appends from one list (the other is maxed out and returns an empty list)
         contributions += self.contributions[min_len:] + other.contributions[min_len:]
 
-        return MOrbital(index, energy, occupation, contributions)
+        spin = self.spin if self.spin == other.spin else None
+        return MOrbital(index, spin, energy, occupation, contributions)
+
+    @property
+    def gspin(self):
+        if self.spin == 1:
+            return 'α'
+        elif self.spin == -1:
+            return 'β'
+        return ''
 
     def csv(self):
         ao_contrib_str = '\n'.join([ao_contrib.csv() for ao_contrib in self.contributions])
-        return '{: >2d}, {: > 7.5f}, {:>3.2f}\n{}'.format(self.index, self.energy, self.occupation, ao_contrib_str)
+        return '{: >2d}, {}, {: > 7.5f}, {:>3.2f}\n{}'.format(self.index, self.gspin, self.energy, self.occupation, ao_contrib_str)
 
     def latex(self):
         """
@@ -372,7 +389,7 @@ class MOrbital:
 
         # Sort by atom index
         contribs = sorted(list(atoms.values()), key=lambda x: x.index)
-        return MOrbital(self.index, self.energy, self.occupation, contribs)
+        return MOrbital(self.index, None, self.energy, self.occupation, contribs)
 
     def am_contract(self):
         """
@@ -394,7 +411,7 @@ class MOrbital:
         # Sort by atom index and then am_type
         key = lambda x: (x.index, am_types.index(x.ao[0]))
         contribs = sorted(list(atoms.values()), key=key)
-        return MOrbital(self.index, self.energy, self.occupation, contribs)
+        return MOrbital(self.index, None, self.energy, self.occupation, contribs)
 
     def atom_sum(self, atom):
         """
@@ -439,11 +456,15 @@ class AO_Contrib:
     """
     Simple class containing an AO and its contribution to an MOrbital
     """
-    def __init__(self, index, atom, ao, val):
+    def __init__(self, index, atom, ao, val, spin=None):
         self.index = index
         self.atom = atom
         self.ao = ao
         self.val = val
+        self.spin = spin
+
+    def __repr__(self):
+        return '<AOC {}{} {} {} [{}]>'.format(self.index, self.gspin, self.atom, self.ao, self.val)
 
     def __eq__(self, other):
         """
@@ -464,6 +485,14 @@ class AO_Contrib:
     @property
     def am(self):
         return search('[a-z]', self.ao).group()
+
+    @property
+    def gspin(self):
+        if self.spin == 1:
+            return 'α'
+        elif self.spin == -1:
+            return 'β'
+        return ''
         
     def __sub__(self, other):
         index = self.index if self.index == other.index else 0

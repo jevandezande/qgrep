@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
 
 # Script that takes an output file and returns the orbital energies
-
 import argparse
-import importlib
-import sys
-sys.path.insert(0, '../')
+import numpy as np
 
-from qgrep.helper import read
-
+from cclib import ccopen
 
 parser = argparse.ArgumentParser(description='Get orbital energies of an output file.')
 parser.add_argument('-i', '--input', help='The file to be read.', type=str,
@@ -20,24 +16,45 @@ parser.add_argument('-o', '--output', help='File for the orbital energies',
 
 args = parser.parse_args()
 
-lines, program = read(args.input)
+try:
+    data = ccopen(args.input).parse()
+    levels = np.array(data.moenergies)
+    homos = data.homos
+except AttributeError as e:
+    raise Exception('Cannot find appropriate data, has the SCF finished yet?')
 
-levels = []
-if program:
-    try:
-        mod = importlib.import_module('qgrep.' + program)
-        if hasattr(mod, 'energy_levels'):
-            levels, info = mod.energy_levels(lines)
-            if args.write:
-                with open(args.output, 'w') as f:
-                    for level in levels:
-                        f.write(level)
-            for item in info:
-                print('{0}:\t{1}'.format(item, info[item]))
-        else:
-            print(program + ' does not yet have energy_levels implemented.')
-    except ImportError:
-        print(program + ' is not yet supported.')
+if levels.shape[0] == 1:
+    i = homos[0]
+    homo = levels[0][i]
+    lumo = levels[0][i+1]
+
+    out = """\
+  eV  │ Index │   Energy  │
+──────┼───────┼───────────┤
+ LUMO │  {:>3}  │ {:>9.5f} │
+ HOMO │  {:>3}  │ {:>9.5f} │
+──────┼───────┼───────────┤
+ GAP  │       │ {:>9.5f} │
+""".format(i+1, lumo, i, homo, homo-lumo)
 else:
-    print('Cannot determine what program made this output file.')
+    ia, ib = homos[0], homos[1]
+    ha, hb = levels[0][ia],   levels[1][ib]
+    la, lb = levels[0][ia+1], levels[1][ib+1]
+    spin_flip = min(la - hb, lb - ha)
 
+    out = """\
+  eV   │  α   β  │  α Energy  β Energy │
+───────┼─────────┼─────────────────────┤
+ LUMOS │ {:>3} {:>3} │ {:>9.5f} {:>9.5f} │
+ HOMOS │ {:>3} {:>3} │ {:>9.5f} {:>9.5f} │    Spin-Flip Gap
+───────┼─────────┼─────────────────────┤    ─────────────
+ GAPS  │         │ {:>9.5f} {:>9.5f} │       {:^8.5f}
+""".format(ia+1, ib+1, la, lb,
+           ia,   ib1,  ha, hb,
+           ha-la, hb-lb, spin_flip)
+print(out)
+
+
+if args.write:
+    levels = levels.T
+    np.savetxt(args.output, levels, fmt="%7.5f")

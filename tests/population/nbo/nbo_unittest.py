@@ -1,9 +1,23 @@
 import unittest
-from sys import path
 import numpy as np
+
+from sys import path
 from numpy.testing import assert_almost_equal
+
 path.insert(0, '../../')
-from qgrep.population.nbo import NPA, NPA_Diff
+
+from qgrep.population.nbo import NAOs, NPA, NPA_Diff
+
+
+class TestNAOs(unittest.TestCase):
+    """Test the NAOs class"""
+    def test_read(self):
+        with open('H2O.nbo') as f:
+            lines = f.readlines()
+        naos = NAOs(lines=lines)
+        occ = [0.58963, 0.00147, 1.99984, 1.79608, 0.00093, 1.99981, 0.00019,
+               1.50996, 0.00052, 1.50996, 0.00052, 0.58963, 0.00147]
+        assert_almost_equal([x[5] for x in naos.vals], occ)
 
 
 class TestNPA(unittest.TestCase):
@@ -18,22 +32,21 @@ class TestNPA(unittest.TestCase):
         with open('H2O.nbo') as f:
             lines = f.readlines()
         h2o = NPA(lines=lines)
-        npa = NPA_Diff()
-        npa.atoms = h2o.atoms
-        npa.charges = np.zeros(h2o.charges.shape)
-        self.assertEqual((h2o - h2o), npa)
+        diff_atoms = ['{:>2}-{:<2}'.format(a, a) for a in h2o.atoms]
+        diff0 = NPA_Diff(diff_atoms, np.zeros(h2o.charges.shape))
+        self.assertEqual((h2o - h2o), diff0)
 
         with open('H2O_stretched.nbo') as f:
             lines = f.readlines()
         h2o_stretched = NPA(lines=lines)
 
-        diff = np.array([[ 0.31616,  0.00000, -0.31758, 0.00142, -0.31616],
-                         [-0.63440, -0.00015,  0.63245, 0.00210,  0.63440],
-                         [ 0.31823,  0.00000, -0.31965, 0.00142, -0.31823]])
-        diff = NPA_Diff(atoms=h2o.atoms, charges=diff)
+        charges = np.array([[ 0.31616,  0.00000, -0.31758, 0.00142, -0.31616],
+                            [-0.63440, -0.00015,  0.63245, 0.00210,  0.63440],
+                            [ 0.31823,  0.00000, -0.31965, 0.00142, -0.31823]])
+        diff_stretch = NPA_Diff(atoms=diff_atoms, charges=charges)
 
-        self.assertEqual((h2o - h2o_stretched), diff)
-        assert_almost_equal((h2o - h2o_stretched).charges, diff.charges)
+        self.assertEqual((h2o - h2o_stretched), diff_stretch)
+        assert_almost_equal((h2o - h2o_stretched).charges, diff_stretch.charges)
 
     def test_add(self):
         with open('H2O.nbo') as f:
@@ -50,7 +63,13 @@ class TestNPA(unittest.TestCase):
                         [ 0.49957, 0.00000,  1.49891, 0.00152,  1.50043]])
 
         assert_almost_equal((h2o + h2o_stretched).charges, add)
-        
+
+class TestNBO(unittest.TestCase):
+    """Tests the NBO class"""
+
+    def test_read(self):
+        pass
+
 
 if __name__ == '__main__':
     unittest.main()

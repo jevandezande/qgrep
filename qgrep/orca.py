@@ -1,8 +1,10 @@
 """Source for all orca related functions"""
-from .molecule import Molecule
-from .convergence import Step, Convergence
 import re
+
 from collections import OrderedDict
+
+from .molecule import Molecule
+from .convergence import Convergence, Step
 
 
 def get_geom(lines, geom_type='xyz', units='angstrom'):
@@ -246,7 +248,7 @@ def get_energy(lines, energy_type='sp'):
         energy_line = 'FINAL SINGLE POINT ENERGY'
         for line in reversed(lines):
             if energy_line == line[:25]:
-                energy = line.split()[-1]
+                energy = line.split()[4]
                 break
     elif energy_type == 'gibbs':
         energy_line = 'Final Gibbs free enthalpy'
@@ -285,7 +287,7 @@ def get_energies(lines, energy_type='sp'):
         energy_line = 'FINAL SINGLE POINT ENERGY'
         for line in lines:
             if energy_line == line[:25]:
-                energies.append(float(line.split()[-1]))
+                energies.append(float(line.split()[4]))
     elif energy_type == 'gibbs':
         energy_line = 'Final Gibbs free enthalpy'
         for line in lines:
@@ -398,6 +400,10 @@ def energy_levels(lines):
 
 
 def get_molecule(lines):
+    """
+    !Deprecated!
+    Read geometry and convert to a Molecule
+    """
     start = 'CARTESIAN COORDINATES (ANGSTROEM)\n'
     end = '\n'
     geom_start = -1
@@ -409,11 +415,11 @@ def get_molecule(lines):
         return ''
 
     mol = Molecule()
-    for i in range(geom_start, len(lines)):
-        if end == lines[i]:
+    for line in lines[geom_start:]:
+        if end == line:
             break
-        data = lines[i].split()
-        mol.append([data[0]] + list(map(float, data[1:4])))
+        atom, x, y, z = line.split()[:4]
+        mol.append([atom, [float(x), float(y), float(z)]])
 
     return mol
 

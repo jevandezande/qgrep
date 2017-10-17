@@ -2,14 +2,14 @@
 
 # Reads a population analysis and outputs the leading contributors for the
 # specified range of orbitals
-
+import sys
 import argparse
 import importlib
-import sys
+
 sys.path.insert(0, '../')
+
 from qgrep.helper import read
 from qgrep.population.orbital_pop import OrbitalPopulation as OP
-
 
 parser = argparse.ArgumentParser(description='Get the population analysis for specified orbitals. '\
                                 'When cropping and contracting, the contraction is performed first.')
@@ -28,7 +28,7 @@ parser.add_argument('-l', '--latex', help='Write in latex format',
                     default=False, action='store_true')
 parser.add_argument('-f', '--format', help='Write in specified format, can use -l for latex',
                     type=str, default='str')
-parser.add_argument('-o', '--output', help='The file to be read.', type=str,
+parser.add_argument('-o', '--output', help='The file where output should be printed.', type=str,
                     default='')
 parser.add_argument('-w', '--write', help='Write to an output file',
                     default=False, action='store_true')

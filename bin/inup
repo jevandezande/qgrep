@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+
+# Script that takes the last geometry of an outputfile and pastes it in the inputfile
+import sys
+import re
+
+from cclib.io import ccread
+
+read_from = 'output.dat'
+write_to = 'input.dat'
+if len(sys.argv) > 1:
+    if sys.argv in ['-h', '--help']:
+        print("""Usage: inup [read_from] [write_to]
+read_from: an xyz or cclib readbale ouput file (default output.dat)
+write_to: an input file, currently on ORCA supported (default input.dat)""")
+        sys.exit()
+    read_from = sys.argv[1]
+    if len(sys.argv) > 2:
+        write_to = sys.argv[2]
+
+print(read_from, write_to)
+if read_from.split('.')[-1] == 'xyz':
+    with open(read_from) as f:
+        next(f), next(f)
+        val_form = '    {:<2}' + '  {:> 10.7f}'*3 + '\n'
+        geom = ''
+        for line in f:
+            atom, x, y, z, *other = line.split()
+            geom += val_form.format(atom, float(x), float(y), float(z))
+    geom = geom[:-1]
+else:
+    # Strip the number of atoms and comment lines
+    geom = '    ' + '\n    '.join(ccread(read_from).writexyz().splitlines()[2:])
+
+with open(write_to) as f:
+    cc_input_file = f.read()
+
+regex = r'\*\s*(xyz|int|gzmt)\s+(-?\d+)\s+(\d+)\n(.*?)\*'
+match = re.search(regex, cc_input_file, flags=re.DOTALL)
+style, charge, multiplicity, xyz = match.groups()
+
+orig_len, new_len = xyz.count('\n'), geom.count('\n') + 1
+if orig_len != new_len:
+    print(f'Different number of atoms: {orig_len} != {new_len}')
+if style != 'xyz':
+    print(f'Changing to xyz from {style}')
+
+swap = f'''* xyz {charge} {multiplicity}
+{geom}
+*'''
+cc_input_file = re.sub(regex, swap, cc_input_file, flags=re.DOTALL)
+
+with open(write_to, 'w') as f:
+    f.write(cc_input_file)

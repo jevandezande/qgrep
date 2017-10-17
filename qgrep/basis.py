@@ -1,6 +1,7 @@
-from collections import OrderedDict, Iterable
-import numpy as np
 import json
+import numpy as np
+
+from collections import Iterable, OrderedDict
 
 SUPPORTED = ['gaussian94', 'gamess', 'bagel', 'cfour']
 AM = 'SPDFGHIKLMN'

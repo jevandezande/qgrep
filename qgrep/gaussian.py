@@ -1,7 +1,8 @@
 """Source for all Gaussian related functions"""
-
 import re
+
 from .atom import Atom
+
 
 def get_geom(lines, geom_type='xyz', units='angstrom'):
     """

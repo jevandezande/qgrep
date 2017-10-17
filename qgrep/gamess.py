@@ -1,6 +1,8 @@
 import os
 import re
+
 from collections import OrderedDict
+
 from .atom import Atom
 from .basis import BasisSet
 from .molecule import Molecule
@@ -117,7 +119,7 @@ class Gamessifier():
             print("Couldn't find geom file: " + geom_file)
             return
 
-        self.mol.read(geom_file)
+        self.mol = Molecule.read_from(geom_file)
 
     def read_basis_set(self, basis_file='basis.gbs'):
         """
@@ -270,7 +272,7 @@ class Gamessifier():
         """Makes an input file with the given geometry and basis"""
         data = ' $DATA\n{}\nC1\n'.format(comment)
         ecp = ' $ECP\n'
-        for name, x, y, z in self.mol:
+        for name, (x, y, z) in self.mol:
             if len(name) > 1:
                 name = name[0].upper() + name[1:].lower()
             an = Atom.atomic_number(name)

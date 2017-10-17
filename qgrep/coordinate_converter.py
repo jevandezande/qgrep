@@ -1,7 +1,6 @@
 """
 A module for converting between zmatrices and Cartesian coordinates
 """
-
 import math as m
 import numpy as np
 
