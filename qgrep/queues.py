@@ -109,7 +109,7 @@ class Queues:
 
         # Display small queues below other queues
         for i, queue in enumerate(small_queues):
-            out += queue.print_inline(large_num, None, person) + '\n'
+            out += queue.print_inline(len(self.sizes) - large_num, None, person) + '\n'
             out += mid_line if i < len(small_queues) - 1 else bot_line
 
         # Remove newline character
