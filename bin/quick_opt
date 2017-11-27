@@ -4,8 +4,9 @@
 import os
 import re
 import argparse
+from more_itertools import peekable
 
-from sq import SubmitJob
+from job_queue import SubmitJob
 
 from cclib import ccopen
 
@@ -14,6 +15,10 @@ parser.add_argument('-i', '--input', help='The file from which to get the geomet
                     type=str, default='output.dat')
 parser.add_argument('-m', '--method', help='The method to use',
                     type=str, default='HF-3C')
+parser.add_argument('-f', '--numerical_freqs', help="Run numerical frequencies.",
+                action='store_true', default=False)
+parser.add_argument('-a', '--analytical_freqs', help="Run frequencies.",
+                action='store_true', default=False)
 parser.add_argument('-d', '--debug', help="Generate but don't submit the optimization.",
                 action='store_true', default=False)
 
@@ -26,7 +31,12 @@ charge = 0
 multiplicity = 1
 if args.input.split('.')[-1] == 'xyz':
     with open(args.input) as f:
-        next(f), next(f)
+        f = peekable(f)
+        # If starting with the number of atoms
+        if len(f.peek().split()) == 1:
+            next(f)
+            next(f)
+
         val_form = '    {:<2}' + '  {:> 10.7f}'*3 + '\n'
         geom = ''
         for line in f:
@@ -41,16 +51,27 @@ else:
     multiplicity = data.mult
 
 
-input_file = f"""%pal nprocs 8 end
+freqs = ''
+if args.numerical_freqs and args.analytical_freqs:
+    raise ValueError('Cannot run numerical and analytic frequencies at the same time.')
+elif args.numerical_freqs:
+    freqs = '! NumFreq\n'
+elif args.analytical_freqs:
+    freqs = '! AnFreq\n'
 
-! Opt {method}
+input_file = f"""\
+%pal nprocs 8 end
+
+! TightOpt {method}
+! KDIIS
+{freqs}
+% scf maxiter 1000 end
 
 * xyz {charge} {multiplicity}
 {geom}
-*
-"""
+*"""
 
-os.makedirs(args.method, exist_ok=True)
+os.makedirs(args.method, exist_ok=False)
 with open(f'{name}/input.dat', 'w') as f:
     f.write(input_file)
 
