@@ -34,7 +34,12 @@ def check(inp, args):
         print("No such data available, has the program not run that yet?")
         return False
 
-    package = data.metadata['package']
+    try:
+        package = data.metadata['package']
+    except AttributeError as e:
+        print(f'Failed to read {inp}')
+        return False
+
     steps = []
     try:
         for (delta_e, rms_grad, max_grad, rms_step, max_step), scfvalues in zip(data.geovalues, data.scfvalues):
