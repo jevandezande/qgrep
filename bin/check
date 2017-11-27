@@ -6,7 +6,7 @@ import sys
 import argparse
 
 from glob import glob
-from cclib import ccopen
+from cclib.io import ccread
 from collections import OrderedDict
 
 from natsort import natsorted
@@ -26,12 +26,17 @@ current directory.', action='store_true', default=False)
 
 args = parser.parse_args()
 
+success_dict = {
+    'ORCA' : 'TOTAL RUN TIME:',
+    'PSI4' : 'Buy a developer',
+}
+
 
 def check(inp, args):
     try:
-        data = ccopen(inp).parse()
+        data = ccread(inp)
     except AttributeError as e:
-        print("No such data available, has the program not run that yet?")
+        print("No such data available, has the program run that yet?")
         return False
 
     try:
@@ -62,19 +67,35 @@ def check(inp, args):
     conv = Convergence(steps, data.geotargets)
     print(conv)
 
-    converged = False
+    # Successful only if nothing fails
+    success = True
+    try:
+        success_value = success_dict[data.metadata['package']]
+        with open(inp) as f:
+            success = False
+            for line in f:
+                if line[:15] == 'TOTAL RUN TIME:':
+                    print('Successfully completed')
+                    success = True
+                    break
+            if not success:
+                print('Job failed/not finished')
+    except ValueError as e:
+        # Don't know the package or the success line
+        pass
+
     if hasattr(data, 'vibfreqs'):
         im_freqs = data.vibfreqs[data.vibfreqs < 0]
         for freq in im_freqs:
             print('***Imaginary frequency: {: >7.2f}i'.format(freq))
+            success = False
         if len(im_freqs) == 0:
             print('No imaginary frequencies')
-            converged = True
 
     if args.plot:
         conv.plot()
 
-    return converged
+    return success
 
 if args.all:
     # assume default argument and search
@@ -105,6 +126,6 @@ else:
     # Print a summary if more than two inputs
     if len(inputs) > 2:
         length = len(max(inputs, key=len))
-        print('Summary')
+        print('\nSummary\n=======')
         for inp, res in zip(inputs, results):
             print(inp.ljust(length) + ': ' + ('✓' if res else 'x'))
