@@ -27,6 +27,13 @@ class Molecule:
         for atom, xyz in zip(self.atoms, self.xyz):
             yield atom, xyz
 
+    def __add__(self, other):
+        """ Combine two molecules """
+        if isinstance(self, Molecule) and isinstance(self, Molecule):
+            return Molecule(self.geom + other.geom)
+        else:
+            raise ValueError(f'Cannot combine {type(self)} and {type(other)}')
+
     def __getitem__(self, i):
         """Returns the ith atom"""
         return (self.atoms[i], self.xyz[i])
