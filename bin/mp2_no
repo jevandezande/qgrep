@@ -1,0 +1,96 @@
+#!/usr/bin/env python3
+
+# Script that starts a quick optimization from the provided geometry
+import os
+import argparse
+
+from cclib import ccopen
+from job_queue import SubmitJob
+
+from more_itertools import peekable
+
+default_options = {
+    'basis':  'def2-svp',
+    'debug':  False,
+    'input':  'output.dat',
+    'nprocs': 8,
+}
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Run MP2 natural orbitals.')
+    parser.add_argument('-i', '--input', help='The file from which to get the geometry.',
+                        type=str, default=default_options['input'])
+    parser.add_argument('-b', '--basis', help='The basis set to use.',
+                        type=str, default=default_options['basis'])
+    parser.add_argument('-d', '--debug', help="Generate but don't submit the optimization.",
+                        action='store_true', default=default_options['debug'])
+
+    copied_defaults = default_options.copy()
+    copied_defaults.update(parser.parse_args().__dict__)
+    return copied_defaults
+
+
+def parse_options(options):
+    copied_defaults = default_options.copy()
+    copied_defaults.update(options)
+    return copied_defaults
+
+
+def mp2_no(options=None):
+    if options is None:
+        options = parse_args()
+    else:
+        options = parse_options(options)
+
+    charge = 0
+    multiplicity = 1
+    if options['input'].split('.')[-1] == 'xyz':
+        with open(options['input']) as f:
+            f = peekable(f)
+            # If starting with the number of atoms
+            if len(f.peek().split()) == 1:
+                next(f)
+                next(f)
+
+            val_form = '    {:<2}' + '  {:> 10.7f}'*3 + '\n'
+            geom = ''
+            for line in f:
+                atom, x, y, z, *other = line.split()
+                geom += val_form.format(atom, float(x), float(y), float(z))
+        geom = geom[:-1]
+    else:
+        data = ccopen(options['input']).parse()
+        # Strip the number of atoms and comment lines
+        geom = '    ' + '\n    '.join(data.writexyz().splitlines()[2:])
+        charge = data.charge
+        multiplicity = data.mult
+
+    input_file = f"""\
+%pal nprocs {options['nprocs']} end
+
+! TightSCF RI-MP2 {options['basis']} RIJCOSX AutoAux
+! KDIIS
+
+% scf maxiter 1000 end
+
+% mp2 DoNatOrbs True end
+
+* xyz {charge} {multiplicity}
+{geom}
+*"""
+
+    dir = 'mp2_no'
+    os.makedirs(dir, exist_ok=False)
+    with open(f'{dir}/input.dat', 'w') as f:
+        f.write(input_file)
+
+    cwd = os.getcwd()
+    os.chdir(dir)
+    job = SubmitJob({'debug': options['debug']})
+    job.submit()
+    os.chdir(cwd)
+
+
+if __name__ == '__main__':
+    mp2_no()
