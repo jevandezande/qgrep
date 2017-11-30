@@ -2,7 +2,6 @@
 
 # Script that starts a quick optimization from the provided geometry
 import os
-import re
 import argparse
 from more_itertools import peekable
 
@@ -10,17 +9,17 @@ from job_queue import SubmitJob
 
 from cclib import ccopen
 
-parser = argparse.ArgumentParser(description='Update the geometry fo the input file.')
+parser = argparse.ArgumentParser(description='Run a quick geometry optimization.')
 parser.add_argument('-i', '--input', help='The file from which to get the geometry.',
                     type=str, default='output.dat')
 parser.add_argument('-m', '--method', help='The method to use',
                     type=str, default='HF-3C')
 parser.add_argument('-f', '--numerical_freqs', help="Run numerical frequencies.",
-                action='store_true', default=False)
+                    action='store_true', default=False)
 parser.add_argument('-a', '--analytical_freqs', help="Run frequencies.",
-                action='store_true', default=False)
+                    action='store_true', default=False)
 parser.add_argument('-d', '--debug', help="Generate but don't submit the optimization.",
-                action='store_true', default=False)
+                    action='store_true', default=False)
 
 args = parser.parse_args()
 
@@ -51,18 +50,21 @@ else:
     multiplicity = data.mult
 
 
+tight = ''
 freqs = ''
 if args.numerical_freqs and args.analytical_freqs:
     raise ValueError('Cannot run numerical and analytic frequencies at the same time.')
 elif args.numerical_freqs:
     freqs = '! NumFreq\n'
+    tight = 'Tight'
 elif args.analytical_freqs:
     freqs = '! AnFreq\n'
+    tight = 'Tight'
 
 input_file = f"""\
 %pal nprocs 8 end
 
-! TightOpt {method}
+! {tight}Opt {method}
 ! KDIIS
 {freqs}
 % scf maxiter 1000 end
