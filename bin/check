@@ -33,56 +33,38 @@ success_dict = {
 
 
 def check(inp, args):
+    # Successful only if nothing fails
+    success = True
+
     try:
         data = ccread(inp)
     except AttributeError as e:
-        print("No such data available, has the program run that yet?")
+        print('No such data available, has the program run that yet?')
         return False
 
-    try:
+    if 'package' in data.metadata:
         package = data.metadata['package']
-    except AttributeError as e:
+    else:
         print(f'Failed to read {inp}')
         return False
 
+    conv = None
     steps = []
-    try:
+    if (hasattr(data, 'geovalues') and hasattr(data, 'scfvalues')):
         for (delta_e, rms_grad, max_grad, rms_step, max_step), scfvalues in zip(data.geovalues, data.scfvalues):
-            if package == 'ORCA':
-                params = OrderedDict((
-                    ('delta_e', delta_e),
-                    ('rms_grad', rms_grad),
-                    ('max_grad', max_grad),
-                    ('rms_step', rms_step),
-                    ('max_step', max_step),
-                    ('scf_steps', len(scfvalues)),
-                ))
-                steps.append(Step(params, list(data.geotargets) + [0]))
-            else:
-                raise NotImplementedError('Only ORCA check_convergence has been implemented so far.')
-    except AttributeError as e:
-        print("No such data available, has the program not run that yet?")
-        return False
-
-    conv = Convergence(steps, data.geotargets)
-    print(conv)
-
-    # Successful only if nothing fails
-    success = True
-    try:
-        success_value = success_dict[data.metadata['package']]
-        with open(inp) as f:
-            success = False
-            for line in f:
-                if line[:15] == 'TOTAL RUN TIME:':
-                    print('Successfully completed')
-                    success = True
-                    break
-            if not success:
-                print('Job failed/not finished')
-    except ValueError as e:
-        # Don't know the package or the success line
-        pass
+            params = OrderedDict((
+                ('delta_e', delta_e),
+                ('rms_grad', rms_grad),
+                ('max_grad', max_grad),
+                ('rms_step', rms_step),
+                ('max_step', max_step),
+                ('scf_steps', len(scfvalues)),
+            ))
+            steps.append(Step(params, list(data.geotargets) + [0]))
+        conv = Convergence(steps, data.geotargets)
+    else:
+        print('No optimization found.')
+        success = False
 
     if hasattr(data, 'vibfreqs'):
         im_freqs = data.vibfreqs[data.vibfreqs < 0]
@@ -92,8 +74,20 @@ def check(inp, args):
         if len(im_freqs) == 0:
             print('No imaginary frequencies')
 
-    if args.plot:
+    if args.plot and conv:
         conv.plot()
+
+    success_value = success_dict[data.metadata['package']]
+    with open(inp) as f:
+        finished = False
+        for line in f:
+            if line[:15] == success_value:
+                print('Successfully completed')
+                finished = True
+                break
+        if not finished:
+            success = False
+            print('Job failed/not finished')
 
     return success
 
@@ -121,7 +115,8 @@ else:
     inputs = natsorted(inputs)
     results = []
     for inp in inputs:
-        print(inp)
+        if len(inputs) > 1:
+            print(inp)
         results.append(check(inp, args))
     # Print a summary if more than two inputs
     if len(inputs) > 2:
