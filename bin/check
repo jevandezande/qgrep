@@ -62,6 +62,7 @@ def check(inp, args):
             ))
             steps.append(Step(params, list(data.geotargets) + [0]))
         conv = Convergence(steps, data.geotargets)
+        print(conv)
     else:
         print('No optimization found.')
         success = False
