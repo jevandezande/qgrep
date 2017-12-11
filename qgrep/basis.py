@@ -3,7 +3,7 @@ import numpy as np
 
 from collections import Iterable, OrderedDict
 
-SUPPORTED = ['gaussian94', 'gamess', 'bagel', 'cfour']
+SUPPORTED = ['gaussian94', 'gamess', 'bagel', 'cfour', 'molpro']
 AM = 'SPDFGHIKLMN'
 
 class BasisFunction:
@@ -151,6 +151,8 @@ class BasisFunction:
             # Print coefficients
             for c_line in self.coeffs:
                 out += (' {:>12.7g}'*self.num_coeffs).format(*c_line) + '\n'
+        elif style == 'molpro':
+            # TODO: print basis function in Molpro format
         else:
             raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
         return out
@@ -236,6 +238,8 @@ class Basis:
                 out += '"{:s}" : ['.format(self.atom)
             elif style == 'cfour':
                 out += '{:s}:{:s}\nComment Line\n\n'.format(self.atom, self.name)
+            elif style == 'molpro':
+                out += 'basis={\n!\n! {:s}\n! {:s}\n'.format(self.name, self.name)
             else:
                 raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
         if style == 'bagel':
@@ -256,6 +260,8 @@ class Basis:
             # Print basis functions
             for bf in self:
                 out += bf.print(style)
+        elif style == 'molpro':
+            # TODO: Print Basis in Molpro format
         else:
             out += ''.join([c.print(style, self.atom) for c in self])
         return out
@@ -516,6 +522,10 @@ class BasisSet:
         if style == 'bagel':
             out += ',\n\n'.join([basis.print('bagel').replace('\n', '\n    ') for basis in self])
             return '{\n' + out + '\n}'
+
+        elif style == 'molpro':
+            pass
+            # TODO: Print decontracted Molpro basis set
         elif style in ['gaussian94', 'gamess', 'cfour']:
             if style == 'gaussian94':
                 separator = '****\n'
