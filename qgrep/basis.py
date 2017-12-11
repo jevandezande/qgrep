@@ -152,7 +152,10 @@ class BasisFunction:
             for c_line in self.coeffs:
                 out += (' {:>12.7g}'*self.num_coeffs).format(*c_line) + '\n'
         elif style == 'molpro':
-            # TODO: print basis function in Molpro format
+            # Print coeffs for basis function in Molpro format
+            for c in self.coeffs:
+                out += ', ' + ('{:<12.7g}'*self.num_coeffs).format(*c)
+            out += '\n'
         else:
             raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
         return out
