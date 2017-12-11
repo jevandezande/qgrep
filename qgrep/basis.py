@@ -242,7 +242,7 @@ class Basis:
             elif style == 'cfour':
                 out += '{:s}:{:s}\nComment Line\n\n'.format(self.atom, self.name)
             elif style == 'molpro':
-                out += 'basis={\n!\n! {:s}\n! {:s}\n'.format(self.name, self.name)
+                out += '! {:s}\n! {:s}\n'.format(self.name, self.name)
             else:
                 raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
         if style == 'bagel':
@@ -527,13 +527,14 @@ class BasisSet:
             return '{\n' + out + '\n}'
 
         elif style == 'molpro':
-            pass
-            # TODO: Print decontracted Molpro basis set
-        elif style in ['gaussian94', 'gamess', 'cfour']:
+            out += 'basis={\n!'
+            out += join(basis.print('molpro') for basis in self)
+            out += '}'
+        elif style in ['gaussian94', 'gamess', 'cfour', 'molpro']:
             if style == 'gaussian94':
                 separator = '****\n'
                 out = separator
-            elif style in ['gamess', 'cfour']:
+            elif style in ['gamess', 'cfour', 'molpro']:
                 separator = '\n'
             # TODO: sort according to periodic table
             out += separator.join(
