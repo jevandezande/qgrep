@@ -265,6 +265,7 @@ class Basis:
                 out += bf.print(style)
         elif style == 'molpro':
             # TODO: Print Basis in Molpro format
+            pass
         else:
             out += ''.join([c.print(style, self.atom) for c in self])
         return out
@@ -448,6 +449,10 @@ class BasisSet:
                     continue
                 # Comments start with an '!'
                 if line[0] == '!':
+                    continue
+                # ECP line
+                if line[:3] == 'ecp':
+                    # TODO: Store the ECP in a comment
                     continue
                 # Exponent line
                 if line[0].upper() in AM:
