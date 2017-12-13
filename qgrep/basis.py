@@ -151,11 +151,6 @@ class BasisFunction:
             # Print coefficients
             for c_line in self.coeffs:
                 out += (' {:>12.7g}'*self.num_coeffs).format(*c_line) + '\n'
-        elif style == 'molpro':
-            # Print coeffs for basis function in Molpro format
-            for c in self.coeffs:
-                out += ', ' + ('{:<12.7g}'*self.num_coeffs).format(*c)
-            out += '\n'
         else:
             raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
         return out
@@ -242,7 +237,7 @@ class Basis:
             elif style == 'cfour':
                 out += '{:s}:{:s}\nComment Line\n\n'.format(self.atom, self.name)
             elif style == 'molpro':
-                out += '! {:s}\n! {:s}\n'.format(self.name, self.name)
+                out += '! {:s}\n! {:s}\n'.format(self.atom, self.atom)
             else:
                 raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
         if style == 'bagel':
@@ -265,7 +260,41 @@ class Basis:
                 out += bf.print(style)
         elif style == 'molpro':
             # TODO: Print Basis in Molpro format
-            pass
+            old_am = ''
+            ex = ''
+            co = ''
+            for bf in self:
+                if bf.am == old_am:
+                    # Add exps to ex string
+                    for exp in bf.exps:
+                        ex += ', ' + '{:.7f}'.format(exp)
+                    # Add coeffs to co string   
+                    co += 'c, ' + '{}.{}'.format(start_count, end_count)
+                    for coef in bf.coeffs:
+                        co += ', ' + '{:9.7f}'.format(float(coef))
+                    co += '\n'
+                else:
+                    old_am = bf.am
+                    if ex != '':
+                        out += ex + '\n'
+                    else:
+                        out += ex
+                    out += co 
+                    ex = ''
+                    co = ''
+                    # Re-initialize for new angular momentum
+                    start_count = 1
+                    end_count = 1
+                    # Beginning of exps line
+                    ex += '{}, {}'.format(AM[bf.am].lower(), self.atom)
+                    for exp in bf.exps:
+                        ex += ', ' + '{:.7f}'.format(exp)
+                    # Add coeffs to co string   
+                    co += 'c, ' + '{}.{}'.format(start_count, end_count)
+                    for coef in bf.coeffs:
+                        co += ', ' + '{:9.7f}'.format(float(coef))
+                    co += '\n'
+                    
         else:
             out += ''.join([c.print(style, self.atom) for c in self])
         return out
@@ -532,14 +561,16 @@ class BasisSet:
             return '{\n' + out + '\n}'
 
         elif style == 'molpro':
-            out += 'basis={\n!'
-            out += join(basis.print('molpro') for basis in self)
+            out += 'basis={\n!\n'
+            for basis in self:
+                out += basis.print('molpro')
             out += '}'
-        elif style in ['gaussian94', 'gamess', 'cfour', 'molpro']:
+            return out
+        elif style in ['gaussian94', 'gamess', 'cfour']:
             if style == 'gaussian94':
                 separator = '****\n'
                 out = separator
-            elif style in ['gamess', 'cfour', 'molpro']:
+            elif style in ['gamess', 'cfour']:
                 separator = '\n'
             # TODO: sort according to periodic table
             out += separator.join(
