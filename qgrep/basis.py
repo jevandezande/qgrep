@@ -260,40 +260,28 @@ class Basis:
                 out += bf.print(style)
         elif style == 'molpro':
             # TODO: Print Basis in Molpro format
-            old_am = ''
             ex = ''
-            co = ''
+            am_dict = {}
             for bf in self:
-                if bf.am == old_am:
-                    # Add exps to ex string
-                    for exp in bf.exps:
-                        ex += ', ' + '{:.7f}'.format(exp)
-                    # Add coeffs to co string   
-                    co += 'c, ' + '{}.{}'.format(start_count, end_count)
-                    for coef in bf.coeffs:
-                        co += ', ' + '{:9.7f}'.format(float(coef))
-                    co += '\n'
-                else:
-                    old_am = bf.am
-                    if ex != '':
-                        out += ex + '\n'
-                    else:
-                        out += ex
-                    out += co 
-                    ex = ''
-                    co = ''
-                    # Re-initialize for new angular momentum
+                if bf.am not in am_dict:
                     start_count = 1
-                    end_count = 1
-                    # Beginning of exps line
-                    ex += '{}, {}'.format(AM[bf.am].lower(), self.atom)
-                    for exp in bf.exps:
-                        ex += ', ' + '{:.7f}'.format(exp)
-                    # Add coeffs to co string   
-                    co += 'c, ' + '{}.{}'.format(start_count, end_count)
-                    for coef in bf.coeffs:
-                        co += ', ' + '{:9.7f}'.format(float(coef))
-                    co += '\n'
+                    ex = '{}, {}'.format(AM[bf.am].lower(), self.atom)
+                    am_dict[bf.am] = [ex,'']
+                #update value of end_count
+                end_count = start_count + len(bf.exps) - 1
+                # Add exps to ex string
+                am_dict[bf.am][0] += ', ' + ', '.join('{:.7f}'.format(exp) for exp in bf.exps)
+                # Add coeffs to co string   
+                co = 'c, {}.{}'.format(start_count, end_count)
+                for coef in bf.coeffs:
+                    co += ', {:9.7f}'.format(float(coef))
+                co += '\n'
+                am_dict[bf.am][1] += co
+                # start_count for next basis function
+                start_count = end_count + 1
+
+            for am, (exp, co) in sorted(am_dict.items(), key=lambda x:x[0]):
+                out += exp + '\n' + co
                     
         else:
             out += ''.join([c.print(style, self.atom) for c in self])
