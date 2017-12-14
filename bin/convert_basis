@@ -27,8 +27,10 @@ if args.output == '{inputname}.{outstyle}':
         args.output = GENBAS
     elif args.ostyle == 'gamess':
         args.output = name + '.gamess'
-    elif args.ostyle == 'gaussian':
+    elif args.ostyle == 'gaussian94':
         args.output = name + '.gbs'
+    elif args.ostyle == 'molpro':
+        args.output = name + '.bas'
 
 
 bs = BasisSet.read(args.input, style=args.istyle, debug=True)

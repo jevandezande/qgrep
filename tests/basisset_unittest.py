@@ -253,9 +253,11 @@ class TestBasisSet(unittest.TestCase):
         bs4 = BasisSet.read(test_file_cfour, 'cfour')
         self.assertEqual(bs, bs4)
 
-        test_file_molpro = 'def2-svp.molpro'
-        bs5 = BasisSet.read(test_file_molpro, 'molpro')
-        self.assertEqual(len(bs5['O']), 6)
+        test_file_molpro = 'my_basis_molpro.bas.tmp'
+        with open(test_file_molpro, 'w') as f:
+            f.write(bs.print('molpro'))
+        bs4 = BasisSet.read(test_file_molpro, 'molpro')
+        self.assertEqual(bs, bs4)
 
         self.assertRaises(SyntaxError, self.basis_set.print, 'turbomole')
 

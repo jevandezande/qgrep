@@ -3,7 +3,7 @@ import numpy as np
 
 from collections import Iterable, OrderedDict
 
-SUPPORTED = ['gaussian94', 'gamess', 'bagel', 'cfour']
+SUPPORTED = ['gaussian94', 'gamess', 'bagel', 'cfour', 'molpro']
 AM = 'SPDFGHIKLMN'
 
 class BasisFunction:
@@ -236,6 +236,8 @@ class Basis:
                 out += '"{:s}" : ['.format(self.atom)
             elif style == 'cfour':
                 out += '{:s}:{:s}\nComment Line\n\n'.format(self.atom, self.name)
+            elif style == 'molpro':
+                out += '! {:s}\n! {:s}\n'.format(self.atom, self.atom)
             else:
                 raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
         if style == 'bagel':
@@ -256,6 +258,31 @@ class Basis:
             # Print basis functions
             for bf in self:
                 out += bf.print(style)
+        elif style == 'molpro':
+            # TODO: Print Basis in Molpro format
+            ex = ''
+            am_dict = {}
+            for bf in self:
+                if bf.am not in am_dict:
+                    start_count = 1
+                    ex = '{}, {}'.format(AM[bf.am].lower(), self.atom)
+                    am_dict[bf.am] = [ex,'']
+                #update value of end_count
+                end_count = start_count + len(bf.exps) - 1
+                # Add exps to ex string
+                am_dict[bf.am][0] += ', ' + ', '.join('{:.7f}'.format(exp) for exp in bf.exps)
+                # Add coeffs to co string   
+                co = 'c, {}.{}'.format(start_count, end_count)
+                for coef in bf.coeffs:
+                    co += ', {:9.7f}'.format(float(coef))
+                co += '\n'
+                am_dict[bf.am][1] += co
+                # start_count for next basis function
+                start_count = end_count + 1
+
+            for am, (exp, co) in sorted(am_dict.items(), key=lambda x:x[0]):
+                out += exp + '\n' + co
+                    
         else:
             out += ''.join([c.print(style, self.atom) for c in self])
         return out
@@ -440,6 +467,10 @@ class BasisSet:
                 # Comments start with an '!'
                 if line[0] == '!':
                     continue
+                # ECP line
+                if line[:3] == 'ecp':
+                    # TODO: Store the ECP in a comment
+                    continue
                 # Exponent line
                 if line[0].upper() in AM:
                     am, atom, *exps = line.split(',')
@@ -516,6 +547,13 @@ class BasisSet:
         if style == 'bagel':
             out += ',\n\n'.join([basis.print('bagel').replace('\n', '\n    ') for basis in self])
             return '{\n' + out + '\n}'
+
+        elif style == 'molpro':
+            out += 'basis={\n!\n'
+            for basis in self:
+                out += basis.print('molpro')
+            out += '}'
+            return out
         elif style in ['gaussian94', 'gamess', 'cfour']:
             if style == 'gaussian94':
                 separator = '****\n'
