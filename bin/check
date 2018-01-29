@@ -70,7 +70,7 @@ def check(inp, args):
     if hasattr(data, 'vibfreqs'):
         im_freqs = data.vibfreqs[data.vibfreqs < 0]
         for freq in im_freqs:
-            print('***Imaginary frequency: {: >7.2f}i'.format(freq))
+            print(f'***Imaginary frequency: {freq: >7.2f}i')
             success = False
         if len(im_freqs) == 0:
             print('No imaginary frequencies')

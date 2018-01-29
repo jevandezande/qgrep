@@ -31,10 +31,9 @@ except AttributeError as e:
 atoms = [numbers_atomic[atom] for atom in atomnos]
 
 out = ''
-header_form = str(data.natom) + "\n{:>5.3f}: {:7.5f}\n"
 line_form = "{:2} " + " {:>10.7f}"*6 + "\n"
 for disps, freq, ir in zip(disps_array, freqs, irs):
-    out += header_form.format(freq, ir)
+    out += f'{data.natom} \n{freq:>5.3f}: {ir:7.5f}\n'
     for atom, xyz, dxyz in zip(atoms, geoms[-1], disps):
         out += line_form.format(atom, *xyz, *dxyz)
     out += '\n'

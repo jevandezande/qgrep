@@ -83,7 +83,7 @@ def plot(lines, geom_type='xyz'):
         if end - start != length:
             length = end - start
 
-        geom = str(length) + '\nStep {0}\n'.format(i)
+        geom = f'{length}\nStep {i}\n'
 
         for line in lines[start:end - int(last)]:
             geom += '\t'.join(line.split()) + '\n'
@@ -191,7 +191,7 @@ def get_freqs(lines):
     vibrations = []
     for i in range(len(modes)):
         mode = modes[i]
-        vibrations.append([str(num_atoms), 'Mode: {0}'.format(i)])
+        vibrations.append([f'{num_atoms} Mode: {i}'])
         for j in range(len(modes[i])):
             vibrations[i].append(geom[j + 2] + '\t' + '\t'.join(mode[j]))
 
@@ -228,15 +228,14 @@ def get_energies(lines, energy_type='sp'):
 
 def template(geom='', jobtype='opt', functional='B3LYP', basis='sto-3g', other=''):
     """Returns a template with the specified geometry and other variables"""
-    template_style = """molecule {{
-{0}
+    return f"""molecule {{
+{geom}
 }}
-set basis {1}
-{2}
+set basis {basis}
+{other}
 
-{3}('{4}')
+{jobtype}('{functional}')
 """
-    return template_style.format(geom, basis, other, jobtype, functional)
 
 
 def completed(lines):

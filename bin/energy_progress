@@ -28,7 +28,7 @@ if program:
         if hasattr(mod, 'get_energies'):
             energies = mod.get_energies(lines, args.energy_type)
             if len(energies) == 0:
-                print('No energy output by {}, (may still be running)'.format(program))
+                print(f'No energy output by {program}, (may still be running)')
             else:
                 energies = (np.array(energies) - min(energies))*627.15
                 plt.plot(energies, 'ro')

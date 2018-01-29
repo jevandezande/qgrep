@@ -31,6 +31,6 @@ def get_geom(lines, geom_type='xyz', units='angstrom'):
         if line == end:
             break
         idx, an, a_type, x, y, z = line.split()
-        geom.append('{:<2s} {} {} {}'.format(Atom.atomic_number(an), x, y, z))
+        geom.append(f'{Atom.atomic_number(an):<2s} {x} {y} {z}')
 
     return geom

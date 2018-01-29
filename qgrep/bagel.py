@@ -127,13 +127,12 @@ def convert_to_bagel_geom(geom_str):
     Converts to a bagel formatted geometry (json format)
     """
     bagel_geom = ''
-    geom_form1 = '{{"atom" : "{:s}",  "xyz" : [{:>15.10f},{:>15.10f},{:>15.10f}] }},\n'
-    geom_form2 = '{{"atom" : "{:s}", "xyz" : [{:>15.10f},{:>15.10f},{:>15.10f}] }},\n'
+    geom_form = '[{:>15.10f},{:>15.10f},{:>15.10f}] }},\n'
     for line in geom_str.strip().split('\n'):
         atom, *xyz = line.split()
-        form = geom_form1
-        if len(atom) == 2:
-            form = geom_form2
-        bagel_geom += form.format(atom, *map(float, xyz))
+        bagel_geom += f'{{"atom" : "{atom:s}", '
+        if len(atom) == 1:
+            bagel_geom += ' '
+        bagel_geom += geom_form.format(*map(float, xyz))
 
     return bagel_geom[:-2]

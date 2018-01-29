@@ -37,15 +37,15 @@ for inp in args.input:
     elif os.path.isfile(inp + '/output.dat'):
         inps.append(inp + '/output.dat')
     else:
-        raise ValueError('Cannot find output file {}.'.format(inp))
+        raise ValueError(f'Cannot find output file {inp}.')
 
 names = list(range(len(inps))) if args.name == '{autogenerate}' else args.name
 
 if len(inps) == 0:
-    print('You must specify output file(s) to read from')
+    print('You must specify output file(s) to read from.')
 elif args.subtract:
     if len(inps) != 2:
-        raise Exception('Can only do subtraction between two spectra, given: {}'.format(len(inps)))
+        raise Exception(f'Can only do subtraction between two spectra, given: {len(inps)}')
     s0 = gen_spectra(inps[0], names[0])
     s1 = gen_spectra(inps[1], names[1])
     (s1 - s0).plot(fwhh=args.width, units=args.units)

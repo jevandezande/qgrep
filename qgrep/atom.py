@@ -38,7 +38,7 @@ class Atom:
        self.xyz = xyz
 
     def __str__(self):
-        return ('{:<4}' + ' {:> 13.8f}' * 3).format(name, *xyz)
+        return f'{name:<4}' + (' {:> 13.8f}' * 3).format(*xyz)
 
     def check_name(self, name):
         if name not in short_to_long_names or name not in long_to_short_names:

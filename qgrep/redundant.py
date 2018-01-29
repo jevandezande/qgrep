@@ -40,7 +40,7 @@ class RedundantInternals:
                     mismatch += 1
                     continue
                 if thresh is None or abs(final2 - final1) > 10**-thresh:
-                    f = '-'.join(['{:>3} {:<2}']*int(len(atoms1))) + (' = {:> 5.' + str(thresh) + 'f}').format(final2 - final1)
+                    f = '-'.join(['{:>3} {:<2}']*int(len(atoms1))) + (' = {:> 5.' + f'{thresh}' + 'f}').format(final2 - final1)
                     print(f.format(*collapse(atoms1)))
             return mismatch
         print('Bonds')

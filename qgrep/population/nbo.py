@@ -142,7 +142,7 @@ class NPA:
         charges = []
         # Allow combination even if the dimensions don't match
         for (atom1, charges1), (atom2, charges2) in zip_longest(self, other, fillvalue=['', np.zeros(5)]):
-            atoms.append('{:>2}{:}{:<2}'.format(atom1, form, atom2))
+            atoms.append(f'{atom1:>2}{form}{atom2:<2}')
 
             if form == '-':
                 charges.append(charges1 - charges2)

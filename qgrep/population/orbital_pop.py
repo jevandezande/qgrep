@@ -16,10 +16,10 @@ class OrbitalPopulation:
             self.orb_list = orb_list
         else:
             self.orb_list = []
-    
+
     def __eq__(self, other):
         return self.orb_list == other.orb_list
-    
+
     def __iter__(self):
         for orb in self.orb_list:
             yield orb
@@ -36,13 +36,13 @@ class OrbitalPopulation:
         self.orb_list[index] = value
 
     def __str__(self):
-        return '\n\n'.join([str(orb) for orb in self.orb_list])
+        return '\n\n'.join([f'{orb}' for orb in self.orb_list])
 
     def __sub__(self, other):
         # TODO: Fix MOrbital indexing problem
         if len(self) != len(other):
             Warning('Differing number of orbitals, output will be truncated')
-    
+
         min_len = min(len(self), len(other))
         orb_list = [s - o for s, o in zip(self[:min_len], other[:min_len][:min_len])]
 
@@ -56,7 +56,7 @@ class OrbitalPopulation:
         Write to a file
         """
         if format == 'str':
-            out = str(self)
+            out = f'{self}'
         elif format == 'csv':
             out = self.csv()
         elif format == 'latex':
@@ -107,7 +107,7 @@ class OrbitalPopulation:
         """
         for i, orb in enumerate(self):
             if orb.occupation < 2:
-               return i - 1 
+               return i - 1
 
         return None
 
@@ -151,13 +151,13 @@ class OrbitalPopulation:
         for orb in self:
             orb_list.append(orb.atom_contract())
         return OrbitalPopulation(orb_list=orb_list)
-            
+
     def am_contract(self):
         orb_list = []
         for orb in self:
             orb_list.append(orb.am_contract())
         return OrbitalPopulation(orb_list=orb_list)
-            
+
 
     def crop(self, max_num=5, min_num=2, cutoff=5):
         """
@@ -183,7 +183,7 @@ class OrbitalPopulation:
         Make an OP with a restricted range of orbitals
         """
         return OrbitalPopulation(orb_list=self.orb_list[low:high])
-            
+
     @staticmethod
     def read(file_name, method='lowdin'):
         """Read the orbital populations"""
@@ -323,11 +323,11 @@ class MOrbital:
         return len(self.contributions)
 
     def __repr__(self):
-        return '<MO {}{} {: >8.5f} [{}]>'.format(self.index, self.gspin, self.energy, self.occupation)
+        return f'<MO {self.index}{self.gspin} {self.energy: >8.5f} [{self.occupation}]>'
 
     def __str__(self):
-        contrib_str = '\n'.join([str(contrib) for contrib in self.contributions])
-        return '{: >2d}{} {: >8.5f} {:>3.2f}\n{}'.format(self.index, self.gspin, self.energy, self.occupation, contrib_str)
+        contrib_str = '\n'.join([f'{contrib}' for contrib in self.contributions])
+        return f'{self.index: >2d}{self.gspin} {self.energy: >8.5f} {self.occupation:>3.2f}\n{contrib_str}'
 
     def __sub__(self, other):
         if len(self) != len(other):
@@ -358,16 +358,16 @@ class MOrbital:
 
     def csv(self):
         ao_contrib_str = '\n'.join([ao_contrib.csv() for ao_contrib in self.contributions])
-        return '{: >2d}, {}, {: > 7.5f}, {:>3.2f}\n{}'.format(self.index, self.gspin, self.energy, self.occupation, ao_contrib_str)
+        return f'{self.index: >2d}, {self.gspin}, {self.energy: > 7.5f}, {self.occupation:>3.2f}\n{ao_contrib_str}'
 
     def latex(self):
         """
         Make into a latex tabular
         """
-        aoc_latex = '{:>2d} {: > 6.4f} {:>3.2f}\n'.format(self.index, self.energy, self.occupation)
+        aoc_latex = f'{self.index:>2d} {self.energy: > 6.4f} {self.occupation:>3.2f}\n'
         aoc_latex += '\\begin{tabular}{r l r r}\n Index & Atom & AO  &  val \\\\ \\hline\n'
         for aoc in self.contributions:
-            aoc_latex += '{:>6d} & {:<4s} & {:<3s} & {:>4.1f} \\\\\n'.format(aoc.index, aoc.atom, aoc.ao, aoc.val)
+            aoc_latex += f'{aoc.index:>6d} & {aoc.atom:<4s} & {aoc.ao:<3s} & {aoc.val:>4.1f} \\\\\n'
         aoc_latex += '\\end{tabular}'
 
         return aoc_latex
@@ -428,7 +428,7 @@ class MOrbital:
                     val += ao_contrib.val
         else:
             raise SyntaxError('Atom specifier must be either an int or str.')
-        
+
         return val
 
     def orbital_type_sum(self, atom, am_type):
@@ -464,7 +464,7 @@ class AO_Contrib:
         self.spin = spin
 
     def __repr__(self):
-        return '<AOC {}{} {} {} [{}]>'.format(self.index, self.gspin, self.atom, self.ao, self.val)
+        return f'<AOC {self.index}{self.gspin} {self.atom} {self.ao} [{self.val}]>'
 
     def __eq__(self, other):
         """
@@ -480,7 +480,7 @@ class AO_Contrib:
         return False
 
     def __str__(self):
-        return '{:>2d} {:<2s} {:<4s}: {:>4.1f}'.format(self.index, self.atom, self.ao, self.val)
+        return f'{self.index:>2d} {self.atom:<2s} {self.ao:<4s}: {self.val:>4.1f}'
 
     @property
     def am(self):
@@ -493,7 +493,7 @@ class AO_Contrib:
         elif self.spin == -1:
             return 'β'
         return ''
-        
+
     def __sub__(self, other):
         index = self.index if self.index == other.index else 0
         atom  = self.atom  if self.atom  == other.atom  else ''
@@ -503,7 +503,7 @@ class AO_Contrib:
         return AO_Contrib(index, atom, ao, val)
 
     def csv(self):
-        return '{:>2d}, {:<2s}, {:<4s}, {:>4.1f}'.format(self.index, self.atom, self.ao, self.val)
+        return f'{self.index:>2d}, {self.atom:<2s}, {self.ao:<4s}, {self.val:>4.1f}'
 
 class Group_Contrib:
     """
@@ -527,7 +527,7 @@ class Group_Contrib:
         return False
 
     def __str__(self):
-        return '{:>2d} {:<10}: {:>4.1f}'.format(self.index, self.group, self.val)
+        return f'{self.index:>2d} {self.group:<10}: {self.val:>4.1f}'
 
     def __sub__(self, other):
         index = self.index if self.index == other.index else 0

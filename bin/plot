@@ -26,7 +26,7 @@ atoms = [numbers_atomic[atom] for atom in data.atomnos]
 form = '{:2}' + ' {:>15.10f}'*3 + '\n'
 plot = ''
 for i, geom in enumerate(geoms):
-    plot += '{}\nStep {:}\n'.format(len(atoms), i)
+    plot += f'{len(atoms)}\nStep {i}\n'
     plot += ''.join(form.format(atom, *xyz) for atom, xyz in zip(atoms, geom)) + '\n'
 #plot = '\n'.join(''.join(form.format(a, *q) for a, q in zip(a, g)) for g in geoms)
 

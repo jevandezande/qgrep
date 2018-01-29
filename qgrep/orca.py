@@ -72,7 +72,7 @@ def plot(lines, geom_type='xyz'):
         if end - start != length:
             length = end - start
 
-        geom = str(length) + '\nStep {0}\n'.format(i)
+        geom = f'{length}\nStep {i}\n'
         for line in lines[start:end]:
             geom += '\t'.join(line.split()) + '\n'
 
@@ -94,17 +94,16 @@ def check_convergence(lines):
 
 def template(geom='', jobtype='Opt', functional='B3LYP', basis='sto-3g'):
     """Returns a template with the specified geometry and other variables"""
-    template_style = """% pal nprocs 8 end
+    return f"""% pal nprocs 8 end
 
-! {0} {1} {2} RIJCOSX AutoAux
+! {jobtype} {functional} {basis} RIJCOSX AutoAux
 
 % SCF maxiter 300 end
 
 * xyz 0 1
-{3}
+{geom}
 *
 """
-    return template_style.format(jobtype, functional, basis, geom)
 
 
 def get_freqs(lines):
@@ -112,7 +111,7 @@ def get_freqs(lines):
     # Find the coordinates of the vibrational modes (assumes the last coordinates given)
     geom = get_geom(lines)
     num_atoms = len(geom)
-    geom = [str(num_atoms), ''] + ['\t'.join(line.split()) for line in geom]
+    geom = [f'{num_atoms}', ''] + ['\t'.join(line.split()) for line in geom]
 
     """Model of vibrational output for an N atom molecule
             0    1    ...        5
@@ -209,7 +208,7 @@ def get_freqs(lines):
         mode = modes[i + 6]
         # xyz header including the vibrational frequency
         # offset by 6 to avoid non-vibrational modes
-        vibrations.append([str(num_atoms), '{0} cm^-1'.format(vib_freqs[i + 6])])
+        vibrations.append([f'{num_atoms}\n{vib_freqs[i+6]} cm^-1'])
         for j in range(len(modes[i])):
             # Geometry goes first, then x, y, and z displacements for modes
             vibrations[i].append(geom[j + 2] + '\t' + '\t'.join(mode[j]))
@@ -418,8 +417,8 @@ def get_molecule(lines):
     for line in lines[geom_start:]:
         if end == line:
             break
-        atom, x, y, z = line.split()[:4]
-        mol.append([atom, [float(x), float(y), float(z)]])
+        atom, *xyz = line.split()[:4]
+        mol.append(atom, list(map(float, xyz)))
 
     return mol
 

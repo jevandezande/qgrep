@@ -91,7 +91,7 @@ energy_conversions = {
 
 def convert_energy(data, in_type='hartree', out_type='kcal/mol'):
     if in_type not in energy_conversions or out_type not in energy_conversions[in_type]:
-        raise SyntaxError("Unsupported energy type, please use {}".format(list(energy_conversions.keys())))
+        raise SyntaxError(f"Unsupported energy type, please use {energy_conversions.keys()}")
     conversion = energy_conversions[in_type][out_type]
 
     if isinstance(data, (int, float)):

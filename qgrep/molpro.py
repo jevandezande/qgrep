@@ -56,5 +56,5 @@ def check_convergence(lines):
         for line in lines[:start]:
             if line[:12] == ' Convergence':
                 n, grad, hessian = line.split()[-3:]
-                convs.append('{}  {}'.format(n, grad))
+                convs.append(f'{n}  {grad}')
     return convs

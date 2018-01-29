@@ -35,8 +35,8 @@ def make_orbs(file_name, options):
     # Run
     jmol_jar = '/home/jevandezande/bin/Jmol/build/Jmol.jar'
     # -g controls window size, jmol adds 8x1 to the window (no idea why)
-    jmol = "java -jar {} {} -iLs orbs.jmol -g 492x499"
-    subprocess.call(jmol.format(jmol_jar, file_name), shell=True)
+    jmol = f"java -jar {jmol_jar} {file_name} -iLs orbs.jmol -g 492x499"
+    subprocess.call(jmol, shell=True)
 
 
 def ray_trace(file_name):
@@ -44,7 +44,7 @@ def ray_trace(file_name):
     Run povray
     :param file_name: name of the povary file (.pov or .pov.ini)
     """
-    subprocess.call("/usr/local/bin/povray {}".format(file_name), shell=True)
+    subprocess.call(f"/usr/local/bin/povray {file_name}", shell=True)
 
 
 def draw_folder(options, folder, files='*.molden'):

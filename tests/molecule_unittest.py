@@ -66,7 +66,6 @@ H       0.00000000    1.00000000    1.00000000"""
         self.assertTrue(Molecule.check_geom([]))
         self.assertRaises(ValueError, Molecule.check_geom, [[[1, 2, 3]]])
         self.assertRaises(TypeError, Molecule.check_geom, ['H'], [[[0, 1, 2, 3]]])
-        self.assertRaises(SyntaxError, Molecule.check_geom, [['H', [1, 'a', 3]]])
 
     def test_read_write_geometry(self):
         """Testing read and write"""

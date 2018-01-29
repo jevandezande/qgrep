@@ -61,14 +61,14 @@ def plot(lines, geom_type='xyz', units='angstrom'):
             geom_start = i+3
             for j, line2 in enumerate(lines[geom_start:], start=geom_start):
                 if line2 == end:
-                    geoms.append('{}\nStep {}\n'.format(j - geom_start, step) + geom)
+                    geoms.append(f'{j - geom_start}\nStep {step}\n' + geom)
                     break
                 atom, an, x, y, z = line2.split()
                 if units == 'angstrom':
                     x, y, z = float(x)*BOHR_TO_ANGSTROM, float(y)*BOHR_TO_ANGSTROM, float(z)*BOHR_TO_ANGSTROM
-                    geom += '{:<2s} {:> 15.8f} {:> 15.8f} {:> 15.8f}\n'.format(atom, x, y, z)
+                    geom += f'{atom:<2s} {x:> 15.8f} {y:> 15.8f} {z:> 15.8f}\n'
                 else:
-                    geom += '{:<2s} {:>11} {:>11s} {:>11s}\n'.format(atom, x, y, z)
+                    geom += f'{atom:<2s} {x:>11} {y:>11s} {z:>11s}\n'
     return geoms
 
 

@@ -73,7 +73,7 @@ class Queues:
             # Print small queues near the end
             if queue.size <= SMALL_QUEUE:
                 continue
-            out += BAR + ('{:^' + str(COLUMN_WIDTH-1) + '}').format(name_form.format(name, queue.used, queue.avail, queue.queued))
+            out += BAR + ('{:^' + f'{COLUMN_WIDTH-1}' + '}').format(name_form.format(name, queue.used, queue.avail, queue.queued))
         out += BAR + '\n' + mid_line
         header = BAR + 'ID'.center(JOB_ID_LENGTH) + ' USER  ' + 'Job Name'.center(NAME_LENGTH) + ' ST'
         out += header*large_num + BAR + '\n' + mid_line
@@ -97,13 +97,13 @@ class Queues:
                 # Add how many more jobs are running in each queue
                 for queue in job_list:
                     if len(queue) > numjobs:
-                        out += BAR + ('{:^' + str(COLUMN_WIDTH + 7) + '}').format('\033[1m{: >+5} jobs\033[0m'.format(len(queue) - numjobs))
+                        out += BAR + ('{:^' + f'{COLUMN_WIDTH + 7}' + '}').format(f'\033[1m{len(queue) - numjobs: >+5} jobs\033[0m')
                     else:
                         out += blank
                 out += BAR + '\n'
                 break
             for job in job_row:
-                out += BAR + str(job) if job else blank
+                out += BAR + f'{job}' if job else blank
             out += BAR + '\n'
         out += mid_line if small_queues else bot_line
 
@@ -394,7 +394,7 @@ class Queue:
 
         out = '\n'.join(list(map(str, jobs.values()))[:numlines])
         if numlines < len(self):
-            out += '\n+{} jobs'.format(len(self) - numlines)
+            out += f'\n+{len(self) - numlines} jobs'
 
         return out
 
@@ -405,14 +405,14 @@ class Queue:
         else:
             jobs = self.jobs
 
-        used_avail_queued = '{} ({:2d}/{:2d}/{:2d})'.format(self.name, self.used, self.avail, self.queued)
-        out = BAR + ('{:^' + str(COLUMN_WIDTH-1) + '}').format(used_avail_queued) + BAR
+        used_avail_queued = f'{self.name} ({self.used:2d}/{self.avail:2d}/{self.queued:2d})'
+        out = BAR + ('{:^' + f'{COLUMN_WIDTH-1}' + '}').format(used_avail_queued) + BAR
         for i, job in enumerate(jobs.values()):
             if not (max_num is None) and i >= max_num:
                 break
             if not (i + 1) % width:
-                out += '\n' + BAR
-            out += str(job) + BAR
+                out += f'\n {BAR}'
+            out += f'{job} {BAR}'
 
         # Add blank spots to fill out to end
         if (len(jobs) + 1) % width:
@@ -491,16 +491,16 @@ class Job:
 
     def __str__(self):
         """Print a short description of the job, with color"""
-        job_form = '{:>' + str(JOB_ID_LENGTH) + 'd} {:<5s} {:<' + str(NAME_LENGTH) + 's} {}{:2s}' + colors.normal
+        job_form = '{:>' + f'{JOB_ID_LENGTH}' + 'd} {:<5s} {:<' + f'{NAME_LENGTH}' + 's} {}{:2s}' + colors.normal
 
         # Color queue status by type, use red if unrecognized
         job_colors = defaultdict(lambda: colors.red, {'r': colors.green, 'qw': colors.blue})
 
         # Bold the person's jobs
         if self.owner == getpass.getuser():
-            owner = colors.bold + '{:5.5s}'.format(self.owner) + colors.normal
+            owner = colors.bold + f'{self.owner:5.5s}' + colors.normal
         else:
-            owner = '{:5.5s}'.format(self.owner)
+            owner = f'{self.owner:5.5s}'
 
         return job_form.format(int(self.id), owner, self.name[:NAME_LENGTH],
                             job_colors[self.state], self.state[:2])# + str(self.nodes) + ', ' + str(self.nodect)

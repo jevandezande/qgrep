@@ -32,10 +32,10 @@ for i, ring in enumerate(mol.sssr):
     normal = np.array([n1.GetX(), n1.GetY(), n1.GetZ()])
     normal /= np.linalg.norm(normal)
     print('-'*51)
-    print('Ring {}'.format(i))
-    print('Atoms {}'.format(atoms))
-    print("C:  {:>15.10f} {:>15.10f} {:>15.10f}".format(*center))
-    print("N1: {:>15.10f} {:>15.10f} {:>15.10f}".format(*normal))
+    print(f'Ring {i}')
+    print(f'Atoms {atoms}')
+    print('C:  {:>15.10f} {:>15.10f} {:>15.10f}'.format(*center))
+    print('N1: {:>15.10f} {:>15.10f} {:>15.10f}'.format(*normal))
     ghost_atoms += center, center + normal
 
 # Print ghost atoms
@@ -44,7 +44,7 @@ if args.format == 'orca':
     newgto = 'newgto S 1 1 100000 1 end newauxJKgto S 1 1 200000 1 end'
     print('-'*51)
     print('Ghost atoms for NICS')
-    for atom in ghost_atoms:
-        print('H:  {:>15.10f} {:>15.10f} {:>15.10f} {}'.format(*atom, newgto))
+    for coords in ghost_atoms:
+        print('H:  {:>15.10f} {:>15.10f} {:>15.10f} {}'.format(*coords, newgto))
 else:
     print('{} is not currently supported.'.format(args.format))

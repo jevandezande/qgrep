@@ -90,7 +90,7 @@ class Molecule:
         Raises a syntax error if it is not
         """
         if not isinstance(atom, str):
-            raise SyntaxError('Atom name must be a string: {}'.format(atom))
+            raise SyntaxError(f'Atom name must be a string: {atom}')
         if len(xyz) != 3:
             raise SyntaxError('Only 3 coordinates supported.')
         return True
@@ -136,10 +136,10 @@ class Molecule:
         out = ''
         if style == 'xyz':
             if label:
-                out += '{}\n\n'.format(len(self))
-            out += str(self)
+                out += f'{len(self)}\n\n'
+            out += f'{self}'
         elif style == 'latex':
-            header = '{}\\\\\n'.format(len(self))
+            header = f'{len(self)}\\\\\n'
             line_form = '{:<2}' + ' {:> 13.6f}' * 3
             atoms = [line_form.format(atom, *xyz) for atom, xyz in self]
             atoms = '\n'.join(atoms)

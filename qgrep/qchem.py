@@ -54,7 +54,7 @@ def plot(lines, geom_type='xyz'):
         if not end - start == length:
             length = end - start
 
-        geom = str(length) + '\nStep {0}\n'.format(i)
+        geom = f'{length}\nStep {i}\n'
         for line in lines[start:end]:
             geom += '\t'.join(line.split()[1:]) + '\n'
 
@@ -76,18 +76,16 @@ def check_convergence(lines):
 
 def template(geom='', jobtype='Opt', functional='B3LYP', basis='sto-3g'):
     """Returns a template with the specified geometry and other variables"""
-    template_style = """$molecule
-{0}
+    return f"""$molecule
+{geom}
 $end
 
 $rem
-    jobtype            {1}
-    exchange        {2}
-    basis            {3}
+    jobtype     {job_type}
+    exchange    {functional}
+    basis       {basis}
 $end
 """
-
-    return template_style.format(geom, jobtype, functional, basis)
 
 
 def generate_input(geom='', options=None):
@@ -99,7 +97,7 @@ def generate_input(geom='', options=None):
         options = {}
     # Convert keys and values to lowercase strings for ease of use
     if options:
-        options = {str(k).lower(): str(v).lower() for k, v in options.items()}
+        options = {f'{k}'.lower(): f'{v}'.lower() for k, v in options.items()}
     else:
         options = {}
 
@@ -134,7 +132,7 @@ def generate_input(geom='', options=None):
             else:
                 check.append('Missing geometry file')
     # Prettify the geometry by adding tabs
-    input_str = "$molecule\n{}\n$end\n".format(geom)
+    input_str = f"$molecule\n{geom}\n$end\n"
 
     basis = ''
     if 'basis' in options:
@@ -159,8 +157,7 @@ def generate_input(geom='', options=None):
         options['max_scf_cycles'] = '300'
 
     # Write rem section using keys and values from dictionary
-    kv_form = '\t{:<19s} {}\n'
-    rem = ''.join([kv_form.format(k, v) for k, v in sorted(options.items())])
+    rem = ''.join([f'\t{k:<19s} {v}\n' for k, v in sorted(options.items())])
     input_str += '\n$rem\n' + rem + '\n$end\n'
 
     if 'basis' in options:
@@ -182,8 +179,7 @@ def generate_input(geom='', options=None):
         options['jobtype'] = job2
 
         # Write rem
-        kv_form = '\t{:<19s} {}\n'
-        rem = ''.join([kv_form.format(k, v) for k, v in sorted(options.items())])
+        rem = ''.join([f'\t{k:<19s} {v}\n' for k, v in sorted(options.items())])
         input_str += '\n$rem\n' + rem + '\n$end\n'
 
     print(input_str)

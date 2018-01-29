@@ -55,6 +55,6 @@ else:
     for inp in inps:
         energy = grab_energies(inp, args.units)[-1]
         all_energies.append(energy)
-        print(('{:' + str(length) + 's}: {: >.8f}').format(inp, energy))
+        print(('{:' + f'{length}' + 's}: {: >.8f}').format(inp, energy))
     if args.list:
         print(all_energies)

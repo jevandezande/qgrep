@@ -18,10 +18,10 @@ class Step:
             # integers
             if key in ['scf_steps']:
                 pass
-            out += '{:> 9.2e}'.format(value)
+            out += f'{value:> 9.2e}'
             out += '*' if abs(value) < criterion else ' '
 
-        out += '|{:> 7d}'.format(value)
+        out += f'|{value:> 7d}'
         return out
 
 
@@ -43,15 +43,15 @@ class Convergence:
         line = '-'*66 + '\n'
         out = header + line
         for i, step in enumerate(self.steps):
-            out += '{:>3}: '.format(i)
+            out += f'{i:>3}: '
             for (key, value), criterion in zip(step.params.items(), step.criteria):
                 # integers
                 if key in ['scf_steps']:
                     pass
                 else:
                     star = '*' if abs(value) < criterion and not (i == 0 and key == 'delta_e') else ' '
-                    out += '{:> 9.2e}{}'.format(value, star)
-            out += '|{:> 7d}\n'.format(step.scf_steps)
+                    out += f'{value:> 9.2e}{star}'
+            out += f'|{step.scf_steps:> 7d}\n'
 
         return out + line + '    ' + (' {:> 9.2e}'*len(self.criteria)).format(*self.criteria)
 

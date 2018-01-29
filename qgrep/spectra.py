@@ -57,7 +57,7 @@ class Spectra:
         self.options.update(options)
 
     def __repr__(self):
-        return '<Spectra {}>'.format(self.name)
+        return f'<Spectra {self.name}>'
 
     def __sub__(self, other):
         return SpectralDifference(self, other)
@@ -147,7 +147,7 @@ class CombinedSpectra:
         self.spectra1, self.spectra2 = spectra1, spectra2
 
     def __repr__(self):
-        return '<CombinedSpectra {} : {}>'.format(self.spectra1.name, self.spectra2.name)
+        return f'<CombinedSpectra {self.spectra1.name} : {self.spectra2.name}>'
 
     def plot(self, npoints=1001, fwhh=1, units='eV'):
         """
@@ -240,12 +240,12 @@ class CombinedSpectra:
 
 class SpectralDifference(CombinedSpectra):
     def __repr__(self):
-        return '<SpectralDifference {} - {}>'.format(self.spectra1.name, self.spectra2.name)
+        return f'<SpectralDifference {self.spectra1.name} - {self.spectra2.name}>'
 
 
 class SpectralSum(CombinedSpectra):
     def __repr__(self):
-        return '<SpectralSum {} + {}>'.format(self.spectra1.name, self.spectra2.name)
+        return f'<SpectralSum {self.spectra1.name} + {self.spectra2.name}>'
 
 
 def gen_spectra(file_name, name, thresh=9):

@@ -70,7 +70,7 @@ def plot(lines, geom_type='xyz'):
             while lines[i] != end:
                 i += 1
             end_num = i
-            geom = str(end_num - start_num) + '\nStep {0}\n'.format(step)
+            geom = f'{end_num - start_num}\nStep {step}\n'
             for line in lines[start_num:end_num]:
                 atom, num, x, y, z = line.split()
                 geom += '\t'.join([atom, x, y, z]) + '\n'
@@ -175,10 +175,8 @@ class Gamessifier():
         options_str = ''
         for block, values in self.options_dict.items():
             block_options = '\n'.join(
-                ['    {}={}'.format(key, value) for key, value in
-                 values.items()])
-            options_str += ' ${}\n{}\n $END\n\n'.format(block.upper(),
-                                                        block_options)
+                [f'    {key}={value}' for key, value in values.items()])
+            options_str += f' ${block.upper()}\n{block_options}\n $END\n\n'
         return options_str
 
     def read_options(self, options='options.dat'):
@@ -201,8 +199,7 @@ class Gamessifier():
         elif isinstance(options, dict):
             self.options_dict = options
         else:
-            raise SyntaxError('Invalid options format, must be either a string'
-                              'or a dictionary.')
+            raise SyntaxError('Invalid options format, must be either a string or a dictionary.')
 
     def read_data(self, dat_file='input.dat'):
         """Read vec and hess from .dat file that gamess makes"""
@@ -270,7 +267,7 @@ class Gamessifier():
 
     def write_input(self, input_file='input.inp', comment=''):
         """Makes an input file with the given geometry and basis"""
-        data = ' $DATA\n{}\nC1\n'.format(comment)
+        data = f' $DATA\n{comment}\nC1\n'
         ecp = ' $ECP\n'
         for name, (x, y, z) in self.mol:
             if len(name) > 1:
@@ -278,17 +275,15 @@ class Gamessifier():
             an = Atom.atomic_number(name)
             atom_basis = self.basis_set[name].print(style='gamess',
                                                     print_name=False)
-            data += '{} {}     {}  {}  {}\n{}\n'.format(name, an, x, y, z,
-                                                        atom_basis)
+            data += f'{name} {an}     {x}  {y}  {z}\n{atom_basis}\n'
             if name in self.ecp:
                 ecp += self.ecp[name].strip() + '\n'
             else:
-                ecp += '{}-ECP NONE\n'.format(name)
+                ecp += f'{name}-ECP NONE\n'
         data += ' $END\n'
         ecp += ' $END\n'
 
         self.update_options()
 
-        input_data = '{}\n{}\n{}\n{}\n{}'.format(self.write_options_str(), data,
-                                                 ecp, self.vec, self.hess)
+        input_data = f'{self.write_options_str()}\n{data}\n{ecp}\n{self.vec}\n{self.hess}'
         open(input_file, 'w').write(input_data)

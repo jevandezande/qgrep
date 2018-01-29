@@ -300,18 +300,18 @@ class CoordinateConverter:
     def output_cartesian(self, output_file='geom.xyz'):
         """Output the Cartesian coordinates of the file"""
         with open(output_file, 'w') as f:
-            f.write(str(len(self.cartesian)))
+            f.write(f'{len(self.cartesian)}')
             f.write('\n\n')
             for line in self.cartesian:
                 name, position, mass = line
                 f.write(name + '\t')
-                f.write('\t'.join(str(x) for x in position))
+                f.write('\t'.join(f'{x}' for x in position))
                 f.write('\n')
 
     def print_cartesian(self):
         """Print the Cartesian coordinates"""
         for line in self.cartesian:
-            print(line[0] + '\t' + '\t'.join(str(x) for x in line[1]))
+            print(line[0] + '\t' + '\t'.join(f'{x}' for x in line[1]))
 
     def output_zmatrix(self, output_file='geom.zmat'):
         """Output the zmatrix to the file"""
@@ -322,13 +322,13 @@ class CoordinateConverter:
                 f.write(name)
                 for i in position:
                     for j in range(0, len(i), 2):
-                        f.write('\t' + str(i[j] + 1) + '\t' + str(i[j + 1]))
+                        f.write(f'{i[j] + 1}\t{i[j + 1]}')
                 f.write('\n')
 
     def print_zmatrix(self):
         """Print the zmatrix"""
         for line in self.zmatrix:
-            print(line[0] + '\t' + '\t'.join(str(x) for x in line[1]))
+            print(f'{line[0]}\t' + '\t'.join(f'{x}' for x in line[1]))
 
     def convert_zmatrix(self, input_file='geom.zmat', output_file='geom.xyz'):
         """

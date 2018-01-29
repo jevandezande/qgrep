@@ -22,7 +22,7 @@ args = parser.parse_args()
 
 lines, program = read(args.input)
 
-xyz_form = '{:<2} {: >10.6f} {: >10.6f} {: >10.6f}\n'
+
 if program:
     try:
         mod = importlib.import_module('qgrep.' + program)

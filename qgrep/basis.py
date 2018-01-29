@@ -14,15 +14,14 @@ class BasisFunction:
         self.num_coeffs = 1 if len(coeffs.shape) == 1 else coeffs.shape[0]
         self.func_type = func_type.upper()
         if not self.func_type in 'SPDFGHIKLMN':
-            raise SyntaxError("Invalid angular momentum.")
+            raise SyntaxError('Invalid angular momentum.')
         if self.func_type == 'SP' and coeffs.shape[0] != 2:
             raise SyntaxError('Expected exactly two sets of coefficients for combined BasisFunction.')
 
         if len(exps) == 0 or len(coeffs) == 0:
-            raise SyntaxError('Cannot create an empty BasisFunction')
+            raise SyntaxError('Cannot create an empty BasisFunction.')
         elif len(exps) != coeffs.shape[-1]:
-            raise SyntaxError(('Need coefficients and exponents of the same'
-                              'length, got: \n{}\n{}').format(exps, coeffs))
+            raise SyntaxError(f'Need coefficients and exponents of the same length, got: \n{exp}\n{coeffs}')
 
         BasisFunction.check_exps(exps)
         BasisFunction.check_coeffs(coeffs)
@@ -39,15 +38,15 @@ class BasisFunction:
 
     def __setitem__(self, item, value):
         if len(value) != len(self.values[0]):
-            raise ValueError("Incorrect size, expected {} elements.".format(len(self.values[0])))
+            raise ValueError(f'Incorrect size, expected {len(self.values[0])} elements.')
         if not value[0] > 0:
-            raise ValueError("All exponents must be greater than 0")
+            raise ValueError('All exponents must be greater than 0.')
         self.values[item] = value
 
     def __repr__(self):
         """Make a nice representation of the BasisFunction"""
-        mult_str = '' if self.num_coeffs == 1 else 'x' + str(self.coeffs.shape[1])
-        return "<BasisFunction {:s} {:d}{}>".format(self.func_type, len(self.exps), mult_str)
+        mult_str = '' if self.num_coeffs == 1 else 'x' + f'{self.coeffs.shape[1]}'
+        return f"<BasisFunction {self.func_type:s} {len(self.exps):d}{mult_str}>"
 
     def __str__(self):
         """Return a string of the BasisFunction"""
@@ -71,7 +70,7 @@ class BasisFunction:
         """Check to make sure that the exponents are valid"""
         for exp in exps:
             if not exp > 0:
-                raise ValueError("Exponents must be greater than 0.")
+                raise ValueError('Exponents must be greater than 0.')
 
     @staticmethod
     def check_coeffs(coeffs):
@@ -97,7 +96,7 @@ class BasisFunction:
     def coeffs(self, cs):
         BasisFunction.check_coeffs(cs)
         if self.coeffs.shape != cs.shape:
-            raise SyntaxError('Incorrect number of coeffs: expected {}, got {}'.format(self.coeffs.shape, cs.shape))
+            raise SyntaxError(f'Incorrect number of coeffs: expected {self.coeffs.shape}, got {cs.shape}.')
         self.values[:, 1:] = cs
 
     @property
@@ -128,11 +127,11 @@ class BasisFunction:
         out = ''
         form = '{:>17.7f}' + ' {:> 11.7f}' * num_coeffs
         if style == 'gaussian94':
-            out += '{:<2}    {}\n'.format(self.func_type, len(self))
+            out += f'{self.func_type:<2}    {len(self)}\n'
             for group in self.values:
                 out += form.format(*group) + '\n'
         elif style == 'gamess':
-            out += '{:<2}    {}\n'.format(self.func_type, len(self))
+            out += f'{self.func_type:<2}    {len(self)}\n'
             form = ' {:>2} ' + form
             for i, group in enumerate(self.values, start=1):
                 out += form.format(i, *group) + '\n'
@@ -146,13 +145,13 @@ class BasisFunction:
             for i, exp in enumerate(self.exps):
                 if not i % 6:
                     out += '\n'
-                out += ' {:>12.7g}'.format(exp)
+                out += f' {exp:>12.7g}'
             out += '\n\n'
             # Print coefficients
             for c_line in self.coeffs:
                 out += (' {:>12.7g}'*self.num_coeffs).format(*c_line) + '\n'
         else:
-            raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
+            raise SyntaxError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
         return out
 
 
@@ -165,7 +164,7 @@ class Basis:
         self.atom = atom
         if not isinstance(basis_functions, list) or not all(
                 map(lambda x: isinstance(x, BasisFunction), basis_functions)):
-            raise SyntaxError("Expected a list of BasisFunctions")
+            raise SyntaxError('Expected a list of BasisFunctions.')
         self.basis_functions = basis_functions
         self.name = name
 
@@ -180,9 +179,7 @@ class Basis:
     def __setitem__(self, i, value):
         """Sets the ith BasisFunction"""
         if not isinstance(value, BasisFunction):
-            raise SyntaxError(
-                "Expecting a BasisFunction object, instead got: {}".format(
-                    type(value)))
+            raise SyntaxError(f'Expecting a BasisFunction object, instead got: {type(value)}')
         self.basis_functions[i] = value
 
     def __delitem__(self, key):
@@ -203,7 +200,7 @@ class Basis:
             yield c
 
     def __repr__(self):
-        return "<Basis {:s} {:d}>".format(self.atom, len(self.basis_functions))
+        return f"<Basis {self.atom:s} {len(self.basis_functions):d}>"
 
     def __str__(self):
         return self.print()
@@ -226,24 +223,24 @@ class Basis:
         """Print all BasisFunctions in the specified format"""
         out = ''
         if style not in SUPPORTED:
-            raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
+            raise SyntaxError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
         if print_name:
             if style == 'gaussian94':
-                out += '{}    0\n'.format(self.atom)
+                out += f'{self.atom}    0\n'
             elif style == 'gamess':
-                out += '{}\n'.format(self.atom, len(self))
+                out += f'{self.atom}\n'
             elif style == 'bagel':
-                out += '"{:s}" : ['.format(self.atom)
+                out += f'"{self.atom:s}" : ['
             elif style == 'cfour':
-                out += '{:s}:{:s}\nComment Line\n\n'.format(self.atom, self.name)
+                out += f'{self.atom:s}:{self.name:s}\nComment Line\n\n'
             elif style == 'molpro':
-                out += '! {:s}\n! {:s}\n'.format(self.atom, self.atom)
+                out += f'! {self.atom:s}\n! {self.atom:s}\n'
             else:
-                raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
+                raise SyntaxError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
         if style == 'bagel':
             out += ',\n'.join([c.print(style, self.atom) for c in self]) + ']'
         elif style == 'cfour':
-            out += ' {:>2d}\n'.format(len(self))
+            out += f' {len(self):>2d}\n'
             # Find values for header
             vals = []
             for bf in self:
@@ -265,16 +262,16 @@ class Basis:
             for bf in self:
                 if bf.am not in am_dict:
                     start_count = 1
-                    ex = '{}, {}'.format(AM[bf.am].lower(), self.atom)
+                    ex = f'{AM[bf.am].lower()}, {self.atom}'
                     am_dict[bf.am] = [ex,'']
                 #update value of end_count
                 end_count = start_count + len(bf.exps) - 1
                 # Add exps to ex string
-                am_dict[bf.am][0] += ', ' + ', '.join('{:.7f}'.format(exp) for exp in bf.exps)
-                # Add coeffs to co string   
-                co = 'c, {}.{}'.format(start_count, end_count)
+                am_dict[bf.am][0] += ', ' + ', '.join(f'{exp:.7f}' for exp in bf.exps)
+                # Add coeffs to co string
+                co = f'c, {start_count}.{end_count}'
                 for coef in bf.coeffs:
-                    co += ', {:9.7f}'.format(float(coef))
+                    co += f', {float(coef):9.7f}'
                 co += '\n'
                 am_dict[bf.am][1] += co
                 # start_count for next basis function
@@ -282,7 +279,7 @@ class Basis:
 
             for am, (exp, co) in sorted(am_dict.items(), key=lambda x:x[0]):
                 out += exp + '\n' + co
-                    
+
         else:
             out += ''.join([c.print(style, self.atom) for c in self])
         return out
@@ -301,7 +298,7 @@ class BasisSet:
             BasisSet.check_basis_set(atoms)
             self.atoms = atoms
         else:
-            raise SyntaxError("Invalid input basis set, must use an OrderedDict")
+            raise SyntaxError('Invalid input basis set, must use an OrderedDict.')
 
     def __getitem__(self, item):
         """Return the basis for the specified atom"""
@@ -310,8 +307,7 @@ class BasisSet:
     def __setitem__(self, item, value):
         """Return the basis for the specified atom"""
         if not isinstance(value, Basis):
-            raise SyntaxError(
-                "Expecting a Basis object, got a: {}".format(Basis))
+            raise SyntaxError(f'Expecting a Basis object, got a: {value}')
         self.atoms[item] = value
 
     def __delitem__(self, key):
@@ -331,7 +327,7 @@ class BasisSet:
         return item in self.atoms
 
     def __repr__(self):
-        return '<BasisSet {:s}>'.format(self.name)
+        return f'<BasisSet {self.name:s}>'
 
     def __str__(self):
         """Print the basis in gaussian94 style"""
@@ -350,7 +346,7 @@ class BasisSet:
                 if not isinstance(basis, Basis):
                     raise SyntaxError('Expecting a dictionary of atom:Basis.')
         else:
-            raise SyntaxError('Expecting a dictionary (of form atom:Basis).')
+            raise SyntaxError('Expecting a dictionary of atom:Basis.')
 
     def change_basis_set(self, basis_set):
         """Change to a new basis"""
@@ -405,10 +401,10 @@ class BasisSet:
                                 good_exp_num = False
 
                         if not good_exp_num:
-                            print('Incorrectly formatted GENBAS exponent section: proceed with caution (section starting on line {})'.format(start))
+                            print(f'Incorrectly formatted GENBAS exponent section: proceed with caution (section starting on line {start})')
 
                         if len(exps) != exp_length:
-                            raise Exception('The number of exponents in the header ({}) does not match the number of exponents read ({}).'.format(exp_length, len(exps)))
+                            raise Exception(f'The number of exponents in the header ({exp_length}) does not match the number of exponents read ({len(exps)}).')
 
                         con_start = exp_end + 2
                         con_end = con_start + exp_length
@@ -425,12 +421,12 @@ class BasisSet:
                                 coeffs = coeffs[:con_length]
                             else:
                                 if debug:
-                                    print('Line {} -- {}:{} section -- {},{},{}'.format(start, atom, basis_name, am, con_length, exp_length))
-                                raise Exception('The number of contractions in the header ({}) does not match the number of contractions read ({}).'.format(con_length, len(coeffs)))
+                                    print(f'Line {start} -- {atom}:{basis_name} section -- {am}, {con_length}, {exp_length}')
+                                raise Exception(f'The number of contractions in the header ({con_length}) does not match the number of contractions read ({len(coeffs)}).')
                         if len(coeffs.T) != exp_length:
                             if debug:
-                                print('Line {} -- {}:{} section -- {},{},{}'.format(start, atom, basis_name, am, con_length, exp_length))
-                            raise Exception('The number of coefficients in the header ({}) does not match the number of exponents read ({}).'.format(exp_length, len(coeffs.T)))
+                                print(f'Line {start} -- {atom}:{basis_name} section -- {am}, {con_length}, {exp_length}')
+                            raise Exception(f'The number of coefficients in the header ({exp_length}) does not match the number of exponents read ({len(coeffs.T)}).')
                         if con_length > 1:
                             bfs += [BasisFunction(AM[am], exps, c) for c in coeffs]
                         else:
@@ -438,7 +434,7 @@ class BasisSet:
                         j = con_end + 1
                 except:
                     if debug:
-                        print('Failed to parse section starting on line {}.'.format(start))
+                        print(f'Failed to parse section starting on line {start}.')
                     raise
                 bs.atoms[atom] = Basis(atom, bfs, basis_name)
 
@@ -489,7 +485,7 @@ class BasisSet:
                     c_exps = exps[c_start - 1:c_end]
                     bfs.append(BasisFunction(am, c_exps, coeffs))
                 else:
-                    raise SyntaxError('Not sure what to with line:\n{}'.format(line))
+                    raise SyntaxError(f'Not sure what to with line:\n{line}')
                 bs[atom] = Basis(atom, bfs)
         else:
             if style == 'gaussian94':
@@ -498,7 +494,7 @@ class BasisSet:
                 num_skip = 1
                 atom_separator = '\n\n'
             else:
-                raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
+                raise SyntaxError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
             with open(in_file) as f:
                 basis_set_str = f.read().strip()
             # Split into atoms
@@ -525,7 +521,7 @@ class BasisSet:
                     bs.atoms[atom] = Basis(atom, con_list)
                 except:
                     if debug:
-                        print('Failed to parse section starting with\n{}'.format('\n'.join(chunk.splitlines()[:5])))
+                        print('Failed to parse section starting with\n' + '\n'.join(chunk.splitlines()[:5]))
                     raise
 
         return bs
@@ -565,7 +561,7 @@ class BasisSet:
                 [basis.print(style) for basis in self])
             return out + separator
         else:
-            raise SyntaxError('Only [{}] currently supported'.format(', '.join(SUPPORTED)))
+            raise SyntaxError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
 
     def values(self):
         """Returns a list of list of np.array(exp, coeff)"""
