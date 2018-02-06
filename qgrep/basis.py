@@ -1,5 +1,6 @@
 import json
 import numpy as np
+from qgrep.atom import ensure_short_atom_name
 
 from collections import Iterable, OrderedDict
 
@@ -161,7 +162,7 @@ class Basis:
     def __init__(self, atom='', basis_functions=None, name=''):
         if basis_functions is None:
             basis_functions = []
-        self.atom = atom
+        self.atom = ensure_short_atom_name(atom)
         if not isinstance(basis_functions, list) or not all(
                 map(lambda x: isinstance(x, BasisFunction), basis_functions)):
             raise SyntaxError('Expected a list of BasisFunctions.')
@@ -518,7 +519,7 @@ class BasisSet:
                         coeffs = np.array(coeffs[0])
                         con_list.append(BasisFunction(am, exps, coeffs))
                         i += num + 1
-                    bs.atoms[atom] = Basis(atom, con_list)
+                    bs.atoms[atom] = Basis(atom, con_list, name=basis_name)
                 except:
                     if debug:
                         print('Failed to parse section starting with\n' + '\n'.join(chunk.splitlines()[:5]))

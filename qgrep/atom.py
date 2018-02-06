@@ -9,6 +9,26 @@ short_to_long_names = {
 }
 long_to_short_names = dict((reversed(item) for item in short_to_long_names.items()))
 
+
+def ensure_short_atom_name(atom):
+    atom = atom.title()
+    if atom in long_to_short_names:
+        atom = long_to_short_names[atom]
+    elif atom not in short_to_long_names:
+        raise ValueError('Invalid atom name: {atom}')
+    return atom
+
+
+def ensure_long_atom_name(atom):
+    atom = atom.title()
+    if atom in short_to_long_names:
+        atom = short_to_long_names[atom]
+    elif atom not in long_to_short_names:
+        raise ValueError('Invalid atom name: {atom}')
+    return atom
+
+
+
 # noinspection PyPep8
 atomic_numbers = {
     'H': 1, 'He': 2, 'Li': 3, 'Be': 4, 'B': 5, 'C': 6, 'N': 7, 'O': 8, 'F': 9, 'Ne': 10, 'Na': 11, 'Mg': 12, 'Al': 13, 'Si': 14, 'P': 15, 'S': 16, 'Cl': 17, 'Ar': 18,
@@ -53,12 +73,13 @@ class Atom:
 
     @staticmethod
     def convert_name(name):
+        name = name.title()
         if name in short_to_long_names:
             return short_to_long_names[name]
         elif name in long_to_short_names:
             return long_to_short_names[name]
         else:
-            raise SyntaxError('Invalid atom name')
+            raise SyntaxError(f'Invalid atom: {name}')
 
     @staticmethod
     def atomic_number(name):
