@@ -237,7 +237,7 @@ class Queues:
                 # Running jobs are arranged by node/queue
                 if child.tag == 'queue_info':
                     for node in child:
-                        #<Queue-List>
+                        # <Queue-List>
                         #   <name>gen3.q@v10.cl.ccqc.uga.edu</name>
                         name = node.find('name').text.split('@')[0]
                         # If we don't want to display the queue
@@ -283,7 +283,6 @@ class Queues:
                         raise
         else:
             raise Exception('Could not read XML, only PBS and SGE currently supported.')
-
 
     def find_sizes(self, omit=None):
         """
@@ -475,14 +474,14 @@ class Job:
     """
     def __init__(self, job_xml, grid_engine):
         self.id, self.name, self.state, self.owner, self.queue, self.workdir = Job.read_job_xml(job_xml, grid_engine)
-        #self.id, self.name, self.state, self.owner, self.queue, self.workdir, (self.nodect, self.nodes) = Job.read_job_xml(job_xml, grid_engine)
+        # self.id, self.name, self.state, self.owner, self.queue, self.workdir, (self.nodect, self.nodes) = Job.read_job_xml(job_xml, grid_engine)
 
     def __eq__(self, other):
         if self.id == other.id and \
-            self.name == other.name and \
-            self.state == other.state and \
-            self.owner == other.owner and \
-            self.queue == other.queue:
+             self.name == other.name and \
+             self.state == other.state and \
+             self.owner == other.owner and \
+             self.queue == other.queue:
             return True
         return False
 
@@ -503,7 +502,7 @@ class Job:
             owner = f'{self.owner:5.5s}'
 
         return job_form.format(int(self.id), owner, self.name[:NAME_LENGTH],
-                            job_colors[self.state], self.state[:2])# + str(self.nodes) + ', ' + str(self.nodect)
+                               job_colors[self.state], self.state[:2])  # + str(self.nodes) + ', ' + str(self.nodect)
 
     @staticmethod
     def read_job_xml(job_xml, grid_engine):
@@ -530,7 +529,7 @@ class Job:
             except AttributeError as e:
                 queue = 'debug.q'
             if (state == 'running' and state2 != 'r') or \
-            (state == 'pending' and state2 != 'qw'):
+                    (state == 'pending' and state2 != 'qw'):
                 pass
             return jid, name, state2, owner, queue
 
@@ -564,6 +563,6 @@ class Job:
                 pass
 
             return jid, name, state, owner, queue, workdir
-            #return jid, name, state, owner, queue, workdir, (nodect, nodes)
+            # return jid, name, state, owner, queue, workdir, (nodect, nodes)
         else:
             raise Exception('Could not read XML, only PBS and SGE currently supported.')

@@ -15,7 +15,6 @@ class MBO:
 
     def diffs(self, other, thresh=4):
         """Compare two MBOs"""
-        mismatch = 0
         def check(vals1, vals2, thresh=4):
             mismatch = 0
             for (*atoms1, final1), (*atoms2, final2) in zip(vals1, vals2):

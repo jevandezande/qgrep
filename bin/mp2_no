@@ -5,8 +5,8 @@ import os
 import argparse
 
 from cclib import ccopen
-from job_queue import SubmitJob
 
+from job_queue import SubmitJob
 from more_itertools import peekable
 
 default_options = {

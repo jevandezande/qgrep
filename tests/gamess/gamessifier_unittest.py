@@ -1,11 +1,10 @@
+import os
 import unittest
 
 from sys import path
 from collections import OrderedDict
 
 path.insert(0, '../..')
-
-import os
 
 from qgrep.basis import Basis, BasisFunction, BasisSet
 from qgrep.gamess import Gamessifier

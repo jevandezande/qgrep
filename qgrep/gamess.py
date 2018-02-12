@@ -1,11 +1,10 @@
 import os
 import re
 
-from collections import OrderedDict
-
 from .atom import Atom
 from .basis import BasisSet
 from .molecule import Molecule
+from collections import OrderedDict
 
 
 def check_convergence(lines):

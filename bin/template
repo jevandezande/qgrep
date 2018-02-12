@@ -7,7 +7,7 @@ import importlib
 
 sys.path.insert(0, '../')
 
-parser = argparse.ArgumentParser(description='Get the geometry of an output file.')
+parser = argparse.ArgumentParser(description='Make an input file with the specified parameters.')
 parser.add_argument('-p', '--program', help='The program', type=str,
                     default='orca')
 parser.add_argument('-g', '--geom', help='The geometry file', type=str,

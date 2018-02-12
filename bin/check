@@ -6,8 +6,8 @@ import sys
 import argparse
 
 from glob import glob
-from cclib.io import ccread
 from collections import OrderedDict
+from cclib.io import ccread
 
 from natsort import natsorted
 

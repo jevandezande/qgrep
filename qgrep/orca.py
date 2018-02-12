@@ -432,6 +432,7 @@ def get_charge(lines):
             return int(line.split()[-1])
     return None
 
+
 def get_multiplicity(lines):
     """
     Returns the multiplicity of the computation. Uses the SCF value.

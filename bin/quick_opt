@@ -3,11 +3,11 @@
 # Script that starts a quick optimization from the provided geometry
 import os
 import argparse
-from more_itertools import peekable
+
+from cclib.io import ccread
 
 from job_queue import SubmitJob
-
-from cclib import ccopen
+from more_itertools import peekable
 
 parser = argparse.ArgumentParser(description='Run a quick geometry optimization.')
 parser.add_argument('-i', '--input', help='The file from which to get the geometry.',
@@ -43,7 +43,7 @@ if args.input.split('.')[-1] == 'xyz':
             geom += val_form.format(atom, float(x), float(y), float(z))
     geom = geom[:-1]
 else:
-    data = ccopen(args.input).parse()
+    data = ccread(args.input)
     # Strip the number of atoms and comment lines
     geom = '    ' + '\n    '.join(data.writexyz().splitlines()[2:])
     charge = data.charge

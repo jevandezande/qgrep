@@ -42,6 +42,7 @@ def get_geom(lines, geom_type='xyz', units='bohr'):
 
     return geom
 
+
 def plot(lines, geom_type='xyz', units='angstrom'):
     """
     """
@@ -72,7 +73,6 @@ def plot(lines, geom_type='xyz', units='angstrom'):
     return geoms
 
 
-
 def check_convergence(lines):
     """Returns all the geometry convergence results"""
     convergence_result = 'Minimum force:'
@@ -86,7 +86,6 @@ def check_convergence(lines):
 
 def get_ir(lines):
     """ Returns all the frequencies and geometries in xyz format. """
-
     geom = get_geom(lines)
     num_atoms = len(geom)
     version = 1
@@ -140,7 +139,6 @@ def get_ir(lines):
 
 def get_theo_method(lines):
     """ Get the level of correlation and basis set for the computation. """
-
     for i in range(len(lines)):
       if 'ICLLVL' in lines[i]:
         theory = lines[i].split()[2]
@@ -151,27 +149,27 @@ def get_theo_method(lines):
 
     return theory, basis, reference
 
+
 def get_charge(lines):
     """ Searches through file and finds the charge of the molecule. """
-
     for i in range(len(lines)):
       if 'ICHRGE' in lines[i]:
         charge = lines[i].split()[2]
 
     return charge
 
+
 def get_multiplicity(lines):
     """ Searches through file and finds the charge of the molecule. """
-
     for i in range(len(lines)):
       if 'IMULTP' in lines[i]:
         multiplicity = lines[i].split()[2]
 
     return multiplicity
 
+
 def get_conv_params(lines):
     """ Finds the convergence criterion for SCF, CC, and Geometry. """
-
     for i in range(len(lines)):
       if 'ISCFCV' in lines[i]:
         scf_conv = lines[i].split()[3]
@@ -185,6 +183,7 @@ def get_conv_params(lines):
         int_thresh = lines[i].split()[3]
 
     return scf_conv, cc_conv, geo_conv, lineq_conv, int_thresh
+
 
 def get_diagnostics(lines):
     """ Gets the S^2 and T1 and T2 diagnostics. """
@@ -242,8 +241,8 @@ def get_diagnostics(lines):
     t1 = math.sqrt((pow(float(t1a),2) + pow(float(t1b),2))/(Nalpha + Nbeta - Ncore))
     return (s2, maxT2, t1)
 
-def get_final_energy(lines):
 
+def get_final_energy(lines):
     for i in reversed(list(range(len(lines)))):
       if 'CCSD(T) energy' in lines[i] and len(lines[i].strip().split()) == 3:
         ccsdpt_energy = lines[i].strip().split()[2]
@@ -254,7 +253,6 @@ def get_final_energy(lines):
 
 def get_energy(lines):
     """ Obtain the latest HF, MP2, CCSD, and CCSD(T), energies. """
-
     for i in reversed(list(range(len(lines)))):
       if 'CCSD(T) energy' in lines[i]:
         ccsdpt_energy = lines[i].strip().split()[2]

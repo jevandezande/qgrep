@@ -2,10 +2,9 @@
 
 # Script that compares two geometries
 import sys
+import numpy as np
 
 from cclib.io import ccread
-
-import numpy as np
 
 
 def eq_mol(file1, file2, atol=8):

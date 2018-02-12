@@ -1,7 +1,9 @@
-from glob import glob
-from natsort import natsorted
-import subprocess
 import os
+import subprocess
+
+from glob import glob
+
+from natsort import natsorted
 
 # Up to but not inclusive
 orbs_script_form = """background white
@@ -18,6 +20,7 @@ for (var i={start}; i<{end}; ++i)
     write {pic_format} @{{"orbs/{name}." + i + ".{ext}"}}
 end for
 """
+
 
 def make_orbs(file_name, options):
     """
@@ -110,6 +113,7 @@ Verbose=false
 mol_script_form = """background white
 write {pic_format} @{{"orbs/{name}." + i + ".{ext}"}}
 """
+
 
 def draw_mol(file_name, options):
     """

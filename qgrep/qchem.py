@@ -1,6 +1,7 @@
 """Source for all qchem related functions"""
 from os import path
 
+
 # noinspection PyPep8
 def get_geom(lines, geom_type='xyz', units='Angstrom'):
     start = 'Standard Nuclear Orientation (Angstroms)'
@@ -153,7 +154,7 @@ def generate_input(geom='', options=None):
                 check.append("Can't open ecp")
 
     # Extra options
-    if not 'max_scf_cycles' in options:
+    if 'max_scf_cycles' not in options:
         options['max_scf_cycles'] = '300'
 
     # Write rem section using keys and values from dictionary

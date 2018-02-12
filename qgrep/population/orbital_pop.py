@@ -1,10 +1,12 @@
 """Source for all Löwdin orbital analysis related functions"""
 import re
 import numpy as np
-from copy import deepcopy
+
 from re import search
+from copy import deepcopy
 
 am_types = 'spdfghi'
+
 
 class OrbitalPopulation:
     """Löwdin Orbital Population class (OP for short)"""
@@ -107,7 +109,7 @@ class OrbitalPopulation:
         """
         for i, orb in enumerate(self):
             if orb.occupation < 2:
-               return i - 1
+                return i - 1
 
         return None
 
@@ -120,21 +122,21 @@ class OrbitalPopulation:
         """
         for i, orb in enumerate(self):
             if orb.occupation == 0:
-               return i
+                return i
 
         return None
 
     @property
     def somo(self):
         """
-        Returns the indeces of the SOMO's
+        Returns the indices of the SOMO's
 
         WARNING: 0-indexed
         """
         somos = []
         for i, orb in enumerate(self):
             if orb.occupation == 1:
-               somos.append(i)
+                somos.append(i)
 
         return somos
 
@@ -157,7 +159,6 @@ class OrbitalPopulation:
         for orb in self:
             orb_list.append(orb.am_contract())
         return OrbitalPopulation(orb_list=orb_list)
-
 
     def crop(self, max_num=5, min_num=2, cutoff=5):
         """
@@ -332,10 +333,10 @@ class MOrbital:
     def __sub__(self, other):
         if len(self) != len(other):
             Warning('The MOrbitals are of different lengths.')
-            #raise ValueError('The MOrbitals are of different lengths.')
+            # raise ValueError('The MOrbitals are of different lengths.')
         min_len = min(len(self), len(other))
 
-        index  = self.index if self.index  == other.index else 0
+        index = self.index if self.index == other.index else 0
         energy = self.energy - other.energy
         occupation = self.occupation - other.occupation
         contributions = []
@@ -435,7 +436,7 @@ class MOrbital:
         """
         Sum over all the contributions from am_type on the specified atom
         """
-        if not am_type in am_types:
+        if am_type not in am_types:
             raise Exception('Invalid am_type')
         val = 0
         if isinstance(atom, str):
@@ -505,6 +506,7 @@ class AO_Contrib:
     def csv(self):
         return f'{self.index:>2d}, {self.atom:<2s}, {self.ao:<4s}, {self.val:>4.1f}'
 
+
 class Group_Contrib:
     """
     Simple class containing a group of atoms and their contribution to a MOrbital
@@ -531,8 +533,7 @@ class Group_Contrib:
 
     def __sub__(self, other):
         index = self.index if self.index == other.index else 0
-        group  = self.group if self.group  == other.group  else ''
-        val   = self.val - other.val
+        group = self.group if self.group == other.group else ''
+        val = self.val - other.val
 
         return Group_Contrib(index, atom, ao, val)
-

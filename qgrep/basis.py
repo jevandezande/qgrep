@@ -1,11 +1,12 @@
 import json
 import numpy as np
-from qgrep.atom import ensure_short_atom_name
 
 from collections import Iterable, OrderedDict
+from .atom import ensure_short_atom_name
 
 SUPPORTED = ['gaussian94', 'gamess', 'bagel', 'cfour', 'molpro']
 AM = 'SPDFGHIKLMN'
+
 
 class BasisFunction:
     """A primitive or a contraction of primitives"""
@@ -14,7 +15,7 @@ class BasisFunction:
         exps, coeffs = np.array(exps), np.array(coeffs)
         self.num_coeffs = 1 if len(coeffs.shape) == 1 else coeffs.shape[0]
         self.func_type = func_type.upper()
-        if not self.func_type in 'SPDFGHIKLMN':
+        if self.func_type not in 'SPDFGHIKLMN':
             raise SyntaxError('Invalid angular momentum.')
         if self.func_type == 'SP' and coeffs.shape[0] != 2:
             raise SyntaxError('Expected exactly two sets of coefficients for combined BasisFunction.')
@@ -138,7 +139,7 @@ class BasisFunction:
                 out += form.format(i, *group) + '\n'
         elif style == 'bagel':
             vals_form = ','.join(['{:>15.8f}']*len(self))
-            c_form = ', '.join(['[' + vals_form  + ']']*num_coeffs)
+            c_form = ', '.join(['[' + vals_form + ']']*num_coeffs)
             bagel_form = '{{\n    "angular" : "{:s}",\n       "prim" :  [' + vals_form + '],\n       "cont" : [' + c_form + ']\n}}\n'
             out += bagel_form.format(self.func_type.lower(), *self.exps, *self.coeffs.flatten())
         elif style == 'cfour':
@@ -264,8 +265,8 @@ class Basis:
                 if bf.am not in am_dict:
                     start_count = 1
                     ex = f'{AM[bf.am].lower()}, {self.atom}'
-                    am_dict[bf.am] = [ex,'']
-                #update value of end_count
+                    am_dict[bf.am] = [ex, '']
+                # Update value of end_count
                 end_count = start_count + len(bf.exps) - 1
                 # Add exps to ex string
                 am_dict[bf.am][0] += ', ' + ', '.join(f'{exp:.7f}' for exp in bf.exps)
@@ -278,7 +279,7 @@ class Basis:
                 # start_count for next basis function
                 start_count = end_count + 1
 
-            for am, (exp, co) in sorted(am_dict.items(), key=lambda x:x[0]):
+            for am, (exp, co) in sorted(am_dict.items(), key=lambda x: x[0]):
                 out += exp + '\n' + co
 
         else:
@@ -319,7 +320,7 @@ class BasisSet:
         """Check if the two basis sets are equal"""
         for atom, basis in self.atoms.items():
             b2 = other[atom]
-            if not atom in other or not basis == b2:
+            if atom not in other or basis != b2:
                 return False
         return True
 

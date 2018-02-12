@@ -49,7 +49,9 @@ class Convergence:
                 if key in ['scf_steps']:
                     pass
                 else:
-                    star = '*' if abs(value) < criterion and not (i == 0 and key == 'delta_e') else ' '
+                    star = ' '
+                    if abs(value) < criterion and not (i == 0 and key == 'delta_e'):
+                        star = '*'
                     out += f'{value:> 9.2e}{star}'
             out += f'|{step.scf_steps:> 7d}\n'
 
@@ -78,12 +80,12 @@ class Convergence:
         # TODO: generalize for more than ORCA
         ax1.plot(x, [self.criteria[1]]*len(self.steps), 'k-')
         ax1.plot(x, [self.criteria[1]]*len(self.steps), 'b*')
-        ax1.plot(x, [self.criteria[2]]*len(self.steps), 'k--' )
-        ax1.plot(x, [self.criteria[2]]*len(self.steps), 'b*' )
+        ax1.plot(x, [self.criteria[2]]*len(self.steps), 'k--')
+        ax1.plot(x, [self.criteria[2]]*len(self.steps), 'b*')
         ax1.plot(x, [self.criteria[3]]*len(self.steps), 'k-')
         ax1.plot(x, [self.criteria[3]]*len(self.steps), 'r*')
-        ax1.plot(x, [self.criteria[4]]*len(self.steps), 'k--' )
-        ax1.plot(x, [self.criteria[4]]*len(self.steps), 'r*' )
+        ax1.plot(x, [self.criteria[4]]*len(self.steps), 'k--')
+        ax1.plot(x, [self.criteria[4]]*len(self.steps), 'r*')
         ax1.legend()
 
         plt.show()

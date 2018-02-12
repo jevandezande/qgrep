@@ -15,7 +15,7 @@ def ensure_short_atom_name(atom):
     if atom in long_to_short_names:
         atom = long_to_short_names[atom]
     elif atom not in short_to_long_names:
-        raise ValueError('Invalid atom name: {atom}')
+        raise ValueError(f'Invalid atom name: {atom}')
     return atom
 
 
@@ -24,7 +24,7 @@ def ensure_long_atom_name(atom):
     if atom in short_to_long_names:
         atom = short_to_long_names[atom]
     elif atom not in long_to_short_names:
-        raise ValueError('Invalid atom name: {atom}')
+        raise ValueError(f'Invalid atom name: {atom}')
     return atom
 
 

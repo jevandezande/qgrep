@@ -1,9 +1,11 @@
 """Source for all nbo relate functions"""
 import re
 import numpy as np
+
 from itertools import zip_longest
-from more_itertools import peekable
 from collections import defaultdict
+
+from more_itertools import peekable
 
 
 class NAOs:
@@ -153,7 +155,6 @@ class NPA:
             return NPA_Diff(atoms, charges)
         return NPA_Sum(atoms, charges)
 
-
     def append(self, atom, *vals):
         """
         Append an atom and charges to the population analysis
@@ -200,11 +201,13 @@ class NPA:
             npa.append([charge, core, valence, rydberg, total])
         return atoms, np.array(npa)
 
+
 class NPA_Diff(NPA):
     """
     NPA class without restrictions on population
     Currently exactly the same
     """
+
 
 class NPA_Sum(NPA):
     """
@@ -239,15 +242,23 @@ class Orbital:
 class LP(Orbital):
     """ Lone Pair """
     pass
+
+
 class CR(Orbital):
     """Core Orbital"""
     pass
+
+
 class LV(Orbital):
     """ TODO: Figure out what type of orbital this is """
     pass
+
+
 class RY(Orbital):
     """Rydberg Orbital"""
     pass
+
+
 class RYs(Orbital):
     """Rydberg* Orbital"""
     def __init__(self):
@@ -378,9 +389,9 @@ class NBOSet:
 
                     regex = fr'\(\s*(\d+\.\d+)%\)\s+(-?\d\.\d+)\*{atom_re}\s+(\w)\(\s*(\d+\.\d+)'
                     # For each atom block within the BD/BD*
-                    #while not re.search('\s*\d+\.\s', file_iter.peek()):
+                    # while not re.search('\s*\d+\.\s', file_iter.peek()):
                     hybrids = []
-                    densities = [] # TODO: Figure out what this actually is
+                    densities = []  # TODO: Figure out what this actually is
                     # TODO: Adapt for three atom bonds?
                     for i in range(2):
                         line = next(file_iter)
@@ -405,7 +416,7 @@ class NBOSet:
                             next(file_iter)
                             line = file_iter.peek()
 
-                    orbitals.append(NBO(occup, atom1, atom1_n, atom2, atom2_n, hybrids, densities)) #[idx, occup, nbo_type, int(number), atom1, int(atom1_n), atom2, int(atom2_n), hybrids, densities])
+                    orbitals.append(NBO(occup, atom1, atom1_n, atom2, atom2_n, hybrids, densities))  # [idx, occup, nbo_type, int(number), atom1, int(atom1_n), atom2, int(atom2_n), hybrids, densities])
 
                 elif nbo_type in single_center:
                     """90. (0.01241) RY*( 1)Fe  1             s(  0.00%)p 1.00(  3.05%)d31.77( 96.89%)"""
@@ -425,4 +436,3 @@ class NBOSet:
             line = next(file_iter).strip()
 
         return orbitals
-
