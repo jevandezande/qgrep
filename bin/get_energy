@@ -6,7 +6,7 @@ import argparse
 import numpy as np
 
 from glob import glob
-from cclib import ccopen
+from cclib.io import ccread
 from cclib.parser.utils import convertor
 
 from natsort import natsorted
@@ -26,35 +26,44 @@ args = parser.parse_args()
 def grab_energies(inp, units='hartree'):
     """
     Grab the energies list from the input file
+    :return: [energies], completed
     """
-    data = ccopen(inp).parse()
+    data = ccread(inp)
     try:
+        completed = data.optdone if hasattr(data, 'optdone') else False
         if args.energy_type == 'free':
             energies = [data.freeenergy]
         else:
             energies = getattr(data, args.energy_type + 'energies')
         convert = lambda x: convertor(x, 'eV', units)
-        return list(map(convert, energies))
+        return list(map(convert, energies)), completed
 
     except AttributeError as e:
         print("Invalid energy type, perhaps it hasn't been run?")
-        return [0]
+        return [0], False
 
-# Find all matches, delete duplicates
+# Find all files that match, delete duplicates
 inps = set()
 for inp_arg in args.input:
     inps |= set(inp for inp in glob(inp_arg) if os.path.isfile(inp))
-    inps |= set(inp for inp in glob(inp_arg + '/output.dat') if os.path.isfile(inp))
+    inps |= set(inp for inp in glob(inp_arg.rstrip('/') + '/output.dat') if os.path.isfile(inp))
 
 if len(inps) == 0:
     print('Could not find input file(s)')
 else:
     inps = natsorted(inps)
     length = len(max(inps, key=len))
-    all_energies = []
+    results = []
     for inp in inps:
-        energy = grab_energies(inp, args.units)[-1]
-        all_energies.append(energy)
-        print(('{:' + f'{length}' + 's}: {: >.8f}').format(inp, energy))
+        energies, completed = grab_energies(inp, args.units)
+        results.append([inp, energies[-1], completed])
+    min_index = results.index(min(results, key=lambda x: x[1]))
+
+    for i, (inp, energy, completed) in enumerate(results):
+        print(('{:' + str(length) + 's}: {:> 15.8f} ').format(inp, energy), end='')
+        print('✓' if completed else 'x', end='')
+        if i == min_index and len(inps) > 1:
+            print(' *', end='')
+        print()
     if args.list:
-        print(all_energies)
+        print(energies)
