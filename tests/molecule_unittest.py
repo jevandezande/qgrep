@@ -3,6 +3,7 @@ import unittest
 import numpy as np
 
 from sys import path
+from numpy.testing import assert_almost_equal
 
 path.insert(0, '..')
 
@@ -26,19 +27,23 @@ class TestMolecule(unittest.TestCase):
     def test_getsetdeleqinsert(self):
         """Test getting, setting and deleting atoms"""
         self.assertEqual(self.water[0][0], 'H')
-        self.assertTrue(all(self.water[0][1] == np.array([0, 0, 0])))
+        assert_almost_equal(self.water[0][1], np.array([0, 0, 0]))
+
         del self.water[1]
         self.assertEqual(self.water[1][0], 'H')
-        self.assertTrue(all(self.water[1][1] == np.array([0, 1, 1])))
+        assert_almost_equal(self.water[1][1], np.array([0, 1, 1]))
+
         self.water[0] = ['H', [0, 0, 0]]
         self.water[1] = ['H', [0, -1, 1]]
         self.assertEqual(self.water[1][0], 'H')
-        self.assertTrue(all(self.water[1][1] == np.array([0, -1, 1])))
+        assert_almost_equal(self.water[1][1], np.array([0, -1, 1]))
+
         self.water.insert(1, 'O', [0, 0, 1])
         self.assertEqual(self.water[1][0], 'O')
-        self.assertTrue(all(self.water[1][1] == np.array([0, 0, 1])))
+        assert_almost_equal(self.water[1][1], np.array([0, 0, 1]))
         self.assertEqual(self.water[2][0], 'H')
-        self.assertTrue(all(self.water[2][1] == np.array([0, -1, 1])))
+        assert_almost_equal(self.water[2][1], np.array([0, -1, 1]))
+
         new_water = Molecule([['H', [0, 0, 0]], ['O', [0, 0, 1]], ['H', [0, -1, 1]]])
         self.assertEqual(self.water, new_water)
 
@@ -69,23 +74,49 @@ H       0.00000000    1.00000000    1.00000000"""
 
     def test_read_write_geometry(self):
         """Testing read and write"""
-        test_file = 'geom.xyz.tmp'
-        self.water.write(test_file, True)
-        mol = Molecule.read_from(test_file)
+        geom_file = 'geom.xyz.tmp'
+        self.water.write(geom_file, True)
+        mol = Molecule.read_from(geom_file)
         mol.name = 'H2O'
         self.assertEqual(mol.geom, self.water.geom)
-        mol.write(test_file, style='latex')
+        mol.write(geom_file, style='latex')
+
         latex_geom = '''\
 \\begin{verbatim}
 H       0.000000      0.000000      0.000000
 O       0.000000      0.000000      1.000000
 H       0.000000      1.000000      1.000000
 \\end{verbatim}'''
-        with open(test_file) as f:
+        with open(geom_file) as f:
             out_tex = f.read()
         self.assertEqual(latex_geom, out_tex)
 
-        os.remove(test_file)
+        os.remove(geom_file)
+
+    def test_com(self):
+        """ Test the center of mass """
+        water_com = np.array([0, 0.05595744, 0.94404256])
+        assert_almost_equal(self.water.center_of_mass(), water_com)
+
+        # Translations should shift the center of mass the same amount
+        translation = [7, 8, 9]
+        self.water.xyz += translation
+        assert_almost_equal(self.water.center_of_mass(), water_com + translation)
+
+    def test_moi_tensor(self):
+        """ Test the moment of inertia tensor """
+        water_moi_tensor = np.array([
+                [ 1.9028595,  0        ,  0        ],
+                [ 0        ,  0.9514297, -0.0563953],
+                [ 0        , -0.0563953,  0.9514297]
+        ])
+
+        assert_almost_equal(self.water.moment_of_inertia_tensor(), water_moi_tensor)
+
+        # Translations should not change moi tensor
+        self.water.xyz += [7, 8, 9]
+        assert_almost_equal(self.water.moment_of_inertia_tensor(), water_moi_tensor)
+
 
 
 if __name__ == '__main__':

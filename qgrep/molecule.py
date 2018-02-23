@@ -1,4 +1,5 @@
 import numpy as np
+from qgrep.atom import atomic_masses, atomic_numbers
 
 from cclib.io import ccread
 
@@ -149,3 +150,51 @@ class Molecule:
             raise SyntaxError('Invalid style')
         with open(outfile, 'w') as f:
             f.write(out)
+
+    def center_of_mass(self, masses=None):
+        """
+        Finds the center of mass
+        :param masses: a dictionary or list of masses to use
+        """
+        if isinstance(masses, list):
+            masses_list = masses
+        elif isinstance(masses, dict):
+            masses_list = [masses[atomic_numbers[atom]] for atom in self.atoms]
+        elif masses is None:
+            masses_list = [atomic_masses[atomic_numbers[atom]] for atom in self.atoms]
+        else:
+            raise ValueError(f'Expected a list or dictionary of masses, got: {type(masses)}')
+
+        com = np.zeros(3)
+        total_mass = 0
+        for mass, xyz in zip(masses_list, self.xyz):
+            com += mass*np.array(xyz)
+            total_mass += mass
+
+        return com/total_mass
+
+    def moment_of_inertia_tensor(self, masses=None):
+        """
+        Generates the moment of intertia tensor (3x3).
+        :param masses: a dictionary or list of masses to use
+        com = self.center_of_mass(masses)
+        """
+        if isinstance(masses, list):
+            masses_list = masses
+        elif isinstance(masses, dict):
+            masses_list = [masses[atomic_numbers[atom]] for atom in self.atoms]
+        elif masses is None:
+            masses_list = [atomic_masses[atomic_numbers[atom]] for atom in self.atoms]
+        else:
+            raise ValueError(f'Expected a list or dictionary of masses, got: {type(masses)}')
+
+        com = self.center_of_mass(masses)
+
+        moi_tensor = np.zeros((3, 3))
+        for mass, xyz in zip(masses_list, self.xyz):
+            x, y, z = xyz - com
+            moi_tensor += mass * np.array([[y**2 + z**2,        -x*y,        -x*z],
+                                           [       -y*x, x**2 + z**2,        -y*z],
+                                           [       -z*x,        -z*y, x**2 + y**2]])
+        return moi_tensor
+
