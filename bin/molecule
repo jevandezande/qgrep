@@ -9,7 +9,7 @@ sys.path.insert(0, '../')
 from qgrep.helper import read
 from qgrep.molecule import Molecule
 
-parser = argparse.ArgumentParser(description='Get the geometry of an output file.')
+parser = argparse.ArgumentParser(description='Generate a formatted molecule from an output file.')
 parser.add_argument('-i', '--input', help='The file to be read.', type=str,
                     default='output.dat')
 parser.add_argument('-o', '--output', help='Where to output the geometry.',

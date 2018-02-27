@@ -26,12 +26,12 @@ try:
     with open(args.geom, 'r') as f:
         geom = f.read().strip()
 except IOError:
-    print("No geometry specified")
+    print('No geometry specified')
 
 program = args.program
 if program:
     try:
-        mod = importlib.import_module('qgrep.' + program)
+        mod = importlib.import_module(f'qgrep.{program}')
         if hasattr(mod, 'template'):
             temp = mod.template(geom, args.jobtype, args.functional, args.basis)
             input_file = 'input.dat'
@@ -40,9 +40,9 @@ if program:
             with open(input_file, 'w') as f:
                 f.write(temp)
         else:
-            print(program + ' does not yet have template implemented.')
+            print(f'{program} does not yet have template implemented.')
     except ImportError:
-        print(program + ' is not yet supported.')
+        print(f'{program} is not yet supported.')
 else:
     print('Cannot determine what program made this output file.')
 
