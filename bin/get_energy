@@ -5,7 +5,7 @@ import os
 import argparse
 import numpy as np
 
-from glob import glob
+import glob
 from cclib.io import ccread
 from cclib.parser.utils import convertor
 
@@ -20,6 +20,8 @@ parser.add_argument('-u', '--units', help='Units to output energy in.',
                     type=str, default='hartree')
 parser.add_argument('-l', '--list', help='Print a list of the energies',
                     default=False, action='store_true')
+parser.add_argument('-a', '--all', help='Find all files corresponding to {input} (can be a glob).',
+                    action='store_true', default=False)
 
 args = parser.parse_args()
 
@@ -42,19 +44,24 @@ def grab_energies(inp, units='hartree'):
         print("Invalid energy type, perhaps it hasn't been run?")
         return [0], False
 
-# Find all files that match, delete duplicates
-inps = set()
-for inp_arg in args.input:
-    inps |= set(inp for inp in glob(inp_arg) if os.path.isfile(inp))
-    inps |= set(inp for inp in glob(inp_arg.rstrip('/') + '/output.dat') if os.path.isfile(inp))
-
-if len(inps) == 0:
-    print('Could not find input file(s)')
+if args.all:
+    inputs = []
+    for inp in args.input:
+        inputs += glob.glob(f'**/{inp}')
 else:
-    inps = natsorted(inps)
-    length = len(max(inps, key=len))
+    # Find all files that match, delete duplicates
+    inputs = set()
+    for inp_arg in args.input:
+        inputs |= set(inp for inp in glob.glob(inp_arg) if os.path.isfile(inp))
+        inputs |= set(inp for inp in glob.glob(inp_arg.rstrip('/') + '/output.dat') if os.path.isfile(inp))
+
+if len(inputs) == 0:
+    print(f'Could not find input file(s) matching {args.input}')
+else:
+    inputs = natsorted(inputs)
+    length = len(max(inputs, key=len))
     results = []
-    for inp in inps:
+    for inp in inputs:
         energies, completed = grab_energies(inp, args.units)
         results.append([inp, energies[-1], completed])
     min_index = results.index(min(results, key=lambda x: x[1]))
@@ -62,7 +69,7 @@ else:
     for i, (inp, energy, completed) in enumerate(results):
         print(('{:' + str(length) + 's}: {:> 15.8f} ').format(inp, energy), end='')
         print('✓' if completed else 'x', end='')
-        if i == min_index and len(inps) > 1:
+        if i == min_index and len(inputs) > 1:
             print(' *', end='')
         print()
     if args.list:

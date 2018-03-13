@@ -5,7 +5,7 @@ import os
 import sys
 import argparse
 
-from glob import glob
+import glob
 from collections import OrderedDict
 from cclib.io import ccread
 
@@ -20,9 +20,8 @@ parser.add_argument('-i', '--input', help='The file(s) to be read.',
                     type=str, nargs='+', default=['output.dat'])
 parser.add_argument('-p', '--plot', help='Plot the convergence.',
                     action='store_true', default=False)
-parser.add_argument('-a', '--all', help='Find all files named output.dat. If \
-input is specified the search starts from that directory, otherwise the \
-current directory.', action='store_true', default=False)
+parser.add_argument('-a', '--all', help='Find all files corresponding to {input} (can be a glob).',
+                    action='store_true', default=False)
 
 args = parser.parse_args()
 
@@ -93,25 +92,18 @@ def check(inp, args):
     return success
 
 if args.all:
-    # assume default argument and search
-    path = args.input[0]
-    if path == 'output.dat':
-        path = '.'
-    elif not os.path.isdir(path):
-        raise ValueError('Input must be a path when used with --all.')
     inputs = []
-    for root, dirs, files in os.walk(path):
-        if 'output.dat' in files:
-            inputs.append(os.path.join(root, 'output.dat'))
+    for inp in args.input:
+        inputs += glob.glob(f'**/{inp}')
 else:
     # Find all matches, delete duplicates
     inputs = set()
     for inp_arg in args.input:
-        inputs |= set(inp for inp in glob(inp_arg) if os.path.isfile(inp))
-        inputs |= set(inp for inp in glob(inp_arg + '/output.dat') if os.path.isfile(inp))
+        inputs |= set(inp for inp in glob.glob(inp_arg) if os.path.isfile(inp))
+        inputs |= set(inp for inp in glob.glob(inp_arg + '/output.dat') if os.path.isfile(inp))
 
 if len(inputs) == 0:
-    print('Could not find input file(s)')
+    print(f'Could not find input file(s) matching {args.input}')
 else:
     inputs = natsorted(inputs)
     results = []
@@ -119,6 +111,7 @@ else:
         if len(inputs) > 1:
             print(inp)
         results.append(check(inp, args))
+
     # Print a summary if more than two inputs
     if len(inputs) > 2:
         length = len(max(inputs, key=len))
