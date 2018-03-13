@@ -7,8 +7,8 @@ import openbabel as ob
 from cclib.io import ccread
 
 parser = argparse.ArgumentParser(description='Find the NICS 0 and 1 points for all rings in a molecule.')
-parser.add_argument('-i', '--input', help='The file to read the molecule from.', type=str,
-                    default='output.dat')
+parser.add_argument('-i', '--input', help='The file to read the molecule from.',
+                    type=str, default='output.dat')
 parser.add_argument('-f', '--format', help='Format to output the ghost atoms.',
                     type=str, default='orca')
 
@@ -47,4 +47,4 @@ if args.format == 'orca':
     for coords in ghost_atoms:
         print('H:  {:>15.10f} {:>15.10f} {:>15.10f} {}'.format(*coords, newgto))
 else:
-    print('{} is not currently supported.'.format(args.format))
+    print(f'{args.format} is not currently supported.')

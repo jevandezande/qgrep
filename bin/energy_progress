@@ -13,8 +13,8 @@ sys.path.insert(0, '../')
 from qgrep.helper import read
 
 parser = argparse.ArgumentParser(description='Plots the energies from output file.')
-parser.add_argument('-i', '--input', help='The file to be read.', type=str,
-                    default='output.dat')
+parser.add_argument('-i', '--input', help='The file to be read.',
+                    type=str, default='output.dat')
 parser.add_argument('-t', '--energy_type', help='Desired type of energy',
                     type=str, default='sp')
 

@@ -8,16 +8,16 @@ import importlib
 sys.path.insert(0, '../')
 
 parser = argparse.ArgumentParser(description='Make an input file with the specified parameters.')
-parser.add_argument('-p', '--program', help='The program', type=str,
-                    default='orca')
-parser.add_argument('-g', '--geom', help='The geometry file', type=str,
-                    default='geom.xyz')
-parser.add_argument('-j', '--jobtype', help='The jobtype to run', type=str,
-                    default='opt')
+parser.add_argument('-p', '--program', help='The program',
+                    type=str, default='orca')
+parser.add_argument('-g', '--geom', help='The geometry file',
+                    type=str, default='geom.xyz')
+parser.add_argument('-j', '--jobtype', help='The jobtype to run',
+                    type=str, default='opt')
 parser.add_argument('-f', '--functional', help='The functional to use',
                     type=str, default='B3LYP')
-parser.add_argument('-b', '--basis', help='The basis set to use', type=str,
-                    default='def2-svp')
+parser.add_argument('-b', '--basis', help='The basis set to use',
+                    type=str, default='def2-svp')
 
 args = parser.parse_args()
 

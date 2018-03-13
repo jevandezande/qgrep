@@ -6,8 +6,8 @@ import argparse
 from cclib import ccopen
 
 parser = argparse.ArgumentParser(description='Get the geometry from an output file.')
-parser.add_argument('-i', '--input', help='The file to be read.', type=str,
-                    default='output.dat')
+parser.add_argument('-i', '--input', help='The file to be read.',
+                    type=str, default='output.dat')
 parser.add_argument('-o', '--output', help='Where to output the geometry.',
                     type=str, default='geom.xyz')
 
