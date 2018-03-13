@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+
+# Script that runs a stability analysis of the specified geometry
+import os
+import argparse
+
+from cclib import ccopen
+
+from job_queue import SubmitJob
+from configparser import ConfigParser
+from more_itertools import peekable
+
+config_file = os.path.join(os.path.expanduser("~"), '.qgrepconfig')
+config = ConfigParser()
+config.read(config_file)
+conf = config['defaults']
+
+
+def read_config(config, arg, default):
+    try:
+        return config[arg]
+    except KeyError:
+        return default
+
+
+PROGRAM = read_config(conf, 'program', 'orca')
+QUEUE = read_config(conf, 'queue', 'small')
+
+parser = argparse.ArgumentParser(description='Run a stability analysis.')
+parser.add_argument('-d', '--debug', help="Generate but don't submit the optimization.",
+                    action='store_true', default=False)
+parser.add_argument('-i', '--input', help='The file from which to get the geometry.',
+                    type=str, default='output.dat')
+parser.add_argument('-m', '--method', help='The method to use.',
+                    type=str, default='{autoselect}')
+parser.add_argument('-p', '--program', help='Which program to use.',
+                    type=str, default=PROGRAM)
+parser.add_argument('-q', '--queue', help='Which queue to use.',
+                    type=str, default=QUEUE)
+
+args = parser.parse_args()
+
+name = 'stability'
+if args.method != '{autoselect}':
+    args.method = ' '.join(args.method.split('/'))
+
+charge = 0
+multiplicity = 1
+if args.input.split('.')[-1] == 'xyz':
+    with open(args.input) as f:
+        f = peekable(f)
+        # If starting with the number of atoms
+        if len(f.peek().split()) == 1:
+            next(f)
+            next(f)
+
+        val_form = '    {:<2}' + '  {:> 10.7f}'*3 + '\n'
+        geom = ''
+        for line in f:
+            atom, x, y, z, *other = line.split()
+            geom += val_form.format(atom, float(x), float(y), float(z))
+    geom = geom[:-1]
+else:
+    data = ccopen(args.input).parse()
+    # Strip the number of atoms and comment lines
+    geom = '    ' + '\n    '.join(data.writexyz().splitlines()[2:])
+
+    charge = data.charge
+    multiplicity = data.mult
+
+if args.method == '{autoselect}':
+    args.method = 'BP86 def2-svp'
+
+if args.program == 'orca':
+    input_file = f"""\
+%pal nprocs 8 end
+
+! TightSCF {args.method}
+! KDIIS
+
+% scf
+    maxiter 1000
+    StabPerform true
+end
+
+* xyz {charge} {multiplicity}
+{geom}
+*"""
+else:
+    raise NotImplementedError('Only orca is currently supported')
+
+os.makedirs(name, exist_ok=False)
+with open(f'{name}/input.dat', 'w') as f:
+    f.write(input_file)
+
+cwd = os.getcwd()
+os.chdir(name)
+job = SubmitJob({'debug': args.debug, 'queue': args.queue, 'program': args.program})
+job.submit()
+os.chdir(cwd)
