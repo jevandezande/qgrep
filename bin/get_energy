@@ -2,10 +2,10 @@
 
 # Script that takes an output file and gets the last energy of specified type
 import os
+import glob
 import argparse
 import numpy as np
 
-import glob
 from cclib.io import ccread
 from cclib.parser.utils import convertor
 
@@ -24,6 +24,7 @@ parser.add_argument('-a', '--all', help='Find all files corresponding to {input}
                     action='store_true', default=False)
 
 args = parser.parse_args()
+
 
 def grab_energies(inp, units='hartree'):
     """
@@ -44,10 +45,11 @@ def grab_energies(inp, units='hartree'):
         print("Invalid energy type, perhaps it hasn't been run?")
         return [0], False
 
+
 if args.all:
     inputs = []
     for inp in args.input:
-        inputs += glob.glob(f'**/{inp}')
+        inputs += glob.glob(f'**/{inp}', recursive=True)
 else:
     # Find all files that match, delete duplicates
     inputs = set()

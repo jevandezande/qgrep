@@ -3,9 +3,9 @@
 # Script that takes an output file and prints its geometry convergence results
 import os
 import sys
+import glob
 import argparse
 
-import glob
 from collections import OrderedDict
 from cclib.io import ccread
 
@@ -26,8 +26,8 @@ parser.add_argument('-a', '--all', help='Find all files corresponding to {input}
 args = parser.parse_args()
 
 success_dict = {
-    'ORCA' : 'TOTAL RUN TIME:',
-    'PSI4' : 'Buy a developer',
+    'ORCA': 'TOTAL RUN TIME:',
+    'PSI4': 'Buy a developer',
 }
 
 
@@ -91,10 +91,11 @@ def check(inp, args):
 
     return success
 
+
 if args.all:
     inputs = []
     for inp in args.input:
-        inputs += glob.glob(f'**/{inp}')
+        inputs += glob.glob(f'**/{inp}', recursive=True)
 else:
     # Find all matches, delete duplicates
     inputs = set()
