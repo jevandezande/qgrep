@@ -23,9 +23,13 @@ parser.add_argument('-t', '--spectra_type', help='Type of spectra to plot.',
 parser.add_argument('-s', '--subtract', help='Subtract the spectra.',
                     default=False, action='store_true')
 parser.add_argument('-w', '--width', help='Gaussian width.',
-                    default=1, type=float)
+                    type=float, default=1)
 parser.add_argument('-u', '--units', help='Units to plot with',
-                    default='eV', type=str)
+                    type=str, default='eV')
+parser.add_argument('-b', '--bounds', help='Bounds which to splot spectra within.',
+                    type=float, nargs='+', default=None)
+parser.add_argument('-c', '--cutoff', help="Don't plot peaks under specified intensity",
+                    type=float, default=1e-10)
 
 args = parser.parse_args()
 
@@ -46,14 +50,13 @@ if len(inps) == 0:
 elif args.subtract:
     if len(inps) != 2:
         raise Exception(f'Can only do subtraction between two spectra, given: {len(inps)}')
-    s0 = gen_spectra(inps[0], names[0])
-    s1 = gen_spectra(inps[1], names[1])
-    (s1 - s0).plot(fwhh=args.width, units=args.units)
+    s0 = gen_spectra(inps[0], names[0], args.units)
+    s1 = gen_spectra(inps[1], names[1], args.units)
+    (s1 - s0).plot(fwhh=args.width, bounds=args.bounds, cutoff=args.cutoff)
     plt.show()
 else:
     for inp, name in zip(inps, names):
-        s = gen_spectra(inp, name)
+        s = gen_spectra(inp, name, args.units)
         plt.figure()
-        s.plot(fwhh=args.width, units=args.units)
+        s.plot(fwhh=args.width, bounds=args.bounds, cutoff=args.cutoff)
     plt.show()
-

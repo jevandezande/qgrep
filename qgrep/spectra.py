@@ -66,6 +66,8 @@ class Spectra:
         :param energies: list of transition intensities
         :param name: name of spectra
         """
+        assert all(energies >= 0)
+        assert all(intensities >= 0)
         self.energies = energies
         self.intensities = intensities
         self.name = name
@@ -88,7 +90,7 @@ class Spectra:
     def __add__(self, other):
         return SpectralSum(self, other)
 
-    def spectral_values(self, npoints=10001, fwhh=1):
+    def spectral_values(self, npoints=10001, fwhh=1, bounds=None, cutoff=1e-10):
         """
         Generate the values needed for `plot()`
         :return: xs, ys (line of spectra), bar_xs, bar_ys (sticks plots)
@@ -99,7 +101,7 @@ class Spectra:
         pf = peak_functions[self.options['peak_function']]
         peaks = []
         for energy, intensity in zip(energies, intensities):
-            if intensity > 0:
+            if intensity > cutoff:
                 peaks.append(pf(energy, intensity, fwhh))
 
         val_range = energies[-1] - energies[0]
@@ -117,15 +119,28 @@ class Spectra:
             for peak in peaks:
                 ys[i] += peak(x)
 
+        if bounds is not None:
+            low, high = bounds
+            assert (low > 0) and (high > 0)
+
+            selector = (xs > low) & (xs < high)
+            xs = xs[selector]
+            ys = ys[selector]
+
+            selector = (energies > low) & (energies < high) & (intensities > cutoff)
+            energies = energies[selector]
+            intensities = intensities[selector]
+
         return xs, ys, energies, intensities
 
-    def plot(self, npoints=10001, fwhh=1):
+    def plot(self, npoints=10001, fwhh=1, bounds=None, cutoff=1e-10):
         """
         Plots the transitions
         :param npoints: the number of points to use in the expansion
         :param fwhh: the width of the gaussian
+        :param bounds: the bounds of the plot
         """
-        xs, ys, bar_xs, bar_ys = self.spectral_values(npoints, fwhh)
+        xs, ys, bar_xs, bar_ys = self.spectral_values(npoints, fwhh, bounds, cutoff)
 
         # switch to KeV
         plt.ticklabel_format(style='sci', axis='x', scilimits=(0, 3))
@@ -161,7 +176,7 @@ class CombinedSpectra:
     def __repr__(self):
         return f'<CombinedSpectra {self.spectra1.name} : {self.spectra2.name}>'
 
-    def plot(self, npoints=1001, fwhh=1):
+    def plot(self, npoints=1001, fwhh=1, bounds=None, cutoff=1e-10):
         """
         Plot the difference of two spectra on top of the spectras
         of the individual spectra, with the second flipped
@@ -186,8 +201,8 @@ class CombinedSpectra:
             sp2.energies = np.append(sp2.energies, sp1.energies[-1])
             sp2.intensities = np.append(sp2.intensities, 0)
 
-        xs1, ys1, bar_xs1, bar_ys1 = sp1.spectral_values(npoints, fwhh)
-        xs2, ys2, bar_xs2, bar_ys2 = sp2.spectral_values(npoints, fwhh)
+        xs1, ys1, bar_xs1, bar_ys1 = sp1.spectral_values(npoints, fwhh, bounds, cutoff)
+        xs2, ys2, bar_xs2, bar_ys2 = sp2.spectral_values(npoints, fwhh, bounds, cutoff)
 
         if isinstance(self, SpectralSum):
             combo = ys1 + ys2
