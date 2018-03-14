@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import abc
 import numpy as np
 
 from cclib.io import ccread
@@ -7,30 +8,51 @@ from cclib.parser.utils import convertor
 from matplotlib import pyplot as plt
 
 
-def gaussian(energy, intensity, width):
-    return lambda x: intensity*np.exp(-(x-energy)**2/(2*width**2))
+class Peak:
+    def __init__(self, energy, intensity, width):
+        self.energy = energy
+        self.intensity = intensity
+        self.width = width
+
+    def __repr__(self):
+        return f"<{type(self).__name__} {energy}:{intensity}:{width}>"
+
+    def __str__(self):
+        return repr(self)
+
+    @abc.abstractmethod
+    def __call__(self, x):
+        """
+        Return the intensity at point x
+        """
+        pass
 
 
-def gaussian_fast(energy, intensity, width):
+class Gaussian(Peak):
+    def __call__(self, x):
+        return self.intensity*np.exp(-(x-self.energy)**2/(2*self.width**2))
+
+
+class Gaussian_fast(Peak):
     """
     Faster form of a gaussian function
     Cutoff at 6 standard deviations
     """
-    def f(x):
-        val = abs(x-energy)/width
+    def __call__(self, x):
+        val = abs(x-self.energy)/self.width
         if val > 6:
             return 0
-        return intensity*np.exp(-val**2/2)
-    return f
+        return self.intensity*np.exp(-val**2/2)
 
 
-def lorentzian(energy, intensity, width):
-    return lambda x: 1/(2*np.pi) * width / ((x - energy)**2 + width**2/4)
+def Lorentzian(Peak):
+    def __call__(self, x):
+        return 1/(2*np.pi) * self.width / ((x - self.energy)**2 + self.width**2/4)
 
 
 peak_functions = {
-    'gaussian' : gaussian_fast,
-    'lorentzian' : lorentzian,
+    'gaussian' : Gaussian_fast,
+    'lorentzian' : Lorentzian,
 }
 
 
@@ -42,6 +64,7 @@ class Spectra:
         """
         :param intensities: list of transition energies
         :param energies: list of transition intensities
+        :param name: name of spectra
         """
         self.energies = energies
         self.intensities = intensities
@@ -58,6 +81,9 @@ class Spectra:
 
     def __repr__(self):
         return f'<Spectra {self.name}>'
+
+    def __str__(self):
+        return repr(self)
 
     def __sub__(self, other):
         return SpectralDifference(self, other)
@@ -84,19 +110,17 @@ class Spectra:
             energies = convertor(energies, 'eV', units)
 
         # Make all of the peak functions functions
-        peak_function = peak_functions[self.options['peak_function']]
-
+        pf = peak_functions[self.options['peak_function']]
         peaks = []
         for energy, intensity in zip(energies, intensities):
-            peaks.append(peak_function(energy, intensity, fwhh))
+            peaks.append(pf(energy, intensity, fwhh))
 
-        # Add a little before and after the first and last vals
         val_range = energies[-1] - energies[0]
+        # Add a little before and after the first and last vals
         low, high = energies[0] - val_range/10, energies[-1] + val_range/10
-        # check to make sure there are enough points for the fwhh
-        if  val_range > npoints*fwhh:
-            raise Exception('Cannot properly plot the spectra, increase the ' +
-                            'peak width or the number of points')
+        if val_range > npoints*fwhh:
+            raise Exception('Cannot properly plot the spectra, ' +
+                            'increase the peak width (fwhh) or the number of points (npoints).')
 
         xs = np.linspace(low, high, npoints)
         ys = np.zeros(npoints)
