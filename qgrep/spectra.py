@@ -9,6 +9,9 @@ from matplotlib import pyplot as plt
 
 
 class Peak:
+    """
+    A spectral peak
+    """
     def __init__(self, energy, intensity, width):
         self.energy = energy
         self.intensity = intensity
@@ -22,9 +25,7 @@ class Peak:
 
     @abc.abstractmethod
     def __call__(self, x):
-        """
-        Return the intensity at point x
-        """
+        """ Return the intensity at point x """
         pass
 
 
@@ -35,8 +36,7 @@ class Gaussian(Peak):
 
 class Gaussian_fast(Peak):
     """
-    Faster form of a gaussian function
-    Cutoff at 6 standard deviations
+    Faster form of a gaussian function with a cutoff at 6 standard deviations
     """
     def __call__(self, x):
         val = abs(x-self.energy)/self.width
@@ -51,8 +51,8 @@ def Lorentzian(Peak):
 
 
 peak_functions = {
-    'gaussian' : Gaussian_fast,
-    'lorentzian' : Lorentzian,
+    'gaussian': Gaussian_fast,
+    'lorentzian': Lorentzian,
 }
 
 
@@ -71,10 +71,7 @@ class Spectra:
         self.name = name
 
         self.options = {
-            'bar_width' : (energies[-1] - energies[0])/150,
-            'crop': False,
-            'crop_thresh': 9,
-            'norm' : True,
+            'bar_width': (energies[-1] - energies[0])/150,
             'peak_function': 'gaussian',
         }
         self.options.update(options)
@@ -89,31 +86,21 @@ class Spectra:
         return SpectralDifference(self, other)
 
     def __add__(self, other):
-        """
-        First hack at sum of spectra
-        TODO: Make separate class akin to SpectralDifference but with more additions?
-        """
-        return SpectralSum(self.energies, other)
+        return SpectralSum(self, other)
 
-    def plot(self, npoints=10001, fwhh=1, units='eV'):
+    def spectral_values(self, npoints=10001, fwhh=1):
         """
-        Plots the transitions
-        :param npoints: the number of points to use in the expansion
-        :param fwhh: the width of the gaussian
-        :param units: what units to plot with
+        Generate the values needed for `plot()`
+        :return: xs, ys (line of spectra), bar_xs, bar_ys (sticks plots)
         """
         energies, intensities = self.energies, self.intensities
-
-        if units == 'eV':
-            pass
-        else:
-            energies = convertor(energies, 'eV', units)
 
         # Make all of the peak functions functions
         pf = peak_functions[self.options['peak_function']]
         peaks = []
         for energy, intensity in zip(energies, intensities):
-            peaks.append(pf(energy, intensity, fwhh))
+            if intensity > 0:
+                peaks.append(pf(energy, intensity, fwhh))
 
         val_range = energies[-1] - energies[0]
         # Add a little before and after the first and last vals
@@ -130,135 +117,116 @@ class Spectra:
             for peak in peaks:
                 ys[i] += peak(x)
 
-        # set max to 1
-        max_int = max(ys)
-        if self.options['norm']:
-            intensities = intensities/max_int
-            ys = ys/max_int
-            max_int = 1
-        if self.options['crop']:
-            # TODO: fix problem with x space vs point space, may need to do a backconversion
-            crop_val = 10**-self.options['crop_thresh']*max_int
+        return xs, ys, energies, intensities
 
-            start_point, end_point = np.argmax(ys > crop_val), - np.argmax(ys[::-1] > crop_val)
-            xs, ys = xs[start:end + 1], ys[start:end + 1]
-
-            start_e, end_e = np.argmax(energies > start), np.argmax(energies > end) - 1
-            val_range = energies[end_e] - energies[start_e]
-            energies = energies[start:end + 1]
-            intensities = intensities[start:end + 1]
+    def plot(self, npoints=10001, fwhh=1):
+        """
+        Plots the transitions
+        :param npoints: the number of points to use in the expansion
+        :param fwhh: the width of the gaussian
+        """
+        xs, ys, bar_xs, bar_ys = self.spectral_values(npoints, fwhh)
 
         # switch to KeV
-        plt.ticklabel_format(style='sci', axis='x', scilimits=(0,3))
+        plt.ticklabel_format(style='sci', axis='x', scilimits=(0, 3))
 
         # Plot
         plt.axhline(0, color='black')
 
         plt.plot(xs, ys, 'b-', label=self.name)
-        plt.bar(energies, intensities, self.options['bar_width'], color='r')
+        plt.bar(bar_xs, bar_ys, self.options['bar_width'], color='r')
         plt.legend()
 
 
 class CombinedSpectra:
-
     def __init__(self, spectra1, spectra2):
         """
         Combination of two spectra, either a sum or a difference
 
-        :param spectra1, spectra2: Spectra objects
+        :params spectra1, spectra2: Spectra objects
         """
+        # Check if options match
+        for key1, val1 in spectra1.options.items():
+            if key1 not in spectra2.options:
+                print(f'Conflicting options, {key1} not in spectra2.options.')
+            if val1 != spectra2.options[key1]:
+                print(f'Conflicting options, ' +
+                      f'spectra1.options[{key1}]: {val1} != ' +
+                      f'spectra2.options[{key1}]: {spectra2.options[key1]}, '
+                       'using spectra1.options.')
+
         self.options = spectra1.options.copy()
         self.spectra1, self.spectra2 = spectra1, spectra2
 
     def __repr__(self):
         return f'<CombinedSpectra {self.spectra1.name} : {self.spectra2.name}>'
 
-    def plot(self, npoints=1001, fwhh=1, units='eV'):
+    def plot(self, npoints=1001, fwhh=1):
         """
         Plot the difference of two spectra on top of the spectras
         of the individual spectra, with the second flipped
-        :param units: what units to plot with
         TODO: deal with conflicting option values
-        TODO: make better
+        TODO: currently broken if xs do not align!!!
         """
-        spectra1, spectra2 = self.spectra1, self.spectra2
-        es1, ints1 = spectra1.energies, spectra1.intensities
-        es2, ints2 = spectra2.energies, spectra2.intensities
+        sp1, sp2 = self.spectra1, self.spectra2
 
-        if units == 'eV':
-            pass
-        else:
-            es1 = convertor(es1, 'eV', units)
-            es2 = convertor(es2, 'eV', units)
+        # TODO: remove this hack
+        # Force the energies to have the same range
+        if sp1.energies[0] < sp2.energies[0]:
+            sp2.energies = np.insert(sp2.energies, 0, sp1.energies[0])
+            sp2.intensities = np.insert(sp2.intensities, 0, 0)
+        elif sp1.energies[0] > sp2.energies[0]:
+            sp1.energies = np.insert(sp1.energies, 0, sp2.energies[0])
+            sp1.intensities = np.insert(sp1.intensities, 0, 0)
 
-        # Make all of the peak functions functions
-        peak_function = peak_functions[self.options['peak_function']]
+        if sp1.energies[-1] < sp2.energies[-1]:
+            sp1.energies = np.append(sp1.energies, sp2.energies[-1])
+            sp1.intensities = np.append(sp1.intensities, 0)
+        elif sp1.energies[-1] > sp2.energies[-1]:
+            sp2.energies = np.append(sp2.energies, sp1.energies[-1])
+            sp2.intensities = np.append(sp2.intensities, 0)
 
-        peaks1, peaks2 = [], []
-        for (e1, e2), (int1, int2) in zip(zip(es1, es2), zip(ints1, ints2)):
-            peaks1.append(peak_function(e1, int1, fwhh))
-            peaks2.append(peak_function(e2, int2, fwhh))
+        xs1, ys1, bar_xs1, bar_ys1 = sp1.spectral_values(npoints, fwhh)
+        xs2, ys2, bar_xs2, bar_ys2 = sp2.spectral_values(npoints, fwhh)
 
-        # Add a little before and after the first and last vals
-        low, high = min(es1[0], es2[0]), max(es1[-1], es2[-1])
-        val_range = high - low
-        low, high = low - val_range/10, high + val_range/10
-        if  val_range > npoints*fwhh:
-            raise Exception('Cannot properly plot the spectra, increase the ' +
-                            'peak width or the number of points')
-
-        xs = np.linspace(low, high, npoints)
-        ys1 = np.zeros(npoints)
-        ys2 = np.zeros(npoints)
-
-        # generate all values
-        for i, x in enumerate(xs):
-            for peak1, peak2 in zip(peaks1, peaks2):
-                ys1[i] += peak1(x)
-                ys2[i] += peak2(x)
-
-        if isinstance(self, SpectralDifference):
-            combo = ys1 - ys2
-        elif isinstance(self, SpectralSum):
+        if isinstance(self, SpectralSum):
             combo = ys1 + ys2
-        else:
-            raise SyntaxError('Must be a sum or difference of spectra.')
+        elif isinstance(self, SpectralDifference):
+            combo = ys1 - ys2
+            # Flip second spectra if a difference
+            ys2 = -ys2
+            bar_ys2 = -bar_ys2
 
         # set max to 1
-        if self.options['norm']:
-            co_norm = True
-            if co_norm:
-                max_int = max(max(ys1), max(ys2), max(combo))
-                ints1 = ints1 / max_int
-                ys1 = ys1 / max_int
-                ints2 = ints2 / max_int
-                ys2 = ys2 / max_int
-                combo = combo / max_int
-            else:
-                ints1 = ints1 / max(ys1)
-                ys1 = ys1 / max(ys1)
-                ints2 = ints2 / max(ys2)
-                ys2 = ys2 / max(ys2)
-                combo = ys1 - ys2
-
-        # Flip if a difference
-        if isinstance(self, SpectralDifference):
-            ys2 = -ys2
-            ints2 = -ints2
-
+        #if self.options['norm']:
+        #    co_norm = True
+        #    if co_norm:
+        #        max_int = max(max(ys1), max(ys2), max(combo))
+        #        ints1 = ints1 / max_int
+        #        ys1 = ys1 / max_int
+        #        ints2 = ints2 / max_int
+        #        ys2 = ys2 / max_int
+        #        combo = combo / max_int
+        #    else:
+        #        ints1 = ints1 / max(ys1)
+        #        ys1 = ys1 / max(ys1)
+        #        ints2 = ints2 / max(ys2)
+        #        ys2 = ys2 / max(ys2)
+        #        combo = ys1 - ys2
 
         # switch to KeV
-        plt.ticklabel_format(style='sci', axis='x', scilimits=(0,3))
+        plt.ticklabel_format(style='sci', axis='x', scilimits=(0, 3))
 
         # Plot
         plt.axhline(0, color='black')
 
-        plt.plot(xs, ys1, 'b-', label=spectra1.name)
-        plt.plot(xs, ys2, 'g-', label=spectra2.name)
+        plt.plot(xs1, ys1, 'b-', label=self.spectra1.name)
+        plt.plot(xs2, ys2, 'g-', label=self.spectra2.name)
 
-        plt.plot(xs, combo, 'y-', label='Δ')
-        plt.bar(es1, ints1, self.options['bar_width'], color='r')
-        plt.bar(es2, ints2, self.options['bar_width'], color='r')
+        if isinstance(self, (SpectralSum, SpectralDifference)):
+            plt.plot(xs1, combo, 'y-', label='Δ')
+        plt.bar(bar_xs1, bar_ys1, self.options['bar_width'], color='b')
+        plt.bar(bar_xs2, bar_ys2, self.options['bar_width'], color='g')
         plt.legend()
 
 
@@ -272,9 +240,9 @@ class SpectralSum(CombinedSpectra):
         return f'<SpectralSum {self.spectra1.name} + {self.spectra2.name}>'
 
 
-def gen_spectra(file_name, name, thresh=9):
+def gen_spectra(file_name, name, units='eV', thresh=9):
     data = ccread(file_name)
-    energies, intensities = convertor(data.etenergies, 'cm-1', 'eV'), data.etoscs
+    energies, intensities = convertor(data.etenergies, 'cm-1', units), data.etoscs
     #intensities = abs(intensities)
 
     #print(len(energies))
