@@ -104,18 +104,18 @@ else:
         inputs |= set(inp for inp in glob.glob(inp_arg + '/output.dat') if os.path.isfile(inp))
 
 if len(inputs) == 0:
-    print(f'Could not find input file(s) matching {args.input}')
+    print(f'Could not find input file(s) matching: {",".join(args.input)}')
 else:
     inputs = natsorted(inputs)
-    results = []
+    successes = []
     for inp in inputs:
         if len(inputs) > 1:
             print(inp)
-        results.append(check(inp, args))
+        successes.append(check(inp, args))
 
     # Print a summary if more than two inputs
     if len(inputs) > 2:
         length = len(max(inputs, key=len))
         print('\nSummary\n=======')
-        for inp, res in zip(inputs, results):
-            print(inp.ljust(length) + ': ' + ('✓' if res else 'x'))
+        for inp, success in zip(inputs, successes):
+            print(inp.ljust(length) + ': ' + ('✓' if success else 'x'))
