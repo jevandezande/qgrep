@@ -137,5 +137,6 @@ class TestGroup_Contrib(unittest.TestCase):
         self.assertTrue(group_contrib1 == group_contrib1_dup)
         self.assertFalse(group_contrib1 == group_contrib2)
 
+
 if __name__ == '__main__':
     unittest.main()

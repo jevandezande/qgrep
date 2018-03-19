@@ -34,7 +34,7 @@ class OrbitalPopulation:
 
     def __setitem__(self, index, value):
         if not isinstance(value, Orbital):
-            raise SyntaxError('Must be an Orbital.')
+            raise SyntaxError(f'Must be an Orbital, got: {type(value)}')
         self.orb_list[index] = value
 
     def __str__(self):
@@ -43,7 +43,8 @@ class OrbitalPopulation:
     def __sub__(self, other):
         # TODO: Fix MOrbital indexing problem
         if len(self) != len(other):
-            Warning('Differing number of orbitals, output will be truncated')
+            Warning(f'Differing number of orbitals ({len(self)} != {len(other)}), '
+                     'output will be truncated')
 
         min_len = min(len(self), len(other))
         orb_list = [s - o for s, o in zip(self[:min_len], other[:min_len][:min_len])]
@@ -64,7 +65,7 @@ class OrbitalPopulation:
         elif format == 'latex':
             out = '\n\n'.join([orb.latex() for orb in self.orb_list])
         else:
-            raise SyntaxError('Invalid write format.')
+            raise SyntaxError(f'Invalid write format: {format}')
 
         if file_name == 'stdout':
             print(out)
@@ -76,7 +77,6 @@ class OrbitalPopulation:
         """
         Generates a sorted ROP
         """
-
         if key == 'index':
             sort_key = lambda x: x.index
         elif key == 'atom':
@@ -88,13 +88,11 @@ class OrbitalPopulation:
         elif key == 'spin':
             sort_key = lambda x: x.spin
         else:
-            raise SyntaxError('Invalid key given to sorted.')
+            raise SyntaxError(f'Invalid key given to sorted: {key}')
 
         orb_list = []
         for mo in self.orb_list:
-            contribs = []
-            for contrib in sorted(mo.contributions, key=sort_key, reverse=True):
-                contribs.append(contrib)
+            contribs = sorted(mo.contributions, key=sort_key, reverse=True)
             orb_list.append(MOrbital(mo.index, mo.spin, mo.energy, mo.occupation, contribs))
 
         return OrbitalPopulation(orb_list=orb_list)
@@ -145,20 +143,20 @@ class OrbitalPopulation:
         Append another orbital
         """
         if not isinstance(orbital, MOrbital):
-            raise SyntaxError('You may only append Orbitals.')
+            raise SyntaxError(f'You may only append Orbitals, got: type{orbital}')
         self.orb_list.append(orbital)
 
     def atom_contract(self):
-        orb_list = []
-        for orb in self:
-            orb_list.append(orb.atom_contract())
-        return OrbitalPopulation(orb_list=orb_list)
+        """
+        Contracts all atom AO_Contributions together (i.e. adds)
+        """
+        return OrbitalPopulation(orb_list=[orb.atom_contract() for orb in self])
 
     def am_contract(self):
-        orb_list = []
-        for orb in self:
-            orb_list.append(orb.am_contract())
-        return OrbitalPopulation(orb_list=orb_list)
+        """
+        Contracts all AO_Contributions of the same am together (i.e. adds)
+        """
+        return OrbitalPopulation(orb_list=[orb.am_contract() for orb in self])
 
     def crop(self, max_num=5, min_num=2, cutoff=5):
         """
@@ -233,7 +231,7 @@ Three blank lines
 
             blocks = match.split('\n\n')
             for block in blocks:
-                lines = block.split('\n')
+                lines = block.splitlines()
 
                 # Remove excess from the first block
                 if first:
@@ -248,26 +246,23 @@ Three blank lines
                     lines = lines[1:]
 
                 # Parse out the header
-                indexes = lines[0].split()
-                orb_es = lines[1].split()
-                occs = lines[2].split()
-                orbs = []
-                for i in range(len(indexes)):
-                    index, orb_e, occ = int(indexes[i]), float(orb_es[i]), round(float(occs[i]))
-                    # Add orbitals without occupations (added in next section)
-                    orbs.append(MOrbital(index, spin, orb_e, occ))
+                indexes = map(int, lines[0].split())
+                orb_es = map(float, lines[1].split())
+                occs = map(float, lines[2].split())
+
+                # Generate orbitals (occupations added in next section)
+                orbs = [MOrbital(idx, spin, orb_e, occ) for idx, orb_e, occ in zip(indexes, orb_es, occs)]
 
                 # Parse out the orbital contributions
                 for line in lines[4:]:
                     index, atom, ao, *vals = line.split()
                     index = int(index)
+                    vals = map(float, vals)
                     for i, val in enumerate(vals):
                         # If there is occupation, this deletes all the appearances of 0.0
                         # Due to rounding, the occupations will not add up to 100
-                        val = float(val)
                         if val > 0:
-                            ao_contrib = AO_Contrib(index, atom, ao, val, spin)
-                            orbs[i].contributions.append(ao_contrib)
+                            orbs[i].contributions.append(AO_Contrib(index, atom, ao, val, spin))
 
                 orb_list += orbs
         else:
@@ -281,14 +276,13 @@ Three blank lines
             csv = f.read()
         orb_list = []
         for block in csv.split('\n\n'):
-            lines = block.strip().split('\n')
+            lines = block.strip().splitlines()
             mo_index, spin, orb_e, occ = lines[0].split(',')
             mo_index, orb_e, occ = int(mo_index), float(orb_e), round(float(occ))
             aocs = []
             for line in lines[1:]:
                 index, atom, ao, val = line.split(',')
-                index, atom, ao, val = int(index), atom.strip(), ao.strip(), float(val)
-                aocs.append(AO_Contrib(index, atom, ao, val, spin))
+                aocs.append(AO_Contrib(int(index), atom.strip(), ao.strip(), float(val), spin))
             orb_list.append(MOrbital(mo_index, spin, orb_e, occ, aocs))
 
         return orb_list
@@ -389,7 +383,7 @@ class MOrbital:
                 atoms[index] = aoc
 
         # Sort by atom index
-        contribs = sorted(list(atoms.values()), key=lambda x: x.index)
+        contribs = sorted(atoms.values(), key=lambda x: x.index)
         return MOrbital(self.index, None, self.energy, self.occupation, contribs)
 
     def am_contract(self):
@@ -400,7 +394,6 @@ class MOrbital:
         atoms = {}
         for aoc in self.contributions:
             # First non-number corresponds to the am
-
             index, am, val = aoc.index, aoc.ao[0], aoc.val
             if (index, am) in atoms:
                 atoms[(index, am)].val += val
@@ -411,7 +404,7 @@ class MOrbital:
 
         # Sort by atom index and then am_type
         key = lambda x: (x.index, am_types.index(x.ao[0]))
-        contribs = sorted(list(atoms.values()), key=key)
+        contribs = sorted(atoms.values(), key=key)
         return MOrbital(self.index, None, self.energy, self.occupation, contribs)
 
     def atom_sum(self, atom):
@@ -428,7 +421,7 @@ class MOrbital:
                 if ao_contrib.index == atom:
                     val += ao_contrib.val
         else:
-            raise SyntaxError('Atom specifier must be either an int or str.')
+            raise SyntaxError(f'Atom specifier must be either an int or str, got: {type(atom)}')
 
         return val
 
@@ -437,7 +430,7 @@ class MOrbital:
         Sum over all the contributions from am_type on the specified atom
         """
         if am_type not in am_types:
-            raise Exception('Invalid am_type')
+            raise Exception(f'Invalid am_type, got: {am_type}, expected {am_types}')
         val = 0
         if isinstance(atom, str):
             for ao_contrib in self.contributions:
