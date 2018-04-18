@@ -20,6 +20,8 @@ parser.add_argument('-a', '--analytical_freqs', help="Run frequencies.",
                     action='store_true', default=False)
 parser.add_argument('-d', '--debug', help="Generate but don't submit the optimization.",
                     action='store_true', default=False)
+parser.add_argument('-q', '--queue', help='Which queue to select (default is used if not specified.',
+                    type=str, default=None)
 
 args = parser.parse_args()
 
@@ -77,8 +79,14 @@ os.makedirs(args.method, exist_ok=False)
 with open(f'{name}/input.dat', 'w') as f:
     f.write(input_file)
 
+options = {
+    'debug': args.debug,
+}
+if args.queue is not None:
+    options['queue'] = args.queue
+
 cwd = os.getcwd()
 os.chdir(name)
-job = SubmitJob({'debug': args.debug})
+job = SubmitJob(options)
 job.submit()
 os.chdir(cwd)
