@@ -28,15 +28,14 @@ def get_geom(lines, geom_type='xyz', units='angstrom'):
         if line == end:
             break
         idx, atom, charge, *xyz = line.split()
-        xyz = (float(q)*BOHR_TO_ANGSTROM for q in xyz)
-        geom.append('{:<2s} {} {} {}'.format(atom, *xyz))
+        x, y, z = map(lambda q: float(q)*BOHR_TO_ANGSTROM, xyz)
+        geom.append(f'{atom:<2s} {x} {y} {z}')
 
     return geom
 
 
 def get_energy(lines, energy_type=''):
     """Get the energy"""
-    # The energy will always be on the third line from the end, zeroth element
     energy = lines[-3].split()[0]
 
     return energy
