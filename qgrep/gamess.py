@@ -11,8 +11,8 @@ def check_convergence(lines):
     """Returns all the geometry convergence results"""
     convergence_result = 'MAXIMUM GRADIENT'
     convergence_list = []
-    for i in range(len(lines)):
-        if convergence_result in lines[i]:
+    for i, line in enumerate(lines):
+        if convergence_result in line:
             convergence_list.append(''.join(lines[i + 2].strip()))
 
     return convergence_list
@@ -40,8 +40,8 @@ def get_geom(lines, geom_type='xyz', units='angstrom'):
         return ''
 
     geom_end = -1
-    for i in range(geom_start, len(lines)):
-        if end == lines[i]:
+    for i, line in enumerate(lines[geom_start:], start=geom_start):
+        if end == line:
             geom_end = i
             break
     if geom_end == -1:
@@ -133,34 +133,30 @@ class Gamessifier():
 
     def read_ecp(self, ecp_file='ecp.dat'):
         """Reads an ecp file and makes a dictionary with the form atom:ecp"""
-        self.ecp = ''
-        if not ecp_file:
-            return
+        self.ecp = {}
         if not os.path.isfile(ecp_file):
-            print("Couldn't find ecp file: " + ecp_file)
+            print(f"Couldn't find ecp file: {ecp_file}")
             return
 
-        lines = open(ecp_file).readlines()
-        self.ecp = {}
-        i = 0
-        while i < len(lines):
-            name, ecp_type = lines[i].split()[:2]
-            name = name.split('-')[0]
-            if ecp_type == 'GEN':
-                self.ecp[name] = lines[i]
-                done = False
-                while not done:
-                    i += 1
-                    if lines[i][0] == ' ':
-                        self.ecp[name] += lines[i]
-                    else:
-                        done = True
-            elif ecp_type == 'NONE':
-                self.ecp[name] = lines[i]
-                i += 1
-            else:
-                raise SyntaxError('Invalid ecp type, only GEN and NONE are'
-                                  'currently accepted.')
+        with open(ecp_file) as file:
+            for line in file:
+                name, ecp_type = line.split()[:2]
+                name = name.split('-')[0]
+                if ecp_type == 'GEN':
+                    self.ecp[name] = line
+                    while True:
+                        try:
+                            line = next(file)
+                        except StopIteration:
+                            break
+                        if line[0] == ' ':
+                            self.ecp[name] += line
+                        else:
+                            break
+                elif ecp_type == 'NONE':
+                    self.ecp[name] = line
+                else:
+                    raise SyntaxError('Invalid ecp type, only GEN and NONE are currently accepted.')
 
     def write_options_str(self):
         """
@@ -183,7 +179,8 @@ class Gamessifier():
         self.options_dict = OrderedDict()
         if isinstance(options, str):
             if os.path.isfile(options):
-                options_str = open(options).read()
+                with open(options) as f:
+                    options_str = f.read()
                 matches = re.findall('^ \$\w+.*?\$END', options_str,
                                      re.DOTALL + re.MULTILINE)
                 for match in matches:
@@ -208,7 +205,8 @@ class Gamessifier():
             return
         if not os.path.isfile(dat_file):
             print("Couldn't find dat file: " + dat_file)
-        data = open(dat_file).read()
+        with open(dat_file) as f:
+            data = f.read()
         vec_result = re.findall(self.vec_re, data)
         hess_result = re.findall(self.hess_re, data)
         if vec_result:
@@ -285,4 +283,5 @@ class Gamessifier():
         self.update_options()
 
         input_data = f'{self.write_options_str()}\n{data}\n{ecp}\n{self.vec}\n{self.hess}'
-        open(input_file, 'w').write(input_data)
+        with open(input_file, 'w') as f:
+            f.write(input_data)

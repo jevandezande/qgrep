@@ -36,7 +36,8 @@ class TestGamessifier(unittest.TestCase):
         tmp_basis_file = 'basis.gbs.tmp1'
         basis_set = BasisSet()
         basis_set['B'] = Basis('B', [BasisFunction('S', [0.2, 0.4], [0.3, 0.7])])
-        open(tmp_basis_file, 'w').write(basis_set.print('gamess'))
+        with open(tmp_basis_file, 'w') as f:
+            f.write(basis_set.print('gamess'))
         self.g.read_basis_set(tmp_basis_file)
         self.assertEqual(basis_set, self.g.basis_set)
 
@@ -53,7 +54,8 @@ C-ECP GEN   10  2
       -60.2990287        2     64.6477389
       -10.4217834        2     16.0960833
 O-ECP NONE"""
-        open(tmp_ecp_file, 'w').write(ecp)
+        with open(tmp_ecp_file, 'w') as f:
+            f.write(ecp)
         self.g.read_ecp(tmp_ecp_file)
         os.remove(tmp_ecp_file)
 
@@ -71,7 +73,8 @@ O-ECP NONE"""
         self.assertEqual(options_str, self.g.write_options_str())
 
         tmp_options_file = 'options.dat.tmp'
-        open(tmp_options_file, 'w').write(options_str)
+        with open(tmp_options_file, 'w') as f:
+            f.write(options_str)
         self.g.read_options(tmp_options_file)
 
     def test_read_other_data(self):
@@ -80,7 +83,8 @@ O-ECP NONE"""
         vec = ' $VEC\n12 23 31\n33241 32523 11.0\n $END'
         hess = ' $HESS\n32 43 987\n453 443 11.0\n $END'
         data = 'Hey\n' + vec + ' \n random other text\n' + hess + '\n more text\n122\n'
-        open(tmp_dat_file, 'w').write(data)
+        with open(tmp_dat_file, 'w') as f:
+            f.write(data)
         self.g.read_data(tmp_dat_file)
         self.assertEqual(vec, self.g.vec)
         self.assertEqual(hess, self.g.hess)
@@ -102,7 +106,8 @@ O-ECP NONE"""
         basis_set['H'] = Basis('H', [BasisFunction('S', [1], [1])])
         basis_set['O'] = Basis('O', [BasisFunction('S', [1], [1]), BasisFunction('S', [2], [1])])
         basis_set['C'] = Basis('C', [BasisFunction('S', [1], [1]), BasisFunction('SP', [1, 2], [[0.4, 0.6], [0.1, 0.9]])])
-        open(tmp_basis_file, 'w').write(basis_set.print('gamess'))
+        with open(tmp_basis_file, 'w') as f:
+            f.write(basis_set.print('gamess'))
         tmp_geom_file = 'geom.xyz.tmp'
         self.formaldehyde_xyz.write(tmp_geom_file)
         tmp_ecp_file = 'ecp.dat.tmp'
@@ -113,15 +118,18 @@ C-ECP GEN   10  2
       -60.2990287        2     64.6477389
       -10.4217834        2     16.0960833
 O-ECP NONE"""
-        open(tmp_ecp_file, 'w').write(ecp)
+        with open(tmp_ecp_file, 'w') as f:
+            f.write(ecp)
         tmp_options_file = 'options.dat.tmp'
         options_str = ' $CONTRL\n    SCFTYP=RHF\n $END\n\n $SCF\n    DIRSCF=.TRUE.\n $END\n\n'
-        open(tmp_options_file, 'w').write(options_str)
+        with open(tmp_options_file, 'w') as f:
+            f.write(options_str)
         tmp_dat_file = 'dat.tmp'
         vec = ' $VEC\n12 23 31\n33241 32523 11.0\n $END'
         hess = ' $HESS\n32 43 987\n453 443 11.0\n $END'
         data = 'Hey\n' + vec + ' \n random other text\n' + hess + '\n more text\n122\n'
-        open(tmp_dat_file, 'w').write(data)
+        with open(tmp_dat_file, 'w') as f:
+            f.write(data)
 
         self.g.read(tmp_geom_file, tmp_basis_file, tmp_ecp_file, tmp_options_file, tmp_dat_file)
 
