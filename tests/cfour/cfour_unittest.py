@@ -20,8 +20,8 @@ class TestCFour(unittest.TestCase):
 
     def test_get_geom(self):
         """Testing get_geom"""
-        self.assertEqual(self.files['h2o.xyz'],
-                         cfour.get_geom(self.files['h2o.out'], geom_type='xyz'))
+        h2o_xyz = cfour.get_geom(self.files['h2o.out'], geom_type='xyz')
+        self.assertEqual(self.files['h2o.xyz'], h2o_xyz)
 
     def test_check_convergence(self):
         """Testing check_convergence"""
@@ -50,3 +50,5 @@ class TestCFour(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+    h2o_xyz = cfour.get_geom(open('h2o.out').readlines(), geom_type='xyz')
+    print(h2o_xyz)
