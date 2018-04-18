@@ -2,7 +2,6 @@
 from os import path
 
 
-# noinspection PyPep8
 def get_geom(lines, geom_type='xyz', units='Angstrom'):
     start = 'Standard Nuclear Orientation (Angstroms)'
     end = 'Molecular Point Group'
@@ -40,10 +39,10 @@ def plot(lines, geom_type='xyz'):
 
     geoms_start = []
     geoms_end = []
-    for i in range(len(lines)):
-        if start in lines[i]:
+    for i, line in enumerate(lines):
+        if start in line:
             geoms_start.append(i + 3)
-        if end in lines[i]:
+        if end in line:
             geoms_end.append(i - 1)
 
     geoms = []
@@ -68,8 +67,8 @@ def check_convergence(lines):
     """Returns all the geometry convergence results"""
     convergence_result = 'Maximum     Tolerance    Cnvgd?'
     convergence_list = []
-    for i in range(len(lines)):
-        if convergence_result in lines[i]:
+    for i, line in enumerate(lines):
+        if convergence_result in line:
             convergence_list.append(''.join(lines[i:i + 4]))
 
     return convergence_list
@@ -116,8 +115,8 @@ def generate_input(geom='', options=None):
     if geom:
         if geom == 'read':
             if path.isfile('geom.xyz'):
-                geom = [line.split() for line in open('geom.xyz').readlines()]
-                geom = [line.split() for line in open('geom.xyz').readlines()]
+                with open('geom.xyz') as f:
+                    geom = [line.split() for line in f.readlines()]
                 charge = 0
                 multiplicity = 1
                 if len(geom[0]) == 2 and geom[0][0].isdigit() and geom[0][1].isdigit():
@@ -139,7 +138,8 @@ def generate_input(geom='', options=None):
     if 'basis' in options:
         if options['basis'] == 'read':
             if path.isfile('basis.gbs'):
-                basis = "\n$basis\n" + open('basis.gbs').read() + "$end\n"
+                with open('basis.gbs') as f:
+                    basis = "\n$basis\n" + f.read() + "$end\n"
             else:
                 check.append("Can't open basis")
     else:
@@ -149,7 +149,8 @@ def generate_input(geom='', options=None):
     if 'ecp' in options:
         if options['ecp'] == 'read':
             if path.isfile('ecp.gbs'):
-                ecp = "\n$ecp\n" + open('ecp.gbs').read() + "$end\n"
+                with open('ecp.gbs') as f:
+                    ecp = "\n$ecp\n" + f.read() + "$end\n"
             else:
                 check.append("Can't open ecp")
 
@@ -186,4 +187,5 @@ def generate_input(geom='', options=None):
     print(input_str)
     print('Check:' + '\n\t'.join(check))
 
-    open('input.dat', 'w').write(input_str)
+    with open('input.dat', 'w') as f:
+        f.write(input_str)
