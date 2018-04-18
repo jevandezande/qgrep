@@ -30,14 +30,13 @@ def get_geom(lines, type='xyz', units='angstrom'):
     if units == 'angstrom':
         scale = BOHR_TO_ANGSTROM
     elif units != 'bohr':
-        raise Exception('Invalid Units')
+        raise ValueError('Invalid Units')
 
     geom = []
-    line_form = '{:s} {} {} {}\n'
     for line in lines[geom_start: geom_end]:
         atom, *xyz = [q.strip('",') for q in itemgetter(3, 7, 8, 9)(line.split())]
-        xyz = [scale*float(q) for q in xyz]
-        geom.append(line_form.format(atom, *xyz))
+        x, y, z = [scale*float(q) for q in xyz]
+        geom.append(f'{atom} {x} {y} {z}')
 
     return geom
 
@@ -95,21 +94,21 @@ def get_molecule(lines):
 
 def template(geom='', jobtype='optimize', functional='B3LYP', basis='svp'):
     """Returns a template with the specified geometry and other variables"""
-    template_style = """{{ "bagel" : [
+    return f"""{{ "bagel" : [
 
 {{
   "title" : "molecule",
   "symmetry" : "C1",
-  "basis" : "{1}",
+  "basis" : "{basis}",
   "df_basis" : "svp-jkfit",
   "angstrom" : false,
   "geometry" : [
-  {2}
+  {geom}
   ]
 }},
 
 {{
-  "title" : "{0}",
+  "title" : "{jobtype}",
   "method" : [ {{
     "title" : "rohf",
     "nact" : 0,
@@ -119,7 +118,6 @@ def template(geom='', jobtype='optimize', functional='B3LYP', basis='svp'):
 
 ]}}
 """
-    return template_style.format(jobtype, basis, geom)
 
 
 def convert_to_bagel_geom(geom_str):
@@ -127,12 +125,12 @@ def convert_to_bagel_geom(geom_str):
     Converts to a bagel formatted geometry (json format)
     """
     bagel_geom = ''
-    geom_form = '[{:>15.10f},{:>15.10f},{:>15.10f}] }},\n'
     for line in geom_str.strip().split('\n'):
         atom, *xyz = line.split()
         bagel_geom += f'{{"atom" : "{atom:s}", '
         if len(atom) == 1:
             bagel_geom += ' '
-        bagel_geom += geom_form.format(*map(float, xyz))
+        x, y, z = map(float, xyz)
+        bagel_geom = f'[{x:>15.10f},{y:>15.10f},{z:>15.10f}] }},\n'
 
     return bagel_geom[:-2]
