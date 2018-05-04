@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import os
+import sys
 
 # Script that takes an output file and returns the orbital energies
 import argparse
@@ -7,9 +9,13 @@ import numpy as np
 from cclib import ccopen
 from cclib.parser.utils import convertor
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from qgrep.energy_levels import energy_levels
+
 parser = argparse.ArgumentParser(description='Get the orbital energies from an output file.')
-parser.add_argument('-i', '--input', help='The file to be read.', type=str,
-                    default='output.dat')
+parser.add_argument('-i', '--input', help='The file to be read.',
+                    type=str, nargs='+', default='output.dat')
 parser.add_argument('-w', '--write', help='Write energy levels to an output file.',
                     default=False, action='store_true')
 parser.add_argument('-o', '--output', help='File for the orbital energies.',
@@ -19,48 +25,8 @@ parser.add_argument('-u', '--units', help='Units to output energies in.',
 
 args = parser.parse_args()
 
-try:
-    data = ccopen(args.input).parse()
-    levels = np.array(data.moenergies)
-    if args.units != 'eV':
-        try:
-            levels = convertor(levels, 'eV', args.units)
-        except KeyError as e:
-            raise KeyError(f'Cannot convert energy levels to {args.units}')
-    homos = data.homos
-except AttributeError as e:
-    raise Exception('Cannot find appropriate data, has the SCF finished yet?')
+for inp in args.input:
+    if len(args.input) > 1:
+        print(inp)
 
-if levels.shape[0] == 1:
-    i = homos[0]
-    homo = levels[0][i]
-    lumo = levels[0][i+1]
-
-    out = f"""\
-  eV  │ Index │   Energy  │
-──────┼───────┼───────────┤
- LUMO │  {i+1:>3}  │ {lumo:>9.5f} │
- HOMO │  {i:>3}  │ {homo:>9.5f} │
-──────┼───────┼───────────┤
- GAP  │       │ {lumo-homo:>9.5f} │
-"""
-else:
-    ia, ib = homos[0], homos[1]
-    ha, hb = levels[0][ia],   levels[1][ib]
-    la, lb = levels[0][ia+1], levels[1][ib+1]
-    spin_flip = min(la - hb, lb - ha)
-
-    out = f"""\
-  eV   │  α   β  │  α Energy  β Energy │
-───────┼─────────┼─────────────────────┤
- LUMOS │ {ia+1:>3} {ib+1:>3} │ {la:>9.5f} {lb:>9.5f} │
- HOMOS │ {ia:>3} {ib:>3} │ {ha:>9.5f} {hb:>9.5f} │    Spin-Flip Gap
-───────┼─────────┼─────────────────────┤    ─────────────
- GAPS  │         │ {la-ha:>9.5f} {lb-hb:>9.5f} │       {spin_flip:^8.5f}
-"""
-print(out)
-
-
-if args.write:
-    levels = levels.T
-    np.savetxt(args.output, levels, fmt="%7.5f")
+    energy_levels(inp, args.units, verbose=True, write=args.write)
