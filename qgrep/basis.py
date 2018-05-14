@@ -198,8 +198,7 @@ class Basis:
         return True
 
     def __iter__(self):
-        for c in self.basis_functions:
-            yield c
+        yield from self.basis_functions
 
     def __repr__(self):
         return f"<Basis {self.atom:s} {len(self.basis_functions):d}>"
@@ -336,8 +335,7 @@ class BasisSet:
         return self.print(style='gaussian94')
 
     def __iter__(self):
-        for basis in self.atoms.values():
-            yield basis
+        yield from self.atoms.values()
 
     @staticmethod
     def check_basis_set(atoms):
