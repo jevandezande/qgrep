@@ -567,3 +567,76 @@ class BasisSet:
         """Returns a list of list of np.array(exp, coeff)"""
         vals = [[con.values for con in basis] for basis in self]
         return vals
+
+
+class ECPPotential:
+    def __init__(self, shell, tmp1, tmp2, tmp3):
+        """
+        :param shell: the shell for the ecp
+        :params tmp1..3: unknown values TODO
+        """
+        self.shell = shell
+        assert len(tmp1) == len(tmp2) and len(tmp1) == len(tmp3)
+        self.tmp1, self.tmp2, self.tmp3 = tmp1, tmp2, tmp3
+
+    def __len__(self):
+        return len(self.tmp1)
+
+    def __iter__(self):
+        yield from zip(self.tmp1, self.tmp2, self.tmp3)
+
+    def print(self, style):
+        out = ''
+        """
+f-ul potential
+  1
+  2      3.03407192            21.53103107
+"""
+        if style == 'gaussian94':
+            out += f'{self.shell.lower()}-ul potential\n'
+            out += f'{len(self):>4}\n'
+            out += '\n'.join(f'{t1} {t2:>15.8f} {t3:20.8f}' for t1, t2, t3 in self)
+        else:
+            raise NotImplementedError(f'Style, {style}, is not yet implemented for ECPs')
+        return out
+
+
+class ECP:
+    def __init__(self, atom, num, n_elec, functions, name=''):
+        """
+        :param atom: the atom the ecp is on
+        :param n_elec: number of electrons to replace
+        :param num: some random number TODO
+        :param function: the potentials
+        """
+        self.atom = atom
+        self.num = num
+        self.n_elec = n_elec
+        self.functions = functions
+        self.name = name
+        pass
+
+    def __iter__(self):
+        """ Iterate over the subshells in order """
+        yield from self.functions
+
+    def print(self, style='gaussian94'):
+        """
+IR     0
+IR-ECP     3     60
+f-ul potential
+  1
+  2      3.03407192            21.53103107
+s-ul potential
+  3
+  2     13.65220260           732.26919978
+  2      6.82610130            26.48472087
+  2      3.03407192           -21.53103107
+"""
+        if style == 'gaussian94':
+            out = f'{self.atom}      0\n'
+            out += f'{self.atom}-ECP     {self.num} {self.n_elec:>6}\n'
+            out += '\n'.join(potential.print(style) for potential in self)
+        else:
+            raise NotImplementedError(f'Style, {style}, is not yet implemented for ECPs')
+        return out

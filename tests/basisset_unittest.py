@@ -9,7 +9,7 @@ from numpy.testing import assert_array_almost_equal as aaa_equal
 
 path.insert(0, '..')
 
-from qgrep.basis import Basis, BasisFunction, BasisSet
+from qgrep.basis import Basis, BasisFunction, BasisSet, ECP, ECPPotential
 
 
 class TestBasisFunction(unittest.TestCase):
@@ -53,7 +53,7 @@ class TestBasisFunction(unittest.TestCase):
     def test_check_coeffs(self):
         """Test check_exps"""
         BasisFunction.check_coeffs(np.arange(5))
-        BasisFunction.check_coeffs(np.arange(9).reshape((3,3)))
+        BasisFunction.check_coeffs(np.arange(9).reshape((3, 3)))
         self.assertRaises(ValueError, BasisFunction.check_exps, np.arange(8).reshape((2, 2, 2)))
 
     def test_exps_coeffs(self):
@@ -271,6 +271,51 @@ class TestBasisSet(unittest.TestCase):
                  np.array([[0.1, 0.2], [0.4, 0.3], [3.0, 0.5]])]]
         self.assertEqual(vals[0][0][0][1], self.basis_set.values()[0][0][0][1])
         self.assertEqual(vals[0][1][1][0], self.basis_set.values()[0][1][1][0])
+
+
+class TestECPPotential(unittest.TestCase):
+    def setUp(self):
+        self.ecpps = ECPPotential('S', [2, 2], [20, 10], [200, 100])
+        self.ecppp = ECPPotential('P', [2], [5.5], [13.4])
+
+    def test_len(self):
+        assert len(self.ecpps) == 2
+        assert len(self.ecppp) == 1
+
+    def test_print(self):
+        pr = self.ecpps.print(style='gaussian94')
+        exp = '''s-ul potential
+   2
+2     20.00000000         200.00000000
+2     10.00000000         100.00000000'''
+
+        assert pr == exp
+        pr = self.ecppp.print(style='gaussian94')
+        exp = '''p-ul potential
+   1
+2      5.50000000          13.40000000'''
+        assert pr == exp
+
+
+class TestECP(unittest.TestCase):
+    def setUp(self):
+        self.ecpps = ECPPotential('S', [2, 2], [20, 10], [200, 100])
+        self.ecppp = ECPPotential('P', [2], [5.5], [13.4])
+        self.ecp = ECP('H', 3, 12, [self.ecpps, self.ecppp])
+
+    def test_print(self):
+        pr = self.ecp.print(style='gaussian94')
+        exp = '''\
+H      0
+H-ECP     3     12
+s-ul potential
+   2
+2     20.00000000         200.00000000
+2     10.00000000         100.00000000
+p-ul potential
+   1
+2      5.50000000          13.40000000'''
+        assert pr == exp
 
 
 if __name__ == '__main__':
