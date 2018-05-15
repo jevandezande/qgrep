@@ -153,7 +153,7 @@ class BasisFunction:
             for c_line in self.coeffs:
                 out += (' {:>12.7g}'*self.num_coeffs).format(*c_line) + '\n'
         else:
-            raise SyntaxError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
+            raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
         return out
 
 
@@ -224,7 +224,7 @@ class Basis:
         """Print all BasisFunctions in the specified format"""
         out = ''
         if style not in SUPPORTED:
-            raise SyntaxError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
+            raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
         if print_name:
             if style == 'gaussian94':
                 out += f'{self.atom}    0\n'
@@ -237,7 +237,7 @@ class Basis:
             elif style == 'molpro':
                 out += f'! {self.atom:s}\n! {self.atom:s}\n'
             else:
-                raise SyntaxError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
+                raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
         if style == 'bagel':
             out += ',\n'.join([c.print(style, self.atom) for c in self]) + ']'
         elif style == 'cfour':
@@ -355,7 +355,7 @@ class BasisSet:
 
     @staticmethod
     def read(in_file="basis.gbs", style='gaussian94', debug=False):
-        """Read a gaussian94 style basis set"""
+        """ Read a basis set"""
         # assume spherical
         basis_name = in_file.split('/')[-1].split('.')[0]
         bs = BasisSet(name=basis_name)
@@ -487,14 +487,12 @@ class BasisSet:
                 else:
                     raise SyntaxError(f'Not sure what to with line:\n{line}')
                 bs[atom] = Basis(atom, bfs)
-        else:
+        elif style in ['gaussian94', 'gamess']:
             if style == 'gaussian94':
                 atom_separator = '****'
             elif style == 'gamess':
                 num_skip = 1
                 atom_separator = '\n\n'
-            else:
-                raise SyntaxError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
             with open(in_file) as f:
                 basis_set_str = f.read().strip()
             # Split into atoms
@@ -513,16 +511,17 @@ class BasisSet:
                         con = []
                         for line in basis_chunk[i + 1:i + num + 1]:
                             con.append([float(x) for x in line.split()[num_skip:]])
+                            con.append(list(map(float, line.split()[num_skip:]])))
                         exps, *coeffs = zip(*con)
-                        # Remove extra list
-                        coeffs = np.array(coeffs[0])
-                        con_list.append(BasisFunction(am, exps, coeffs))
+                        con_list.append(BasisFunction(am, exps, np.array(coeffs[0])))
                         i += num + 1
                     bs.atoms[atom] = Basis(atom, con_list, name=basis_name)
                 except:
                     if debug:
                         print('Failed to parse section starting with\n' + '\n'.join(chunk.splitlines()[:5]))
                     raise
+        else:
+            raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
 
         return bs
 
@@ -561,7 +560,7 @@ class BasisSet:
                 [basis.print(style) for basis in self])
             return out + separator
         else:
-            raise SyntaxError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
+            raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
 
     def values(self):
         """Returns a list of list of np.array(exp, coeff)"""
