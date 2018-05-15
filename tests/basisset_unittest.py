@@ -230,32 +230,32 @@ class TestBasisSet(unittest.TestCase):
         test_file_gaussian = 'my_basis_gaussian.gbs.tmp'
         with open(test_file_gaussian, 'w') as f:
             f.write(bs.print('gaussian94'))
-        bs1 = BasisSet.read(test_file_gaussian, 'gaussian94')
-        self.assertEqual('<BasisSet my_basis_gaussian>', repr(bs1))
+        bs1 = BasisSet.read_file(test_file_gaussian, 'gaussian94')
+        self.assertEqual('<BasisSet my_basis_gaussian.gbs>', repr(bs1))
         self.assertEqual(bs, bs1)
 
         test_file_gamess = 'my_basis_gamess.gbs.tmp'
         with open(test_file_gamess, 'w') as f:
             f.write(bs.print('gamess'))
-        bs2 = BasisSet.read(test_file_gamess, 'gamess')
+        bs2 = BasisSet.read_file(test_file_gamess, 'gamess')
         self.assertEqual(bs, bs2)
 
         test_file_bagel = 'my_basis_bagel.json.tmp'
         with open(test_file_bagel, 'w') as f:
             f.write(bs.print('bagel'))
-        bs3 = BasisSet.read(test_file_bagel, 'bagel')
+        bs3 = BasisSet.read_file(test_file_bagel, 'bagel')
         self.assertEqual(bs, bs3)
 
         test_file_cfour = 'my_basis_cfour.GENBAS.tmp'
         with open(test_file_cfour, 'w') as f:
             f.write(bs.print('cfour'))
-        bs4 = BasisSet.read(test_file_cfour, 'cfour')
+        bs4 = BasisSet.read_file(test_file_cfour, 'cfour')
         self.assertEqual(bs, bs4)
 
         test_file_molpro = 'my_basis_molpro.bas.tmp'
         with open(test_file_molpro, 'w') as f:
             f.write(bs.print('molpro'))
-        bs4 = BasisSet.read(test_file_molpro, 'molpro')
+        bs4 = BasisSet.read_file(test_file_molpro, 'molpro')
         self.assertEqual(bs, bs4)
 
         self.assertRaises(ValueError, self.basis_set.print, 'turbomole')

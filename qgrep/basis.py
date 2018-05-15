@@ -153,7 +153,7 @@ class BasisFunction:
             for c_line in self.coeffs:
                 out += (' {:>12.7g}'*self.num_coeffs).format(*c_line) + '\n'
         else:
-            raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
+            raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported, got:{style}.')
         return out
 
 
@@ -224,7 +224,7 @@ class Basis:
         """Print all BasisFunctions in the specified format"""
         out = ''
         if style not in SUPPORTED:
-            raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
+            raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported, got:{style}.')
         if print_name:
             if style == 'gaussian94':
                 out += f'{self.atom}    0\n'
@@ -237,7 +237,7 @@ class Basis:
             elif style == 'molpro':
                 out += f'! {self.atom:s}\n! {self.atom:s}\n'
             else:
-                raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
+                raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported, got:{style}.')
         if style == 'bagel':
             out += ',\n'.join([c.print(style, self.atom) for c in self]) + ']'
         elif style == 'cfour':
@@ -354,16 +354,22 @@ class BasisSet:
         self.atoms = basis_set
 
     @staticmethod
-    def read(in_file="basis.gbs", style='gaussian94', debug=False):
+    def read_file(in_file="basis.gbs", style='gaussian94', basis_name=None, debug=False):
+        if basis_name is None:
+            basis_name = '.'.join(in_file.split('/')[-1].split('.')[:-1])
+        with open(in_file) as f:
+            basis_set_str = f.read().strip()
+        return BasisSet.read_str(basis_set_str, style, basis_name, debug)
+
+    @staticmethod
+    def read_str(basis_set_str, style='gaussian94', basis_name='', debug=False):
         """ Read a basis set"""
-        # assume spherical
-        basis_name = in_file.split('/')[-1].split('.')[0]
         bs = BasisSet(name=basis_name)
+        # assume spherical
         num_skip = 0
 
         if style == 'cfour':
-            with open(in_file) as f:
-                lines = f.readlines()
+            lines = basis_set_str.splitlines()
             block_starts = [i for i, line in enumerate(lines) if ':' in line]
             for start in block_starts:
                 # Ignore comments
@@ -432,15 +438,14 @@ class BasisSet:
                         else:
                             bfs.append(BasisFunction(AM[am], exps, coeffs[0]))
                         j = con_end + 1
-                except:
+                except Exception as e:
                     if debug:
                         print(f'Failed to parse section starting on line {start}.')
                     raise
                 bs.atoms[atom] = Basis(atom, bfs, basis_name)
 
         elif style == 'bagel':
-            with open(in_file) as f:
-                in_file_dict = json.load(f)
+            in_file_dict = json.loads(basis_set_str)
             for atom, basis_list in in_file_dict.items():
                 bfs = []
                 for c in basis_list:
@@ -453,8 +458,7 @@ class BasisSet:
                 bs.atoms[atom] = Basis(atom, bfs, basis_name)
 
         elif style == 'molpro':
-            with open(in_file) as f:
-                lines = [line.strip() for line in f.readlines() if len(line.strip())]
+            lines = [line.strip() for line in basis_set_str.splitlines() if len(line.strip())]
             atom_old = ''
             for line in lines:
                 # Ignore start and end
@@ -493,8 +497,6 @@ class BasisSet:
             elif style == 'gamess':
                 num_skip = 1
                 atom_separator = '\n\n'
-            with open(in_file) as f:
-                basis_set_str = f.read().strip()
             # Split into atoms
             for chunk in basis_set_str.split(atom_separator):
                 if len(chunk) == 0:
@@ -515,12 +517,12 @@ class BasisSet:
                         con_list.append(BasisFunction(am, exps, np.array(coeffs[0])))
                         i += num + 1
                     bs.atoms[atom] = Basis(atom, con_list, name=basis_name)
-                except:
+                except Exception as e:
                     if debug:
                         print('Failed to parse section starting with\n' + '\n'.join(chunk.splitlines()[:5]))
                     raise
         else:
-            raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
+            raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported, got:{style}.')
 
         return bs
 
@@ -559,7 +561,7 @@ class BasisSet:
                 [basis.print(style) for basis in self])
             return out + separator
         else:
-            raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported.')
+            raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported, got:{style}.')
 
     def values(self):
         """Returns a list of list of np.array(exp, coeff)"""
