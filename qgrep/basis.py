@@ -140,7 +140,9 @@ class BasisFunction:
         elif style == 'bagel':
             vals_form = ','.join(['{:>15.8f}']*len(self))
             c_form = ', '.join(['[' + vals_form + ']']*num_coeffs)
-            bagel_form = '{{\n    "angular" : "{:s}",\n       "prim" :  [' + vals_form + '],\n       "cont" : [' + c_form + ']\n}}\n'
+            bagel_form = '{{\n    "angular" : "{:s}",\n       "prim" :  ['\
+                         + vals_form + '],\n       "cont" : ['\
+                         + c_form + ']\n}}\n'
             out += bagel_form.format(self.func_type.lower(), *self.exps, *self.coeffs.flatten())
         elif style == 'cfour':
             # Print exponents
@@ -407,16 +409,17 @@ class BasisSet:
                                 good_exp_num = False
 
                         if not good_exp_num:
-                            print(f'Incorrectly formatted GENBAS exponent section: proceed with caution (section starting on line {start})')
+                            print(f'Incorrectly formatted GENBAS exponent section, proceed with caution, line: {start}')
 
                         if len(exps) != exp_length:
-                            raise Exception(f'The number of exponents in the header ({exp_length}) does not match the number of exponents read ({len(exps)}).')
+                            raise SyntaxError('The number of exponents in the header ({exp_length}) '
+                                              f'does not match the number of exponents read ({len(exps)}).')
 
                         con_start = exp_end + 2
                         con_end = con_start + exp_length
                         coeffs = []
                         if con_length > 6:
-                            print('CFour format does not allow more than 6 contracted coefficients: proceed with caution.')
+                            print('Invalid CFour format: more than 6 contracted coefficients; proceed with caution.')
 
                         for line in lines[con_start:con_end]:
                             coeffs.append([float(c) for c in line.split()])
@@ -427,12 +430,16 @@ class BasisSet:
                                 coeffs = coeffs[:con_length]
                             else:
                                 if debug:
-                                    print(f'Line {start} -- {atom}:{basis_name} section -- {am}, {con_length}, {exp_length}')
-                                raise Exception(f'The number of contractions in the header ({con_length}) does not match the number of contractions read ({len(coeffs)}).')
+                                    print(f'Line {start} -- {atom}:{basis_name} '
+                                          f'section -- {am}, {con_length}, {exp_length}')
+                                raise SyntaxError(f'The number of contractions in the header ({con_length}) '
+                                                  f'does not match the number of contractions read ({len(coeffs)}).')
                         if len(coeffs.T) != exp_length:
                             if debug:
-                                print(f'Line {start} -- {atom}:{basis_name} section -- {am}, {con_length}, {exp_length}')
-                            raise Exception(f'The number of coefficients in the header ({exp_length}) does not match the number of exponents read ({len(coeffs.T)}).')
+                                print(f'Line {start} -- {atom}:{basis_name} '
+                                      f'section -- {am}, {con_length}, {exp_length}')
+                            raise SyntaxError(f'The number of coefficients in the header ({exp_length}) '
+                                              'does not match the number of exponents read ({len(coeffs.T)}).')
                         if con_length > 1:
                             bfs += [BasisFunction(AM[am], exps, c) for c in coeffs]
                         else:
