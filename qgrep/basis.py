@@ -593,9 +593,12 @@ f-ul potential
   2      3.03407192            21.53103107
 """
         if style == 'gaussian94':
-            out += f'{self.shell.lower()}-ul potential\n'
+            out = f'{self.shell.lower()}-ul potential\n'
             out += f'{len(self):>4}\n'
             out += '\n'.join(f'{t1} {t2:>15.8f} {t3:20.8f}' for t1, t2, t3 in self)
+        elif style == 'gamess':
+            out = f'{len(self):<3} -------  {self.shell.lower()}-ul potential  ----------\n'
+            out += '\n'.join(f'{t2:17.8f} {t1:>2} {t3:18.8f}' for t1, t2, t3 in self)
         else:
             raise NotImplementedError(f'Style, {style}, is not yet implemented for ECPs')
         return out
@@ -621,7 +624,8 @@ class ECP:
         yield from self.functions
 
     def print(self, style='gaussian94'):
-        """
+        if style == 'gaussian94':
+            """
 IR     0
 IR-ECP     3     60
 f-ul potential
@@ -633,9 +637,27 @@ s-ul potential
   2      6.82610130            26.48472087
   2      3.03407192           -21.53103107
 """
-        if style == 'gaussian94':
             out = f'{self.atom}      0\n'
             out += f'{self.atom}-ECP     {self.num} {self.n_elec:>6}\n'
+            out += '\n'.join(potential.print(style) for potential in self)
+        elif style == 'gamess':
+            """
+RN-ECP GEN     60     3
+7   -------  s-ul potential  ----------
+      49.96555100  2        30.15124200
+     283.07000000  2        14.52124100
+      62.00287000  2         8.05203800
+     -21.79729000  2         6.34857100
+     -28.94680500  2         6.29594900
+      -1.44736500  2         2.88211800
+      -2.17796400  2         2.90804800
+8   -------  p-ul potential  ----------
+      71.96911900  2        11.00994200
+     143.86055900  2         9.61762500
+       4.71476100  2         7.33600800
+       9.01306500  2         6.40625300
+"""
+            out = f'{self.atom}-ECP GEN {self.n_elec:>6} {self.num:>5}\n'
             out += '\n'.join(potential.print(style) for potential in self)
         else:
             raise NotImplementedError(f'Style, {style}, is not yet implemented for ECPs')

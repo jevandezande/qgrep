@@ -303,7 +303,7 @@ class TestECP(unittest.TestCase):
         self.ecppp = ECPPotential('P', [2], [5.5], [13.4])
         self.ecp = ECP('H', 3, 12, [self.ecpps, self.ecppp])
 
-    def test_print(self):
+    def test_print_gaussian(self):
         pr = self.ecp.print(style='gaussian94')
         exp = '''\
 H      0
@@ -315,6 +315,17 @@ s-ul potential
 p-ul potential
    1
 2      5.50000000          13.40000000'''
+        assert pr == exp
+
+    def test_print_gamess(self):
+        pr = self.ecp.print(style='gamess')
+        exp = """\
+H-ECP GEN     12     3
+2   -------  s-ul potential  ----------
+      20.00000000  2       200.00000000
+      10.00000000  2       100.00000000
+1   -------  p-ul potential  ----------
+       5.50000000  2        13.40000000"""
         assert pr == exp
 
 
