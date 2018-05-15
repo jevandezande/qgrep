@@ -9,7 +9,7 @@ from numpy.testing import assert_array_almost_equal as aaa_equal
 
 path.insert(0, '..')
 
-from qgrep.basis import Basis, BasisFunction, BasisSet, ECP, ECPPotential
+from qgrep.basis import Basis, BasisFunction, BasisSet, ECP, ECPPotential, ECPSet
 
 
 class TestBasisFunction(unittest.TestCase):
@@ -275,8 +275,8 @@ class TestBasisSet(unittest.TestCase):
 
 class TestECPPotential(unittest.TestCase):
     def setUp(self):
-        self.ecpps = ECPPotential('S', [2, 2], [20, 10], [200, 100])
-        self.ecppp = ECPPotential('P', [2], [5.5], [13.4])
+        self.ecpps = ECPPotential('S', [2, 2], [20, 10], [200, 100], 2)
+        self.ecppp = ECPPotential('P', [2], [5.5], [13.4], 2)
 
     def test_len(self):
         assert len(self.ecpps) == 2
@@ -299,15 +299,15 @@ class TestECPPotential(unittest.TestCase):
 
 class TestECP(unittest.TestCase):
     def setUp(self):
-        self.ecpps = ECPPotential('S', [2, 2], [20, 10], [200, 100])
-        self.ecppp = ECPPotential('P', [2], [5.5], [13.4])
-        self.ecp = ECP('H', 3, 12, [self.ecpps, self.ecppp])
+        self.ecpps = ECPPotential('S', [2, 2], [20, 10], [200, 100], 2)
+        self.ecppp = ECPPotential('P', [2], [5.5], [13.4], 2)
+        self.ecp = ECP('H', 2, 12, [self.ecpps, self.ecppp])
 
     def test_print_gaussian(self):
         pr = self.ecp.print(style='gaussian94')
         exp = '''\
 H      0
-H-ECP     3     12
+H-ECP     2     12
 s-ul potential
    2
 2     20.00000000         200.00000000
@@ -315,18 +315,68 @@ s-ul potential
 p-ul potential
    1
 2      5.50000000          13.40000000'''
-        assert pr == exp
+        self.assertEqual(pr, exp)
 
     def test_print_gamess(self):
         pr = self.ecp.print(style='gamess')
         exp = """\
-H-ECP GEN     12     3
+H-ECP GEN     12     2
 2   -------  s-ul potential  ----------
       20.00000000  2       200.00000000
       10.00000000  2       100.00000000
 1   -------  p-ul potential  ----------
        5.50000000  2        13.40000000"""
         assert pr == exp
+
+    def test_print_cfour(self):
+        pr = self.ecp.print(style='cfour')
+        exp = """*
+H:ECP-12
+*
+    NCORE = 12     LMAX =2
+s-f
+  200.00000000    2   20.00000000
+  100.00000000    2   10.00000000
+p-f
+   13.40000000    2    5.50000000
+*"""
+        self.assertEqual(pr, exp)
+
+    def test_eq(self):
+        self.assertEqual(self.ecpps, self.ecpps.copy())
+        self.assertEqual(self.ecppp, self.ecppp.copy())
+        self.assertEqual(self.ecp, self.ecp.copy())
+
+        self.assertNotEqual(self.ecpps, self.ecppp)
+        self.assertNotEqual(self.ecppp, self.ecp)
+
+
+class TestECP(unittest.TestCase):
+    def setUp(self):
+        self.ecpps1 = ECPPotential('S', [2, 2], [20, 10], [200, 100], 2)
+        self.ecppp1 = ECPPotential('P', [2], [5.5], [13.4], 2)
+        self.ecp1 = ECP('H', 2, 12, [self.ecpps1, self.ecppp1])
+
+        self.ecpps2 = ECPPotential('S', [2, 2], [20, 10], [200, 100], 2)
+        self.ecppp2 = ECPPotential('P', [2], [5.5], [13.4], 2)
+        self.ecp2 = ECP('I', 2, 60, [self.ecpps2, self.ecppp2])
+
+        self.ecps = ECPSet(OrderedDict([('H', self.ecp1), ('I', self.ecp2)]))
+
+    def test_read(self):
+        ecps = self.ecps
+        test_file_gamess = 'my_ecp_gamess.gbs.tmp'
+        with open(test_file_gamess, 'w') as f:
+            f.write(ecps.print('gamess'))
+        ecps1 = ECPSet.read_file(test_file_gamess, 'gamess')
+        self.assertEqual('<ECPSet my_ecp_gamess.gbs>', repr(ecps1))
+        print(ecps.print('gamess'))
+        print('-'*80)
+        print(ecps1.print('gamess'))
+        self.assertEqual(ecps, ecps1)
+
+        for tmp_file in glob('*.tmp'):
+            os.remove(tmp_file)
 
 
 if __name__ == '__main__':

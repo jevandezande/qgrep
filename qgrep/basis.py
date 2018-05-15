@@ -572,19 +572,37 @@ class BasisSet:
 class ECPPotential:
     def __init__(self, shell, tmp1, tmp2, tmp3, lmax=None):
         """
-        :param shell: the shell for the ecp
+        :param shell: the shell of the ECP
         :params tmp1..3: unknown values TODO
+        :param lmax: maximimum angular momentum of the ECP
         """
         self.shell = shell.lower()
         assert len(tmp1) == len(tmp2) and len(tmp1) == len(tmp3)
         self.tmp1, self.tmp2, self.tmp3 = tmp1, tmp2, tmp3
         self.lmax = lmax
 
+    def __repr__(self):
+        """ Make a nice representation of the ECPPotential """
+        return f"<ECPPotential {self.shell} {len(self)}>"
+
     def __len__(self):
         return len(self.tmp1)
 
     def __iter__(self):
         yield from zip(self.tmp1, self.tmp2, self.tmp3)
+
+    def __str__(self):
+        return print(style='gaussian94')
+
+    def __eq__(self, other):
+        return isinstance(other, ECPPotential)\
+            and self.tmp1 == other.tmp1\
+            and self.tmp2 == other.tmp2\
+            and self.tmp3 == other.tmp3\
+            and self.lmax == other.lmax
+
+    def copy(self):
+        return ECPPotential(self.shell, np.array(tmp1), np.array(tmp2), np.array(tmp3), self.lmax)
 
     def print(self, style):
         out = ''
@@ -610,23 +628,40 @@ f-ul potential
 
 
 class ECP:
-    def __init__(self, atom, lmax, n_core, functions, name=''):
+    def __init__(self, atom, lmax, n_core, functions, name=None):
         """
         :param atom: the atom the ecp is on
         :param n_core: number of electrons to replace
         :param lmax: max angular momentum
         :param function: the potentials
+        :param name: name of the ECP
         """
         self.atom = atom
         self.lmax = lmax
         self.n_core = n_core
         self.functions = functions
         self.name = name
-        pass
+
+    def __eq__(self, other):
+        return isinstance(other, ECP)\
+            and self.atom == other.atom\
+            and self.lmax == other.lmax\
+            and self.n_core == other.n_core\
+            and self.functions == other.functions\
+            and self.name == other.name
+
+    def __repr__(self):
+        return f"<ECP {self.atom} {len(self)}>"
+
+    def __str__(self):
+        return print(style='gaussian94')
 
     def __iter__(self):
         """ Iterate over the subshells in order """
         yield from self.functions
+
+    def copy(self):
+        return ECP(self.atom, self.lmx, self.n_core, [f.copy() for f in self], self.name)
 
     def print(self, style='gaussian94'):
         if style == 'gaussian94':
@@ -662,8 +697,113 @@ RN-ECP GEN     60     3
        4.71476100  2         7.33600800
        9.01306500  2         6.40625300
 """
-            out = f'{self.atom}-ECP GEN {self.n_elec:>6} {self.num:>5}\n'
+            out = f'{self.atom}-ECP GEN {self.n_core:>6} {self.lmax:>5}\n'
             out += '\n'.join(potential.print(style) for potential in self)
+        elif style == 'cfour':
+            """*
+PT:ECP-60-T
+*
+    NCORE = 60     LMAX =3
+f
+   24.31437573    2    3.30956857
+s-f
+  579.22386092    2   13.42865130
+   29.66949062    2    6.71432560
+  -24.31437573    2    3.30956857
+p-f
+  280.86077422    2   10.36594420
+   26.74538204    2    5.18297210
+  -24.31437573    2    3.30956857
+"""
+            out = f'*\n{self.atom}:ECP-{self.n_core}\n*\n'
+            out += f'    NCORE = {self.n_core}     LMAX ={self.lmax}\n'
+            out += '\n'.join(potential.print(style) for potential in self)
+            out += '\n*'
         else:
             raise NotImplementedError(f'Style, {style}, is not yet implemented for ECPs')
         return out
+
+
+class ECPSet:
+    def __init__(self, ecps=None, name=''):
+        """
+        :param ecps: a dictionary of atom:ecps
+        """
+        self.name = name
+        if ecps is None:
+            self.ecps = OrderedDict()
+        elif isinstance(ecps, OrderedDict):
+            # ECPSet.check_ecp_set(atoms)
+            self.ecps = ecps
+        else:
+            raise SyntaxError('Invalid input basis set, must use an OrderedDict.')
+
+    def __eq__(self, other):
+        return isinstance(other, ECPSet) and self.ecps == other.ecps
+
+    def __repr__(self):
+        return f'<ECPSet {self.name:s}>'
+
+    def __str__(self):
+        return self.print(style='gaussian94')
+
+    def __iter__(self):
+        yield from self.ecps.items()
+
+    def copy(self):
+        return ECPSet(OrderedDict([(a, ecp.copy) for a, ecp in self]))
+
+    def print(self, style='gaussian94'):
+        if style == 'gaussian94':
+            out = '\n\n'.join(f'{ecp.print(style)}' for _, ecp in self)
+        elif style == 'gamess':
+            out = '\n\n'.join(f'$ECP\n{ecp.print(style)}\n$END' for _, ecp in self)
+        else:
+            raise NotImplementedError(f'Style, {style}, is not yet implemented for ECPs')
+
+        return out
+
+    @staticmethod
+    def read_file(in_file="ecp.gbs", style='gaussian94', name=None, debug=False):
+        if name is None:
+            name = '.'.join(in_file.split('.')[:-1])
+        with open(in_file) as f:
+            ecp_str = f.read()
+        return ECPSet.read_str(ecp_str, style, name, debug)
+
+    @staticmethod
+    def read_str(ecp_str, style='gaussian94', name=None, debug=False):
+        ecps = ECPSet(name=name)
+
+        if style == 'gamess':
+            for chunk in ecp_str.split('$END'):
+                if not chunk:
+                    continue
+                it = iter(chunk.splitlines())
+                for line in it:
+                    if not line.strip() or line.strip() == '$ECP':
+                        continue
+                    atom, gen, n_core, lmax = line.split()
+                    atom = atom.split('-')[0]
+                    n_core, lmax = int(n_core), int(lmax)
+                    break
+
+                pots = []
+                for line in it:
+                    if line.strip()[0] == '#':
+                        continue
+
+                    num, dashes, shell, *_ = line.split()
+                    num, shell = int(num), shell[0]
+                    t1s, t2s, t3s = [], [], []
+                    for i, line in zip(range(num), it):
+                        t2, t1, t3 = line.split()
+                        t1s.append(int(t1))
+                        t2s.append(float(t2))
+                        t3s.append(float(t3))
+                    pots.append(ECPPotential(shell, t1s, t2s, t3s, lmax))
+                ecps.ecps[atom] = ECP(atom, lmax, n_core, pots)
+        else:
+            raise NotImplementedError(f'Style, {style}, is not yet implemented for ECPs')
+
+        return ecps
