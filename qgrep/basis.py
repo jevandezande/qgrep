@@ -576,7 +576,7 @@ class BasisSet:
         return vals
 
 
-class ECPPotential:
+class ECPFunction:
     def __init__(self, shell, tmp1, tmp2, tmp3, lmax=None):
         """
         :param shell: the shell of the ECP
@@ -589,8 +589,8 @@ class ECPPotential:
         self.lmax = lmax
 
     def __repr__(self):
-        """ Make a nice representation of the ECPPotential """
-        return f"<ECPPotential {self.shell} {len(self)}>"
+        """ Make a nice representation of the ECPFunction """
+        return f"<ECPFunction {self.shell} {len(self)}>"
 
     def __len__(self):
         return len(self.tmp1)
@@ -599,17 +599,17 @@ class ECPPotential:
         yield from zip(self.tmp1, self.tmp2, self.tmp3)
 
     def __str__(self):
-        return print(style='gaussian94')
+        return self.print(style='gaussian94')
 
     def __eq__(self, other):
-        return isinstance(other, ECPPotential)\
+        return isinstance(other, ECPFunction)\
             and self.tmp1 == other.tmp1\
             and self.tmp2 == other.tmp2\
             and self.tmp3 == other.tmp3\
             and self.lmax == other.lmax
 
     def copy(self):
-        return ECPPotential(self.shell, np.array(tmp1), np.array(tmp2), np.array(tmp3), self.lmax)
+        return ECPFunction(self.shell, np.array(tmp1), np.array(tmp2), np.array(tmp3), self.lmax)
 
     def print(self, style):
         out = ''
@@ -661,7 +661,10 @@ class ECP:
         return f"<ECP {self.atom} {len(self)}>"
 
     def __str__(self):
-        return print(style='gaussian94')
+        return self.print(style='gaussian94')
+
+    def __len__(self):
+        return len(self.functions)
 
     def __iter__(self):
         """ Iterate over the subshells in order """
@@ -765,6 +768,8 @@ class ECPSet:
             out = '\n\n'.join(f'{ecp.print(style)}' for _, ecp in self)
         elif style == 'gamess':
             out = '\n\n'.join(f'$ECP\n{ecp.print(style)}\n$END' for _, ecp in self)
+        elif style == 'cfour':
+            out = '\n'.join(ecp.print(style) for _, ecp in self)
         else:
             raise NotImplementedError(f'Style, {style}, is not yet implemented for ECPs')
 
@@ -784,7 +789,7 @@ class ECPSet:
 
         if style == 'gamess':
             for chunk in ecp_str.split('$END'):
-                if not chunk:
+                if not chunk.strip():
                     continue
                 it = iter(chunk.splitlines())
                 for line in it:
@@ -808,7 +813,7 @@ class ECPSet:
                         t1s.append(int(t1))
                         t2s.append(float(t2))
                         t3s.append(float(t3))
-                    pots.append(ECPPotential(shell, t1s, t2s, t3s, lmax))
+                    pots.append(ECPFunction(shell, t1s, t2s, t3s, lmax))
                 ecps.ecps[atom] = ECP(atom, lmax, n_core, pots)
         else:
             raise NotImplementedError(f'Style, {style}, is not yet implemented for ECPs')

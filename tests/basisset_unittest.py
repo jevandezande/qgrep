@@ -9,7 +9,7 @@ from numpy.testing import assert_array_almost_equal as aaa_equal
 
 path.insert(0, '..')
 
-from qgrep.basis import Basis, BasisFunction, BasisSet, ECP, ECPPotential, ECPSet
+from qgrep.basis import Basis, BasisFunction, BasisSet, ECP, ECPFunction, ECPSet
 
 
 class TestBasisFunction(unittest.TestCase):
@@ -273,10 +273,10 @@ class TestBasisSet(unittest.TestCase):
         self.assertEqual(vals[0][1][1][0], self.basis_set.values()[0][1][1][0])
 
 
-class TestECPPotential(unittest.TestCase):
+class TestECPFunction(unittest.TestCase):
     def setUp(self):
-        self.ecpps = ECPPotential('S', [2, 2], [20, 10], [200, 100], 2)
-        self.ecppp = ECPPotential('P', [2], [5.5], [13.4], 2)
+        self.ecpps = ECPFunction('S', [2, 2], [20, 10], [200, 100], 2)
+        self.ecppp = ECPFunction('P', [2], [5.5], [13.4], 2)
 
     def test_len(self):
         assert len(self.ecpps) == 2
@@ -299,8 +299,8 @@ class TestECPPotential(unittest.TestCase):
 
 class TestECP(unittest.TestCase):
     def setUp(self):
-        self.ecpps = ECPPotential('S', [2, 2], [20, 10], [200, 100], 2)
-        self.ecppp = ECPPotential('P', [2], [5.5], [13.4], 2)
+        self.ecpps = ECPFunction('S', [2, 2], [20, 10], [200, 100], 2)
+        self.ecppp = ECPFunction('P', [2], [5.5], [13.4], 2)
         self.ecp = ECP('H', 2, 12, [self.ecpps, self.ecppp])
 
     def test_print_gaussian(self):
@@ -353,12 +353,12 @@ p-f
 
 class TestECP(unittest.TestCase):
     def setUp(self):
-        self.ecpps1 = ECPPotential('S', [2, 2], [20, 10], [200, 100], 2)
-        self.ecppp1 = ECPPotential('P', [2], [5.5], [13.4], 2)
+        self.ecpps1 = ECPFunction('S', [2, 2], [20, 10], [200, 100], 2)
+        self.ecppp1 = ECPFunction('P', [2], [5.5], [13.4], 2)
         self.ecp1 = ECP('H', 2, 12, [self.ecpps1, self.ecppp1])
 
-        self.ecpps2 = ECPPotential('S', [2, 2], [20, 10], [200, 100], 2)
-        self.ecppp2 = ECPPotential('P', [2], [5.5], [13.4], 2)
+        self.ecpps2 = ECPFunction('S', [2, 2], [20, 10], [200, 100], 2)
+        self.ecppp2 = ECPFunction('P', [2], [5.5], [13.4], 2)
         self.ecp2 = ECP('I', 2, 60, [self.ecpps2, self.ecppp2])
 
         self.ecps = ECPSet(OrderedDict([('H', self.ecp1), ('I', self.ecp2)]))
