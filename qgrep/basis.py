@@ -790,7 +790,7 @@ class ECPSet:
                 for line in it:
                     if not line.strip() or line.strip() == '$ECP':
                         continue
-                    atom, gen, n_core, lmax = line.split()
+                    atom, *ecp, gen, n_core, lmax = line.split()
                     atom = atom.split('-')[0]
                     n_core, lmax = int(n_core), int(lmax)
                     break
