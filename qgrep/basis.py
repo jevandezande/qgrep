@@ -510,8 +510,7 @@ class BasisSet:
                         num = int(num)
                         con = []
                         for line in basis_chunk[i + 1:i + num + 1]:
-                            con.append([float(x) for x in line.split()[num_skip:]])
-                            con.append(list(map(float, line.split()[num_skip:]])))
+                            con.append(list(map(float, line.split()[num_skip:])))
                         exps, *coeffs = zip(*con)
                         con_list.append(BasisFunction(am, exps, np.array(coeffs[0])))
                         i += num + 1
@@ -569,14 +568,15 @@ class BasisSet:
 
 
 class ECPPotential:
-    def __init__(self, shell, tmp1, tmp2, tmp3):
+    def __init__(self, shell, tmp1, tmp2, tmp3, lmax=None):
         """
         :param shell: the shell for the ecp
         :params tmp1..3: unknown values TODO
         """
-        self.shell = shell
+        self.shell = shell.lower()
         assert len(tmp1) == len(tmp2) and len(tmp1) == len(tmp3)
         self.tmp1, self.tmp2, self.tmp3 = tmp1, tmp2, tmp3
+        self.lmax = lmax
 
     def __len__(self):
         return len(self.tmp1)
@@ -592,28 +592,32 @@ f-ul potential
   2      3.03407192            21.53103107
 """
         if style == 'gaussian94':
-            out = f'{self.shell.lower()}-ul potential\n'
+            out = f'{self.shell}-ul potential\n'
             out += f'{len(self):>4}\n'
             out += '\n'.join(f'{t1} {t2:>15.8f} {t3:20.8f}' for t1, t2, t3 in self)
         elif style == 'gamess':
-            out = f'{len(self):<3} -------  {self.shell.lower()}-ul potential  ----------\n'
+            out = f'{len(self):<3} -------  {self.shell}-ul potential  ----------\n'
             out += '\n'.join(f'{t2:17.8f} {t1:>2} {t3:18.8f}' for t1, t2, t3 in self)
+        elif style == 'cfour':
+            lmax_symbol = AM[self.lmax].lower()
+            out = f'{self.shell}-{lmax_symbol}\n'
+            out += '\n'.join(f'{t3:14.8f} {t1:>4} {t2:13.8f}' for t1, t2, t3 in self)
         else:
             raise NotImplementedError(f'Style, {style}, is not yet implemented for ECPs')
         return out
 
 
 class ECP:
-    def __init__(self, atom, num, n_elec, functions, name=''):
+    def __init__(self, atom, lmax, n_core, functions, name=''):
         """
         :param atom: the atom the ecp is on
-        :param n_elec: number of electrons to replace
-        :param num: some random number TODO
+        :param n_core: number of electrons to replace
+        :param lmax: max angular momentum
         :param function: the potentials
         """
         self.atom = atom
-        self.num = num
-        self.n_elec = n_elec
+        self.lmax = lmax
+        self.n_core = n_core
         self.functions = functions
         self.name = name
         pass
@@ -637,7 +641,7 @@ s-ul potential
   2      3.03407192           -21.53103107
 """
             out = f'{self.atom}      0\n'
-            out += f'{self.atom}-ECP     {self.num} {self.n_elec:>6}\n'
+            out += f'{self.atom}-ECP     {self.lmax} {self.n_core:>6}\n'
             out += '\n'.join(potential.print(style) for potential in self)
         elif style == 'gamess':
             """

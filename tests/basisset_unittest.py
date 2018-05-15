@@ -258,7 +258,7 @@ class TestBasisSet(unittest.TestCase):
         bs4 = BasisSet.read(test_file_molpro, 'molpro')
         self.assertEqual(bs, bs4)
 
-        self.assertRaises(SyntaxError, self.basis_set.print, 'turbomole')
+        self.assertRaises(ValueError, self.basis_set.print, 'turbomole')
 
         for tmp_file in glob('*.tmp'):
             os.remove(tmp_file)
