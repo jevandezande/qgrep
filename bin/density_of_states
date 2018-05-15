@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+import os
+import sys
+
+# Script that takes an output file and plot the density of states
+import argparse
+import numpy as np
+
+from cclib import ccopen
+from cclib.parser.utils import convertor
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from qgrep.energy_levels import density_of_states
+
+parser = argparse.ArgumentParser(description='Plot the density of states from an output file')
+parser.add_argument('-i', '--input', help='The file to be read.',
+                    type=str, nargs='+', default=['output.dat'])
+parser.add_argument('-u', '--units', help='Units to plot energies in.',
+                    type=str, default='eV')
+parser.add_argument('-b', '--bins', help='Number of bins to segregate the data into.',
+                    type=int, default=50)
+parser.add_argument('-w', '--window', help='Window to display the energies',
+                    type=int, default=(-100, 100))
+
+args = parser.parse_args()
+
+for inp in args.input:
+    if len(args.input) > 1:
+        print(inp)
+
+    density_of_states(inp, args.units, args.bins, args.window)

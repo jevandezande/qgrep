@@ -15,7 +15,7 @@ from qgrep.energy_levels import energy_levels
 
 parser = argparse.ArgumentParser(description='Get the orbital energies from an output file.')
 parser.add_argument('-i', '--input', help='The file to be read.',
-                    type=str, nargs='+', default='output.dat')
+                    type=str, nargs='+', default=['output.dat'])
 parser.add_argument('-w', '--write', help='Write energy levels to an output file.',
                     default=False, action='store_true')
 parser.add_argument('-o', '--output', help='File for the orbital energies.',

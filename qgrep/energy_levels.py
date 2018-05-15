@@ -68,3 +68,23 @@ def energy_levels(input_file, units='eV', verbose=True, write=None):
     if write:
         levels = levels.T
         np.savetxt(write, levels, fmt='%7.5f')
+
+
+def density_of_states(input_file, units='eV', bins=50, window=(-100, 100)):
+    """
+    Plot the density of states
+    :param input_file: input file to read
+    :param units: units to plot energies in
+    :param bins: number of bins to use for the histogram
+    :param window: window in which to plot energies
+    """
+    lower, upper = window
+    levels, homos = read_energy_levels(input_file, units)
+    occ, virt = np.array([]), np.array([])
+    for spin, homo in zip(levels, homos):
+        o, v = spin[:homo + 1], spin[homo + 1:]
+        occ = np.append(occ, o[lower < o & o < upper])
+        virt = np.append(virt, v[lower < v & v < upper])
+
+    plt.hist([occ, virt], bins=bins)
+    plt.show()
