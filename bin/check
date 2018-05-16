@@ -49,8 +49,12 @@ def check(inp, args):
 
     conv = None
     steps = []
-    if (hasattr(data, 'geovalues') and hasattr(data, 'scfvalues')):
-        for (delta_e, rms_grad, max_grad, rms_step, max_step), scfvalues in zip(data.geovalues, data.scfvalues):
+    if hasattr(data, 'geovalues'):
+        if hasattr(data, 'scfvalues'):
+            scfvalues = data.scfvalues
+        else:
+            scfvalues = [[]]*len(data.geovalues)
+        for (delta_e, rms_grad, max_grad, rms_step, max_step), scfvalues in zip(data.geovalues, scfvalues):
             params = OrderedDict((
                 ('delta_e', delta_e),
                 ('rms_grad', rms_grad),
