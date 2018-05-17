@@ -74,5 +74,9 @@ else:
         if i == min_index and len(inputs) > 1:
             print(' *', end='')
         print()
+    if len(inputs) == 2:
+        sort = sorted(results, key=lambda x: x[1])
+        print('-'*(length + 21))
+        print('Difference'.ljust(length) + f': {sort[1][1] - sort[0][1]:15.8f}')
     if args.list:
         print(energies)
