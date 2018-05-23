@@ -370,9 +370,6 @@ class TestECP(unittest.TestCase):
             f.write(ecps.print('gamess'))
         ecps1 = ECPSet.read_file(test_file_gamess, 'gamess')
         self.assertEqual('<ECPSet my_ecp_gamess.gbs>', repr(ecps1))
-        print(ecps.print('gamess'))
-        print('-'*80)
-        print(ecps1.print('gamess'))
         self.assertEqual(ecps, ecps1)
 
         for tmp_file in glob('*.tmp'):

@@ -129,7 +129,7 @@ class Gamessifier():
         if not basis_file or not os.path.isfile(basis_file):
             raise Exception("Couldn't find basis file: " + basis_file)
 
-        self.basis_set = BasisSet.read(basis_file, style='gamess')
+        self.basis_set = BasisSet.read_file(basis_file, style='gamess')
 
     def read_ecp(self, ecp_file='ecp.dat'):
         """Reads an ecp file and makes a dictionary with the form atom:ecp"""

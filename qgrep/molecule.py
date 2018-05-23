@@ -84,7 +84,10 @@ class Molecule:
         """Append atom to geometry"""
         Molecule.check_atom(atom, xyz)
         self.atoms.append(atom)
-        self.xyz = np.append(self.xyz, np.array(xyz)[np.newaxis, ...], axis=0)
+        if len(self.xyz) > 0:
+            self.xyz = np.append(self.xyz, np.array(xyz)[np.newaxis, ...], axis=0)
+        else:
+            self.xyz = np.array(xyz)[np.newaxis, ...]
 
     @staticmethod
     def check_atom(atom, xyz):

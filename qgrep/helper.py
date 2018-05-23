@@ -35,7 +35,7 @@ def check_program(file_name):
         "----- GAMESS execution script 'rungms' -----": 'gamess',
         'N A T U R A L   A T O M I C   O R B I T A L   A N D': 'nbo',
         'Entering Gaussian System, Link 0=g09': 'gaussian',
-        '***  PROGRAM SYSTEM MOLPRO  ***': 'molpro', # Printed after input file
+        '***  PROGRAM SYSTEM MOLPRO  ***': 'molpro',  # Printed after input file
         'BAGEL - Freshly leavened quantum chemistry': 'bagel',
     }
 
@@ -57,7 +57,9 @@ def find_input_program(in_file):
     :param: in_file: file name string
     :return: string of the program or None
     """
-    lines = open(in_file).readlines()
+    with open(in_file) as f:
+        lines = f.readlines()
+
     if '***,' == lines[0][:4]:
         return 'molpro'
     elif '% pal nprocs ' == lines[0][:13]:
@@ -91,7 +93,7 @@ energy_conversions = {
 
 def convert_energy(data, in_type='hartree', out_type='kcal/mol'):
     if in_type not in energy_conversions or out_type not in energy_conversions[in_type]:
-        raise SyntaxError(f"Unsupported energy type, please use {energy_conversions.keys()}")
+        raise ValueError(f"Unsupported energy type, please use {energy_conversions.keys()}")
     conversion = energy_conversions[in_type][out_type]
 
     if isinstance(data, (int, float)):

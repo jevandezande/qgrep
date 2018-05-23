@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 class Step:
     """
-    An object that stores a convergence result
+    An object that stores a geometry convergence step
     """
     def __init__(self, params, criteria):
         self.__dict__.update(params)
@@ -26,23 +26,29 @@ class Step:
 
 
 class Convergence:
-    """
-    Stores multiple convergence steps
-    """
-    def __init__(self, steps, criteria, program='orca'):
+    def __init__(self, steps, targets, program='orca'):
+        """
+        Stores multiple geometry convergence steps
+        :param steps: list of Steps
+        :param targets: targets for convergence
+        :param program: the program the results are from
+        """
         self.steps = steps
-        self.criteria = criteria
+        self.targets = targets
         self.program = program
+
+    def __iter__(self):
+        yield from self.steps
 
     def __str__(self):
         if self.program == 'orca':
             header = "      Δ energy  RMS grad  MAX grad  RMS step  MAX Step | SCF Steps\n"
         else:
-            raise NotImplementedError('Congervence currently only implemented for ORCA')
+            raise NotImplementedError('Convergence currently only implemented for ORCA')
 
         line = '-'*66 + '\n'
         out = header + line
-        for i, step in enumerate(self.steps):
+        for i, step in enumerate(self):
             out += f'{i:>3}: '
             for (key, value), criterion in zip(step.params.items(), step.criteria):
                 # integers
@@ -57,7 +63,11 @@ class Convergence:
 
         return out + line + '    ' + (' {:> 9.2e}'*len(self.criteria)).format(*self.criteria)
 
-    def plot(self):
+    def plot(self, show=True):
+        """
+        Generate a plot of the convergence
+        :param show: show the plot
+        """
         from matplotlib import pyplot as plt
 
         f, (ax0, ax1) = plt.subplots(1, 2, sharex='col')
@@ -73,9 +83,9 @@ class Convergence:
         ax1.set_ylim(0, 1)
         ax1.set_yscale('symlog', linthreshy=1e-4)
         ax1.set_title('Convergence Parameters')
-        ax1.plot(x, self.rms_grad, 'b-' , label='RMS Grad')
+        ax1.plot(x, self.rms_grad, 'b-',  label='RMS Grad')
         ax1.plot(x, self.max_grad, 'b--', label='Max Grad')
-        ax1.plot(x, self.rms_step, 'r-' , label='RMS Step')
+        ax1.plot(x, self.rms_step, 'r-',  label='RMS Step')
         ax1.plot(x, self.max_step, 'r--', label='Max Step')
         # TODO: generalize for more than ORCA
         ax1.plot(x, [self.criteria[1]]*len(self.steps), 'k-')
@@ -88,7 +98,8 @@ class Convergence:
         ax1.plot(x, [self.criteria[4]]*len(self.steps), 'r*')
         ax1.legend()
 
-        plt.show()
+        if show:
+            plt.show()
 
     @property
     def delta_e(self):

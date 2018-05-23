@@ -5,8 +5,13 @@ from .helper import BOHR_TO_ANGSTROM
 from operator import itemgetter
 
 
-def get_geom(lines, type='xyz', units='angstrom'):
-    """Takes the lines of a bagel output file and returns its last geometry in the specified format"""
+def get_geom(lines, style='xyz', units='angstrom'):
+    """
+    Takes the lines of a bagel output file and returns its last geometry in the specified format
+    :param lines: lines of a bagel output file
+    :param style: output style for geom
+    :param units: units for geometry
+    """
     start = '  *** Geometry ***'
     end = '\n'
     geom_start = -1
@@ -41,14 +46,20 @@ def get_geom(lines, type='xyz', units='angstrom'):
     return geom
 
 
-def plot(lines, type='xyz'):
-    """Plots the geometries from the optimization steps"""
+def plot(lines, style='xyz'):
+    """
+    Plots the geometries from the optimization steps
+    :param lines: lines of a bagel output file
+    """
 
-    return get_geom(lines)
+    return get_geom(lines, style)
 
 
 def check_convergence(lines):
-    """Returns all the geometry convergence results"""
+    """
+    Returns all the geometry convergence results
+    :param lines: lines of a bagel output file
+    """
     convergence_start = '  *** Geometry optimization started ***'
     for i, line in enumerate(lines):
         if line[:39] == convergence_start:
@@ -62,38 +73,13 @@ def check_convergence(lines):
     raise Exception('Could not find convergence')
 
 
-def template(geom='', jobtype='Opt', functional='B3LYP', basis='sto-3g'):
-    """Returns a template with the specified geometry and other variables"""
-
-    return template_style.format(jobtype, functional, basis, geom)
-
-
-def get_freqs(lines):
-    return output
-
-
-def get_ir(lines):
+def template(geom='', jobtype='optimize', basis='svp'):
     """
-    Returns all of the vibrational frequencies
+    Returns a template with the specified geometry and other variables
+    :param geom: geometry
+    :param jobtype: type of job to run (single point, optimization, frequencies)
+    :param basis: basis set to use
     """
-    return vib_freqs
-
-
-def get_energy(lines, energy_type='sp'):
-    """Returns the last calculated energy
-    WARNING: It returns as a string in order to prevent python from rounding"""
-    return energy
-
-
-def get_molecule(lines):
-    """
-    Make a molecule object from the last geometry
-    """
-    return mol
-
-
-def template(geom='', jobtype='optimize', functional='B3LYP', basis='svp'):
-    """Returns a template with the specified geometry and other variables"""
     return f"""{{ "bagel" : [
 
 {{
@@ -122,10 +108,11 @@ def template(geom='', jobtype='optimize', functional='B3LYP', basis='svp'):
 
 def convert_to_bagel_geom(geom_str):
     """
-    Converts to a bagel formatted geometry (json format)
+    Converts an xyz geometry sting to a bagel formatted geometry (json format)
+    :param geom_str: xyz geometry to convert
     """
     bagel_geom = ''
-    for line in geom_str.strip().split('\n'):
+    for line in geom_str.strip().splitlines():
         atom, *xyz = line.split()
         bagel_geom += f'{{"atom" : "{atom:s}", '
         if len(atom) == 1:

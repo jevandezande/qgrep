@@ -45,18 +45,20 @@ masses = {'X': 0, 'Ac': 227.028, 'Al': 26.981539, 'Am': 243,
 
 
 class CoordinateConverter:
-    """A coordinate converter class"""
-
     def __init__(self):
+        """A coordinate converter class"""
         self.total_mass = 0
         self.cartesian = []
         self.zmatrix = []
 
     def read_zmatrix(self, input_file='geom.zmat'):
-        """Read the input zmatrix file (assumes no errors and no variables)"""
-        """The zmatrix is a list with each element formatted as follows
+        """
+        Read the input zmatrix file (assumes no errors and no variables)
+        :param input_file: a cfour style zmatrix
+        The zmatrix is a list with each element formatted as follows
         [name, [[atom1, distance], [atom2, angle], [atom3, dihedral]], mass]
-        The first three atoms have blank lists for the undefined coordinates"""
+        The first three atoms have blank lists for the undefined coordinates
+        """
         self.zmatrix = []
         with open(input_file, 'r') as f:
             f.readline()
@@ -90,6 +92,7 @@ class CoordinateConverter:
     def read_cartesian(self, input_file='geom.xyz'):
         """
         Read the Cartesian coordinates file (assumes no errors)
+        :param input_file: xyz formatted geometry
         The Cartesian coordinates consist of a list of atoms formatted as
         follows:
         [name, np.array([x, y, z]), mass]
@@ -182,7 +185,9 @@ class CoordinateConverter:
         self.cartesian.append(atom)
 
     def zmatrix_to_cartesian(self):
-        """Convert the zmartix to Cartesian coordinates"""
+        """
+        Convert the zmartix to Cartesian coordinates
+        """
         # Deal with first three line separately
         self.add_first_three_to_cartesian()
 
@@ -196,7 +201,9 @@ class CoordinateConverter:
         return self.cartesian
 
     def add_first_three_to_zmatrix(self):
-        """The first three atoms need to be treated differently"""
+        """
+        The first three atoms need to be treated differently
+        """
         # First atom
         self.zmatrix = []
         name, position, mass = self.cartesian[0]

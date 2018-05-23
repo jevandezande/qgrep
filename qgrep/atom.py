@@ -40,7 +40,8 @@ def ensure_long_atom_name(atom):
     return atom
 
 
-atomic_numbers = {'X': 0,
+atomic_numbers = {
+    'X': 0,
     'H': 1, 'He': 2,
         'Li': 3, 'Be': 4,
         'B': 5, 'C': 6, 'N': 7, 'O': 8, 'F': 9, 'Ne': 10, 'Na': 11, 'Mg': 12, 'Al': 13, 'Si': 14, 'P': 15, 'S': 16, 'Cl': 17, 'Ar': 18,
@@ -65,11 +66,9 @@ atomic_masses = dict(zip(range(len(am_list)), am_list))
 
 
 class Atom:
-    """
-    Simple atom class
-    """
     def __init__(self, name, *xyz):
         """
+        Simple atom class
         :param name: the name or atomic number of the desired atom
         :param xyz: the xyz coordinates of the atom
         """

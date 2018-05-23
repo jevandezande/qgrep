@@ -5,8 +5,13 @@ from .helper import BOHR_TO_ANGSTROM
 
 
 def get_geom(lines, geom_type='xyz', units='bohr'):
-    """Takes the lines of an cfour output file and returns its last geometry in
-        the specified format"""
+    """
+    Takes the lines of an cfour output file and returns its last geometry in
+    the specified format
+    :param lines: lines of a cfour output file
+    :param geom_type: style of geometry to return
+    :param units: units for the coordinates
+    """
     if geom_type == 'xyz' and units.lower() in ['bohr', 'angstrom']:
         start = ' Z-matrix   Atomic            Coordinates (in bohr)'
     else:
@@ -44,6 +49,10 @@ def get_geom(lines, geom_type='xyz', units='bohr'):
 
 def plot(lines, geom_type='xyz', units='angstrom'):
     """
+    All geometry steps
+    :param lines: lines of a cfour output file
+    :param geom_type: style of geometry to return
+    :param units: units for the coordinates
     """
     if geom_type == 'xyz' and units in ['bohr', 'angstrom']:
         start = ' Z-matrix   Atomic            Coordinates (in bohr)\n'
@@ -73,18 +82,19 @@ def plot(lines, geom_type='xyz', units='angstrom'):
 
 
 def check_convergence(lines):
-    """Returns all the geometry convergence results"""
-    convergence_result = 'Minimum force:'
-    convergence_list = []
-    for line in lines:
-        if convergence_result in line:
-            convergence_list.append(line.strip())
-
-    return convergence_list
+    """
+    Returns all the geometry convergence results
+    :param lines: lines of a cfour output file
+    """
+    target = 'Minimum force:'
+    return [line.strip() for line in lines if target in line]
 
 
 def get_ir(lines):
-    """ Returns all the frequencies and geometries in xyz format. """
+    """
+    Returns all the frequencies and geometries in xyz format.
+    :param lines: lines of a cfour output file
+    """
     geom = get_geom(lines)
     num_atoms = len(geom)
     version = 1
@@ -130,7 +140,6 @@ def get_ir(lines):
         if '0.0' not in line.split()[1]:
             freqs.append(line.split()[1])
 
-    freq_num = len(freqs)
     freqs.reverse()
 
     return freqs
@@ -153,18 +162,18 @@ def get_charge(lines):
     """ Searches through file and finds the charge of the molecule. """
     for line in lines:
         if 'ICHRGE' in line:
-            charge = line.split()[2]
+            return line.split()[2]
 
-    return charge
+    return None
 
 
 def get_multiplicity(lines):
     """ Searches through file and finds the charge of the molecule. """
     for line in lines:
         if 'IMULTP' in line:
-            multiplicity = line.split()[2]
+            return line.split()[2]
 
-    return multiplicity
+    return None
 
 
 def get_conv_params(lines):
@@ -241,10 +250,8 @@ def get_diagnostics(lines):
 def get_final_energy(lines):
     for line in reversed(lines):
         if 'CCSD(T) energy' in line and len(line.split()) == 3:
-            ccsdpt_energy = line.split()[2]
-            break
-
-    return ccsdpt_energy
+            return line.split()[2]
+    return None
 
 
 def get_energy(lines):
@@ -252,15 +259,11 @@ def get_energy(lines):
     for line in reversed(lines):
         if 'CCSD(T) energy' in line:
             ccsdpt_energy = line.split()[2]
-            break
         if 'CCSD energy' in line:
             ccsd_energy = line.split()[2]
-            break
         if 'Total MP2 energy' in line:
             mp2_energy = line.split()[4]
-            break
         if 'E(SCF)=' in line:
             hf_energy = line.split()[1]
-            break
 
     return ccsdpt_energy, ccsd_energy, mp2_energy, hf_energy

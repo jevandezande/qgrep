@@ -425,7 +425,6 @@ class BasisSet:
                             coeffs.append([float(c) for c in line.split()])
                         coeffs = np.array(coeffs).T
                         if len(coeffs) != con_length:
-                            print(coeffs)
                             if len(coeffs) > con_length and not coeffs[con_length:].any():
                                 coeffs = coeffs[:con_length]
                             else:
