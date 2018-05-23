@@ -42,7 +42,7 @@ def grab_energies(inp, units='hartree'):
         return list(map(convert, energies)), completed
 
     except AttributeError as e:
-        print("Invalid energy type, perhaps it hasn't been run?")
+        print(f"Invalid energy type: {args.energy_type}energies, perhaps it hasn't been run?")
         return [0], False
 
 
