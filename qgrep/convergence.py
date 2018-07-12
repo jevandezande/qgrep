@@ -6,6 +6,8 @@ from collections import OrderedDict
 class Step:
     """
     An object that stores a geometry convergence step
+    :param params: convergence parameters
+    :param criteria: criteria for convergence
     """
     def __init__(self, params, criteria):
         self.__dict__.update(params)
@@ -26,15 +28,15 @@ class Step:
 
 
 class Convergence:
-    def __init__(self, steps, targets, program='orca'):
+    def __init__(self, steps, criteria, program='orca'):
         """
         Stores multiple geometry convergence steps
         :param steps: list of Steps
-        :param targets: targets for convergence
+        :param criteria: criteria for convergence
         :param program: the program the results are from
         """
         self.steps = steps
-        self.targets = targets
+        self.criteria = criteria
         self.program = program
 
     def __iter__(self):
