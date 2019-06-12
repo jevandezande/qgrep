@@ -27,7 +27,7 @@ args = parser.parse_args()
 
 success_dict = {
     'ORCA': 'TOTAL RUN TIME:',
-    'PSI4': 'Buy a developer',
+    'Psi4': 'Buy a developer',
 }
 
 

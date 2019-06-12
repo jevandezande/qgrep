@@ -231,9 +231,9 @@ def template(geom='', jobtype='opt', functional='B3LYP', basis='sto-3g', other='
     return f"""molecule {{
 {geom}
 }}
+
 set basis {basis}
 {other}
-
 {jobtype}('{functional}')
 """
 
