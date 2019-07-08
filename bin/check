@@ -37,8 +37,8 @@ def check(inp, args):
 
     try:
         data = ccread(inp)
-    except AttributeError as e:
-        print('No such data available, has the program run that yet?')
+    except:
+        print(f'Failed to read {inp}')
         return False
 
     if 'package' in data.metadata:

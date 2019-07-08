@@ -31,7 +31,12 @@ def grab_energies(inp, units='hartree'):
     Grab the energies list from the input file
     :return: [energies], completed
     """
-    data = ccread(inp)
+    try:
+        data = ccread(inp)
+    except:
+        print(f"Failed to read energy from {inp}")
+        return [0], False
+
     try:
         completed = data.optdone if hasattr(data, 'optdone') else False
         if args.energy_type == 'free':
