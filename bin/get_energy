@@ -4,7 +4,6 @@
 import os
 import glob
 import argparse
-import numpy as np
 
 from cclib.io import ccread
 from cclib.parser.utils import convertor
