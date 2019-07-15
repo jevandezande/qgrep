@@ -14,14 +14,16 @@ parser.add_argument('-i', '--input', help='The file from which to get the geomet
                     type=str, default='output.dat')
 parser.add_argument('-m', '--method', help='The method to use',
                     type=str, default='HF-3C')
-parser.add_argument('-f', '--numerical_freqs', help="Run numerical frequencies.",
+parser.add_argument('-f', '--numerical_freqs', help='Run numerical frequencies.',
                     action='store_true', default=False)
 parser.add_argument('-a', '--analytical_freqs', help="Run frequencies.",
                     action='store_true', default=False)
 parser.add_argument('-d', '--debug', help="Generate but don't submit the optimization.",
                     action='store_true', default=False)
-parser.add_argument('-q', '--queue', help='Which queue to select (default is used if not specified.',
+parser.add_argument('-q', '--queue', help='Which queue to select (default is used if not specified).',
                     type=str, default=None)
+parser.add_argument('-p', '--program', help='Which program to use.',
+                    type=str, default='orca')
 
 args = parser.parse_args()
 
@@ -52,18 +54,19 @@ else:
     multiplicity = data.mult
 
 
-tight = ''
-freqs = ''
-if args.numerical_freqs and args.analytical_freqs:
-    raise ValueError('Cannot run numerical and analytic frequencies at the same time.')
-elif args.numerical_freqs:
-    freqs = '! NumFreq\n'
-    tight = 'Tight'
-elif args.analytical_freqs:
-    freqs = '! AnFreq\n'
-    tight = 'Tight'
+if args.program.lower() == 'orca':
+    tight = ''
+    freqs = ''
+    if args.numerical_freqs and args.analytical_freqs:
+        raise ValueError('Cannot run numerical and analytic frequencies at the same time.')
+    elif args.numerical_freqs:
+        freqs = '! NumFreq\n'
+        tight = 'Tight'
+    elif args.analytical_freqs:
+        freqs = '! AnFreq\n'
+        tight = 'Tight'
 
-input_file = f"""\
+    input_file = f"""\
 %pal nprocs 8 end
 
 ! {tight}Opt {method}
@@ -74,6 +77,23 @@ input_file = f"""\
 * xyz {charge} {multiplicity}
 {geom}
 *"""
+
+elif args.program == 'psi4':
+    freqs = f"freq('{method}')"
+
+    input_file = f'''\
+molecule {{
+    {charge} {multiplicity}
+{geom}
+}}
+
+opt('method')
+{freqs}
+'''
+
+else:
+    raise ValueError(f'{args.program} is not yet supported.')
+
 
 os.makedirs(args.method, exist_ok=False)
 with open(f'{name}/input.dat', 'w') as f:
