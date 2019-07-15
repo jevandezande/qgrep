@@ -226,15 +226,14 @@ def get_energies(lines, energy_type='sp'):
     return energies
 
 
-def template(geom='', jobtype='opt', functional='B3LYP', basis='sto-3g', other=''):
+def template(geom='', jobtype='opt', functional='B3LYP', basis='def2-svp', other=''):
     """Returns a template with the specified geometry and other variables"""
     return f"""molecule {{
 {geom}
 }}
 
-set basis {basis}
 {other}
-{jobtype}('{functional}')
+{jobtype}('{functional}/{basis}')
 """
 
 
