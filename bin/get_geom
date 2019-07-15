@@ -1,17 +1,39 @@
 #!/usr/bin/env python3
 
 # Script that takes an output file and gets the last geometry
+import os
+import glob
 import argparse
 
-from cclib import ccopen
+from cclib.io import ccopen
 
-parser = argparse.ArgumentParser(description='Get the geometry from an output file.')
-parser.add_argument('-i', '--input', help='The file to be read.',
-                    type=str, default='output.dat')
-parser.add_argument('-o', '--output', help='Where to output the geometry.',
-                    type=str, default='geom.xyz')
+from natsort import natsorted
+
+parser = argparse.ArgumentParser(description="Get the geometry from an output file.")
+parser.add_argument( "-i", "--input", help="The file to be read.",
+    type=str, nargs="+", default=["output.dat"])
+parser.add_argument("-o", "--output", help="Where to output the geometry.",
+    type=str, default="geom.xyz")
+parser.add_argument("-a", "--all", help="Find all files corresponding to {input} (can be a glob).",
+    action="store_true", default=False)
 
 args = parser.parse_args()
 
-data = ccopen(args.input).parse()
-data.writexyz(args.output)
+if args.all:
+    inputs = []
+    for inp in args.input:
+        inputs += glob.glob(f"**/{inp}", recursive=True)
+else:
+    inputs = set()
+    for inp_arg in args.input:
+        inputs |= set(inp for inp in glob.glob(inp_arg) if os.path.isfile(inp))
+        inputs |= set(inp for inp in glob.glob(inp_arg.rstrip("/") + "/output.dat") if os.path.isfile(inp))
+
+if len(inputs) == 0:
+    print(f'Could not find input file(s) matching: {",".join(args.input)}')
+else:
+    inputs = natsorted(inputs)
+    for input in inputs:
+        data = ccopen(input).parse()
+        data.metadata["comments"] = [input]
+        data.writexyz(args.output)
