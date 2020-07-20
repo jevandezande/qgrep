@@ -69,6 +69,8 @@ def energy_levels(input_file, units='eV', verbose=True, write=None):
         levels = levels.T
         np.savetxt(write, levels, fmt='%7.5f')
 
+    return levels, homos
+
 
 def density_of_states(input_file, units='eV', bins=50, window=(-100, 100)):
     """

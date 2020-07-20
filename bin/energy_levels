@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 import os
 import sys
-
-# Script that takes an output file and returns the orbital energies
+import glob
 import argparse
 import numpy as np
 
 from cclib import ccopen
 from cclib.parser.utils import convertor
 
+from natsort import natsorted
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from qgrep.energy_levels import energy_levels
+
+# Script that takes an output file and returns the orbital energies
 
 parser = argparse.ArgumentParser(description='Get the orbital energies from an output file.')
 parser.add_argument('-i', '--input', help='The file to be read.',
@@ -22,11 +25,29 @@ parser.add_argument('-o', '--output', help='File for the orbital energies.',
                     type=str, default='energies.dat')
 parser.add_argument('-u', '--units', help='Units to output energies in.',
                     type=str, default='eV')
+parser.add_argument('-a', '--all', help='Find all files corresponding to {input} (can be a glob).',
+                    action='store_true', default=False)
 
 args = parser.parse_args()
 
-for inp in args.input:
-    if len(args.input) > 1:
-        print(inp)
+if args.all:
+    inputs = []
+    for inp in args.input:
+        inputs += glob.glob(f'**/{inp}', recursive=True)
+else:
+    # Find all files that match, delete duplicates
+    inputs = set()
+    for inp_arg in args.input:
+        inputs |= set(inp for inp in glob.glob(inp_arg) if os.path.isfile(inp))
+        inputs |= set(inp for inp in glob.glob(inp_arg.rstrip('/') + '/output.dat') if os.path.isfile(inp))
 
-    energy_levels(inp, args.units, verbose=True, write=args.write)
+if len(inputs) == 0:
+    print(f'Could not find input file(s) matching {args.input}')
+else:
+    inputs = natsorted(inputs)
+    for inp in inputs:
+        print(inp)
+        try:
+            energy_levels(inp, args.units, verbose=True, write=args.write)
+        except Exception:
+            print(f'Could not read {inp}')
