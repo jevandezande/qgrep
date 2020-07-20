@@ -74,7 +74,7 @@ def check_convergence(lines):
     return convergence_list
 
 
-def template(geom='', jobtype='Opt', functional='B3LYP', basis='sto-3g'):
+def template(geom='', jobtype='Opt', theory='B3LYP', basis='sto-3g'):
     """Returns a template with the specified geometry and other variables"""
     return f"""$molecule
 {geom}
@@ -82,7 +82,7 @@ $end
 
 $rem
     jobtype     {job_type}
-    exchange    {functional}
+    exchange    {theory}
     basis       {basis}
 $end
 """

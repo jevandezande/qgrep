@@ -92,11 +92,11 @@ def check_convergence(lines):
     return convergence_list
 
 
-def template(geom='', jobtype='Opt', functional='B3LYP', basis='sto-3g'):
+def template(geom='', jobtype='Opt', theory='B3LYP', basis='sto-3g'):
     """Returns a template with the specified geometry and other variables"""
     return f"""% pal nprocs 8 end
 
-! {jobtype} {functional} {basis} RIJCOSX AutoAux
+! {jobtype} {theory} {basis} RIJCOSX AutoAux
 
 % SCF maxiter 300 end
 

@@ -9,12 +9,12 @@ sys.path.insert(0, '../')
 
 parser = argparse.ArgumentParser(description='Make an input file with the specified parameters.')
 parser.add_argument('-p', '--program', help='The program',
-                    type=str, default='orca')
+                    type=str, default='psi4')
 parser.add_argument('-g', '--geom', help='The geometry file',
                     type=str, default='geom.xyz')
 parser.add_argument('-j', '--jobtype', help='The jobtype to run',
                     type=str, default='opt')
-parser.add_argument('-f', '--functional', help='The functional to use',
+parser.add_argument('-t', '--theory', help='The theory to use',
                     type=str, default='B3LYP')
 parser.add_argument('-b', '--basis', help='The basis set to use',
                     type=str, default='def2-svp')
@@ -24,7 +24,7 @@ args = parser.parse_args()
 geom = ''
 try:
     with open(args.geom, 'r') as f:
-        geom = f.read().strip()
+        geom = ''.join(map(lambda l: f'    {l}', f.readlines()[2:])).rstrip()
 except IOError:
     print('No geometry specified')
 
@@ -33,7 +33,7 @@ if program:
     try:
         mod = importlib.import_module(f'qgrep.{program}')
         if hasattr(mod, 'template'):
-            temp = mod.template(geom, args.jobtype, args.functional, args.basis)
+            temp = mod.template(geom, args.jobtype, args.theory, args.basis)
             input_file = 'input.dat'
             if args.program == 'bagel':
                 input_file = 'input.json'
