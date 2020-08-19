@@ -15,9 +15,13 @@ parser.add_argument('-g', '--geom', help='The geometry file',
 parser.add_argument('-j', '--jobtype', help='The jobtype to run',
                     type=str, default='opt')
 parser.add_argument('-t', '--theory', help='The theory to use',
-                    type=str, default='B3LYP')
+                    type=str, default='B3LYP-D3')
 parser.add_argument('-b', '--basis', help='The basis set to use',
                     type=str, default='def2-svp')
+parser.add_argument('-f', '--freq', help='Run frequencies',
+                    action='store_true', default=False)
+parser.add_argument('-x', '--extra', help='Extra parameters to pass',
+                    type=str, default='')
 
 args = parser.parse_args()
 
@@ -33,7 +37,7 @@ if program:
     try:
         mod = importlib.import_module(f'qgrep.{program}')
         if hasattr(mod, 'template'):
-            temp = mod.template(geom, args.jobtype, args.theory, args.basis)
+            temp = mod.template(geom, args.jobtype, args.theory, args.basis, args.freq, args.extra)
             input_file = 'input.dat'
             if args.program == 'bagel':
                 input_file = 'input.json'

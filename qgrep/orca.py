@@ -92,11 +92,17 @@ def check_convergence(lines):
     return convergence_list
 
 
-def template(geom='', jobtype='Opt', theory='B3LYP', basis='sto-3g'):
+def template(geom='', jobtype='Opt', theory='B3LYP-D3', basis='def2-svp', freq=False, other=''):
     """Returns a template with the specified geometry and other variables"""
+    jobtype = 'TightOpt' if jobtype.lower() == 'opt' else jobtype
+    theory = theory.replace('-D3', ' D3')
+    if freq is False:
+        freq = ''
+    elif freq is True:
+        freq = 'AnFreq'
     return f"""% pal nprocs 8 end
 
-! {jobtype} {theory} {basis} RIJCOSX AutoAux
+! {jobtype} {theory} {basis} RIJCOSX AutoAux {freq} {other}
 
 % SCF maxiter 300 end
 

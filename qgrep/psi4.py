@@ -226,14 +226,16 @@ def get_energies(lines, energy_type='sp'):
     return energies
 
 
-def template(geom='', jobtype='opt', theory='B3LYP', basis='def2-svp', other=''):
+def template(geom='', jobtype='opt', theory='B3LYP-D3', basis='def2-svp', freq=False, other=''):
     """Returns a template with the specified geometry and other variables"""
+    freq = f"freq('{theory}/{basis}')" if freq else ''
     return f"""molecule {{
 {geom}
 }}
 
 {other}
 {jobtype}('{theory}/{basis}')
+{freq}
 """
 
 
