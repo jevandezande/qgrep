@@ -201,3 +201,16 @@ class Molecule:
                                            [       -z*x,        -z*y, x**2 + y**2]])
         return moi_tensor
 
+    def reorder(self, order):
+        """
+        :param order: new order for the molecule
+        :return: molecule with atoms reordered
+        """
+        geom = ['']*len(self)
+        for atom, i in zip(self, order):
+            geom[i] = atom
+
+        assert not any((atom == '' for atom in geom))
+
+        return Molecule(geom)
+

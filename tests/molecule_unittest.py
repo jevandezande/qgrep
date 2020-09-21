@@ -117,6 +117,18 @@ H       0.000000      1.000000      1.000000
         self.water.xyz += [7, 8, 9]
         assert_almost_equal(self.water.moment_of_inertia_tensor(), water_moi_tensor)
 
+    def test_reorder(self):
+        """ Test the reordering of atoms """
+        w1 = self.water
+        w2 = w1.reorder([1, 0, 2])
+        assert w1[0][0] == w2[1][0]
+        assert all(w1[0][1] == w2[1][1])
+        assert w1[1][0] == w2[0][0]
+        assert all(w1[1][1] == w2[0][1])
+        assert w1[2][0] == w2[2][0]
+        assert all(w1[2][1] == w2[2][1])
+
+
 
 
 if __name__ == '__main__':
