@@ -11,13 +11,13 @@ for file in files:
     label = file if len(files) > 1 else ''
     if len(vals.shape) == 1:
         plt.plot(vals, label=label)
-    elif len(vals.shape) == 1:
+    elif len(vals.shape) == 2:
         xs = vals[:, 0]
         for i, ys in enumerate(vals.T[1:]):
-            label += f' {i}' if vals.shape[1] > 1 else ''
-            plt.plot(xs, ys, label=label)
+            label_y = f'{label} - {i}' if vals.shape[1] > 1 else label
+            plt.plot(xs, ys, label=label_y)
     else:
-        raise ValueError(f'To many dimensions in file: {file}, got: {vals.shape}')
+        raise ValueError(f'To many dimensions in file: {file}, got: {vals.shape=}')
 
 plt.legend()
 plt.show()
