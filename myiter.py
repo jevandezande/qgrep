@@ -11,23 +11,25 @@ class MyIter(mit.peekable):
     """
     def __init__(self, iterable):
         super().__init__(iterable)
-        self.position = 0
-        self.current_line = ''
+        self._position = 0
+        self._current_line = ''
 
     def __next__(self):
-        self.position += 1
-        self.current_line = super().__next__().strip()
-        return self.current_line
+        self._position += 1
+        self._current_line = super().__next__().strip()
+        return self._current_line
 
     def jump(self, num):
         """
         Jump forward the specified number of elements in the iterator
         :return: the line n-steps forward
         """
+        if num > 0:
+            raise IndexError('Cannot jump backwards yet')
+
         for _ in range(num-1):
             next(self)
-        if num > 0:
-            return next(self)
+        return next(self)
 
     def peek(self):
         return super().peek().strip()
@@ -48,7 +50,7 @@ if __name__ == "__main__":
     mi = MyIter(open('myiter.py'))
     peeked = mi.peek()
     for line in mi:
-        assert line == mi.current_line
+        assert line == mi._current_line
         assert peeked == line
 
         if not mi.isempty():
