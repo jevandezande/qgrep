@@ -93,7 +93,7 @@ def check(inp, args):
             success = False
             print('Job failed/not finished')
 
-    return success
+    return success, steps
 
 
 if args.all:
@@ -111,15 +111,13 @@ if len(inputs) == 0:
     print(f'Could not find input file(s) matching: {",".join(args.input)}')
 else:
     inputs = natsorted(inputs)
-    successes = []
-    for inp in inputs:
-        if len(inputs) > 1:
-            print(inp)
-        successes.append(check(inp, args))
-
+    results = [check(inp, args) for inp in inputs]
     # Print a summary if more than two inputs
     if len(inputs) > 2:
         length = len(max(inputs, key=len))
-        print('\nSummary\n=======')
-        for inp, success in zip(inputs, successes):
-            print(inp.ljust(length) + ': ' + ('✓' if success else 'x'))
+        form = "{:" + f"{length}" + "} :{:>3d} {}"
+        print("\nSummary\n" + "="*(length + 7))
+        print("\n".join(
+            form.format(inp, len(steps), ("✓" if success else "x"))
+            for inp, (success, steps) in zip(inputs, results)
+        ))
