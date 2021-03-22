@@ -22,6 +22,8 @@ parser.add_argument('-f', '--freq', help='Run frequencies',
                     action='store_true', default=False)
 parser.add_argument('-x', '--extra', help='Extra parameters to pass',
                     type=str, default='')
+parser.add_argument('-i', '--input_file', help='Input filename to use.',
+                    type=str, default=None)
 
 args = parser.parse_args()
 
@@ -38,10 +40,11 @@ if program:
         mod = importlib.import_module(f'qgrep.{program}')
         if hasattr(mod, 'template'):
             temp = mod.template(geom, args.jobtype, args.theory, args.basis, args.freq, args.extra)
-            input_file = 'input.dat'
-            if args.program == 'bagel':
-                input_file = 'input.json'
-            with open(input_file, 'w') as f:
+            if args.input_file is None:
+                args.input_file = 'input.dat'
+                if args.program == 'bagel':
+                    args.input_file = 'input.json'
+            with open(args.input_file, 'w') as f:
                 f.write(temp)
         else:
             print(f'{program} does not yet have template implemented.')
@@ -49,4 +52,3 @@ if program:
         print(f'{program} is not yet supported.')
 else:
     print('Cannot determine what program made this output file.')
-
