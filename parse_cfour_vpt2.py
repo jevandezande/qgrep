@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import sys
-import numpy as np
 
 import more_itertools as mit
+import numpy as np
 
 
 def read(file):
