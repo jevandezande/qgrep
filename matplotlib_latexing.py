@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-golden_mean = (5**0.5 - 1) / 2  # Aesthetic ratio
+golden_mean = (5 ** 0.5 - 1) / 2  # Aesthetic ratio
 
 
 def latexplots(height: float = None, width: float = 16, fontsize: int = 12, pad: float = 2, heightmult: float = 1):
