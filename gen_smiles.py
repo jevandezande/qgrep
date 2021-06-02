@@ -19,6 +19,8 @@ functional_groups = ["=O", "(=O)O", "C#N", "N=C=O"]
 
 def insert_in_str(group, string: str, index: int, strict: bool = False) -> str:
     """
+    Insert a group into a string.
+
     >>> insert_in_str(123, 'abcd', 2)
     'ab123cd'
     """
