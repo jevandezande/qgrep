@@ -2,10 +2,11 @@ import json
 import numpy as np
 
 from collections import Iterable, OrderedDict
+from more_itertools import take
 from .atom import ensure_short_atom_name
 
-SUPPORTED = ['gaussian94', 'gamess', 'bagel', 'cfour', 'molpro']
-AM = 'SPDFGHIKLMN'
+SUPPORTED = ["gaussian94", "gamess", "bagel", "cfour", "molpro"]
+AM = "SPDFGHIKLMN"
 
 
 class BasisFunction:
@@ -15,15 +16,19 @@ class BasisFunction:
         exps, coeffs = np.array(exps), np.array(coeffs)
         self.num_coeffs = 1 if len(coeffs.shape) == 1 else coeffs.shape[0]
         self.func_type = func_type.upper()
-        if self.func_type not in 'SPDFGHIKLMN':
-            raise SyntaxError('Invalid angular momentum.')
-        if self.func_type == 'SP' and coeffs.shape[0] != 2:
-            raise SyntaxError('Expected exactly two sets of coefficients for combined BasisFunction.')
+        if self.func_type not in "SPDFGHIKLMN":
+            raise SyntaxError("Invalid angular momentum.")
+        if self.func_type == "SP" and coeffs.shape[0] != 2:
+            raise SyntaxError(
+                "Expected exactly two sets of coefficients for combined BasisFunction."
+            )
 
-        if len(exps) == 0 or len(coeffs) == 0:
-            raise SyntaxError('Cannot create an empty BasisFunction.')
+        if not exps or not coeffs:
+            raise SyntaxError("Cannot create an empty BasisFunction.")
         elif len(exps) != coeffs.shape[-1]:
-            raise SyntaxError(f'Need coefficients and exponents of the same length, got: \n{exp}\n{coeffs}')
+            raise SyntaxError(
+                f"Need coefficients and exponents of the same length, got: \n{exps=}\n{coeffs=}"
+            )
 
         BasisFunction.check_exps(exps)
         BasisFunction.check_coeffs(coeffs)
@@ -40,14 +45,14 @@ class BasisFunction:
 
     def __setitem__(self, item, value):
         if len(value) != len(self.values[0]):
-            raise ValueError(f'Incorrect size, expected {len(self.values[0])} elements.')
-        if not value[0] > 0:
-            raise ValueError('All exponents must be greater than 0.')
+            raise ValueError(f"Incorrect size, expected {len(self.values[0])} elements.")
+        if value[0] <= 0:
+            raise ValueError("All exponents must be greater than 0.")
         self.values[item] = value
 
     def __repr__(self):
         """Make a nice representation of the BasisFunction"""
-        mult_str = '' if self.num_coeffs == 1 else 'x' + f'{self.coeffs.shape[1]}'
+        mult_str = "" if self.num_coeffs == 1 else f"x{self.coeffs.shape[1]}"
         return f"<BasisFunction {self.func_type:s} {len(self.exps):d}{mult_str}>"
 
     def __str__(self):
@@ -57,8 +62,7 @@ class BasisFunction:
     def __eq__(self, other):
         """Check if the two BasisFunctions are the same"""
         # TODO: Change this to exact equality and make inexact a separate function?
-        return self.func_type == other.func_type and \
-            np.isclose(self.values, other.values).all()
+        return self.func_type == other.func_type and np.isclose(self.values, other.values).all()
 
     def __hash__(self):
         """
@@ -71,14 +75,14 @@ class BasisFunction:
     def check_exps(exps):
         """Check to make sure that the exponents are valid"""
         for exp in exps:
-            if not exp > 0:
-                raise ValueError('Exponents must be greater than 0.')
+            if exp <= 0:
+                raise ValueError("Exponents must be greater than 0.")
 
     @staticmethod
     def check_coeffs(coeffs):
         """Check to make sure that the coefficients are valid"""
         if len(coeffs.shape) not in [1, 2]:
-            raise SyntaxError('Wrong dimension of coeffs array.')
+            raise SyntaxError("Wrong dimension of coeffs array.")
 
     @property
     def exps(self):
@@ -98,15 +102,16 @@ class BasisFunction:
     def coeffs(self, cs):
         BasisFunction.check_coeffs(cs)
         if self.coeffs.shape != cs.shape:
-            raise SyntaxError(f'Incorrect number of coeffs: expected {self.coeffs.shape}, got {cs.shape}.')
+            raise SyntaxError(
+                f"Incorrect number of coeffs: expected {self.coeffs.shape}, got {cs.shape}."
+            )
         self.values[:, 1:] = cs
 
     @property
     def am(self):
-        if self.func_type != 'L' and self.func_type != 'SP':
-            return AM.index(self.func_type)
-        else:
+        if self.func_type in ["L", "SP"]:
             return -1
+        return AM.index(self.func_type)
 
     def decontracted(self):
         """
@@ -115,45 +120,49 @@ class BasisFunction:
         """
         func_type, exps, coeffs = self.func_type, self.exps, self.coeffs
 
-        if func_type == 'SP':
-            yield from BasisFunction('S', np.array(exps), coeffs[:, 0]).decontracted()
-            yield from BasisFunction('P', np.array(exps), coeffs[:, 1]).decontracted()
+        if func_type == "SP":
+            yield from BasisFunction("S", np.array(exps), coeffs[:, 0]).decontracted()
+            yield from BasisFunction("P", np.array(exps), coeffs[:, 1]).decontracted()
         else:
             # Note: Only needs exp as all different coeffs will produce same BasisFunction
             for exp in exps:
                 yield BasisFunction(func_type, [exp], [1])
 
-    def print(self, style='gaussian94', atom=''):
+    def print(self, style="gaussian94", atom=""):
         """Print the BasisFunction to a string"""
         num_coeffs = self.num_coeffs
-        out = ''
-        form = '{:>17.7f}' + ' {:> 11.7f}' * num_coeffs
-        if style == 'gaussian94':
-            out += f'{self.func_type:<2}    {len(self)}\n'
+        out = ""
+        form = "{:>17.7f}" + " {:> 11.7f}" * num_coeffs
+        if style == "gaussian94":
+            out += f"{self.func_type:<2}    {len(self)}\n"
             for group in self.values:
-                out += form.format(*group) + '\n'
-        elif style == 'gamess':
-            out += f'{self.func_type:<2}    {len(self)}\n'
-            form = ' {:>2} ' + form
+                out += form.format(*group) + "\n"
+        elif style == "gamess":
+            out += f"{self.func_type:<2}    {len(self)}\n"
+            form = " {:>2} " + form
             for i, group in enumerate(self.values, start=1):
-                out += form.format(i, *group) + '\n'
-        elif style == 'bagel':
-            vals_form = ','.join(['{:>15.8f}']*len(self))
-            c_form = ', '.join(['[' + vals_form + ']']*num_coeffs)
-            bagel_form = '{{\n    "angular" : "{:s}",\n       "prim" :  ['\
-                         + vals_form + '],\n       "cont" : ['\
-                         + c_form + ']\n}}\n'
+                out += form.format(i, *group) + "\n"
+        elif style == "bagel":
+            vals_form = ",".join(["{:>15.8f}"] * len(self))
+            c_form = ", ".join(["[" + vals_form + "]"] * num_coeffs)
+            bagel_form = (
+                '{{\n    "angular" : "{:s}",\n       "prim" :  ['
+                + vals_form
+                + '],\n       "cont" : ['
+                + c_form
+                + "]\n}}\n"
+            )
             out += bagel_form.format(self.func_type.lower(), *self.exps, *self.coeffs.flatten())
-        elif style == 'cfour':
+        elif style == "cfour":
             # Print exponents
             for i, exp in enumerate(self.exps):
                 if not i % 6:
-                    out += '\n'
-                out += f' {exp:>12.7g}'
-            out += '\n\n'
+                    out += "\n"
+                out += f" {exp:>12.7g}"
+            out += "\n\n"
             # Print coefficients
             for c_line in self.coeffs:
-                out += (' {:>12.7g}'*self.num_coeffs).format(*c_line) + '\n'
+                out += (" {:>12.7g}" * self.num_coeffs).format(*c_line) + "\n"
         else:
             raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported, got:{style}.')
         return out
@@ -162,13 +171,14 @@ class BasisFunction:
 class Basis:
     """A basis for an atom"""
 
-    def __init__(self, atom='', basis_functions=None, name=''):
+    def __init__(self, atom="", basis_functions=None, name=""):
         if basis_functions is None:
             basis_functions = []
         self.atom = ensure_short_atom_name(atom)
         if not isinstance(basis_functions, list) or not all(
-                map(lambda x: isinstance(x, BasisFunction), basis_functions)):
-            raise SyntaxError('Expected a list of BasisFunctions.')
+            map(lambda x: isinstance(x, BasisFunction), basis_functions)
+        ):
+            raise SyntaxError("Expected a list of BasisFunctions.")
         self.basis_functions = basis_functions
         self.name = name
 
@@ -183,7 +193,7 @@ class Basis:
     def __setitem__(self, i, value):
         """Sets the ith BasisFunction"""
         if not isinstance(value, BasisFunction):
-            raise SyntaxError(f'Expecting a BasisFunction object, instead got: {type(value)}')
+            raise SyntaxError(f"Expecting a BasisFunction object, instead got: {type(value)}")
         self.basis_functions[i] = value
 
     def __delitem__(self, key):
@@ -192,18 +202,13 @@ class Basis:
 
     def __eq__(self, other):
         """Check if the two basis are equivalent"""
-        if not len(self.basis_functions) == len(other.basis_functions):
-            return False
-        for s, o in zip(self.basis_functions, other.basis_functions):
-            if not s == o:
-                return False
-        return True
+        return len(self) != len(other) and all(s == o for s, o in zip(self, other))
 
     def __iter__(self):
         yield from self.basis_functions
 
     def __repr__(self):
-        return f"<Basis {self.atom:s} {len(self.basis_functions):d}>"
+        return f"<Basis {self.atom:s} {len(self):d}>"
 
     def __str__(self):
         return self.print()
@@ -215,35 +220,35 @@ class Basis:
         """
         basis_functions = []
         basis_functions_set = set()
-        for con in self.basis_functions:
+        for con in self:
             for f in con.decontracted():
                 if f not in basis_functions_set:
                     basis_functions_set.add(f)
                     basis_functions.append(f)
         return Basis(self.atom, basis_functions, self.name)
 
-    def print(self, style='gaussian94', print_name=True):
+    def print(self, style="gaussian94", print_name=True):
         """Print all BasisFunctions in the specified format"""
-        out = ''
+        out = ""
         if style not in SUPPORTED:
             raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported, got:{style}.')
         if print_name:
-            if style == 'gaussian94':
-                out += f'{self.atom}    0\n'
-            elif style == 'gamess':
-                out += f'{self.atom}\n'
-            elif style == 'bagel':
+            if style == "gaussian94":
+                out += f"{self.atom}    0\n"
+            elif style == "gamess":
+                out += f"{self.atom}\n"
+            elif style == "bagel":
                 out += f'"{self.atom:s}" : ['
-            elif style == 'cfour':
-                out += f'{self.atom:s}:{self.name:s}\nComment Line\n\n'
-            elif style == 'molpro':
-                out += f'! {self.atom:s}\n! {self.atom:s}\n'
+            elif style == "cfour":
+                out += f"{self.atom:s}:{self.name:s}\nComment Line\n\n"
+            elif style == "molpro":
+                out += f"! {self.atom:s}\n! {self.atom:s}\n"
             else:
                 raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported, got:{style}.')
-        if style == 'bagel':
-            out += ',\n'.join([c.print(style, self.atom) for c in self]) + ']'
-        elif style == 'cfour':
-            out += f' {len(self):>2d}\n'
+        if style == "bagel":
+            out += ",\n".join([c.print(style, self.atom) for c in self]) + "]"
+        elif style == "cfour":
+            out += f" {len(self):>2d}\n"
             # Find values for header
             vals = []
             for bf in self:
@@ -254,46 +259,46 @@ class Basis:
             vals = np.array(vals).T
             # Make header
             for xs in vals:
-                out += (' {:>2d}'*len(vals.T)).format(*xs) + '\n'
+                out += (" {:>2d}" * len(vals.T)).format(*xs) + "\n"
             # Print basis functions
             for bf in self:
                 out += bf.print(style)
-        elif style == 'molpro':
+        elif style == "molpro":
             # TODO: Print Basis in Molpro format
-            ex = ''
+            ex = ""
             am_dict = {}
             for bf in self:
                 if bf.am not in am_dict:
                     start_count = 1
-                    ex = f'{AM[bf.am].lower()}, {self.atom}'
-                    am_dict[bf.am] = [ex, '']
+                    ex = f"{AM[bf.am].lower()}, {self.atom}"
+                    am_dict[bf.am] = [ex, ""]
                 # Update value of end_count
                 end_count = start_count + len(bf.exps) - 1
                 # Add exps to ex string
-                am_dict[bf.am][0] += ', ' + ', '.join(f'{exp:.7f}' for exp in bf.exps)
+                am_dict[bf.am][0] += ", " + ", ".join(f"{exp:.7f}" for exp in bf.exps)
                 # Add coeffs to co string
-                co = f'c, {start_count}.{end_count}'
+                co = f"c, {start_count}.{end_count}"
                 for coef in bf.coeffs:
-                    co += f', {float(coef):9.7f}'
-                co += '\n'
+                    co += f", {float(coef):9.7f}"
+                co += "\n"
                 am_dict[bf.am][1] += co
                 # start_count for next basis function
                 start_count = end_count + 1
 
             for am, (exp, co) in sorted(am_dict.items(), key=lambda x: x[0]):
-                out += exp + '\n' + co
+                out += exp + "\n" + co
 
         else:
-            out += ''.join([c.print(style, self.atom) for c in self])
+            out += "".join(c.print(style, self.atom) for c in self)
         return out
 
 
 class BasisSet:
     """A BasisSet, which consists of the basis for multiple atoms"""
 
-    def __init__(self, atoms=None, name=''):
+    def __init__(self, atoms=None, name=""):
         """Atoms is a dictionary of atom:Basis"""
-        self.am = 'spherical'
+        self.am = "spherical"
         self.name = name
         if atoms is None:
             self.atoms = OrderedDict()
@@ -301,7 +306,7 @@ class BasisSet:
             BasisSet.check_basis_set(atoms)
             self.atoms = atoms
         else:
-            raise SyntaxError('Invalid input basis set, must use an OrderedDict.')
+            raise SyntaxError("Invalid input basis set, must use an OrderedDict.")
 
     def __getitem__(self, item):
         """Return the basis for the specified atom"""
@@ -310,7 +315,7 @@ class BasisSet:
     def __setitem__(self, item, value):
         """Return the basis for the specified atom"""
         if not isinstance(value, Basis):
-            raise SyntaxError(f'Expecting a Basis object, got a: {value}')
+            raise SyntaxError(f"Expecting a Basis object, got a: {value}")
         self.atoms[item] = value
 
     def __delitem__(self, key):
@@ -330,11 +335,11 @@ class BasisSet:
         return item in self.atoms
 
     def __repr__(self):
-        return f'<BasisSet {self.name:s}>'
+        return f"<BasisSet {self.name:s}>"
 
     def __str__(self):
         """Print the basis in gaussian94 style"""
-        return self.print(style='gaussian94')
+        return self.print(style="gaussian94")
 
     def __iter__(self):
         yield from self.atoms.values()
@@ -346,9 +351,9 @@ class BasisSet:
             for atom, basis in atoms.items():
                 # Assume that the Basis was made correctly
                 if not isinstance(basis, Basis):
-                    raise SyntaxError('Expecting a dictionary of atom:Basis.')
+                    raise SyntaxError("Expecting a dictionary of atom:Basis.")
         else:
-            raise SyntaxError('Expecting a dictionary of atom:Basis.')
+            raise SyntaxError("Expecting a dictionary of atom:Basis.")
 
     def change_basis_set(self, basis_set):
         """Change to a new basis"""
@@ -356,26 +361,26 @@ class BasisSet:
         self.atoms = basis_set
 
     @staticmethod
-    def read_file(in_file="basis.gbs", style='gaussian94', basis_name=None, debug=False):
+    def read_file(in_file="basis.gbs", style="gaussian94", basis_name=None, debug=False):
         if basis_name is None:
-            basis_name = '.'.join(in_file.split('/')[-1].split('.')[:-1])
+            basis_name = ".".join(in_file.split("/")[-1].split(".")[:-1])
         with open(in_file) as f:
             basis_set_str = f.read().strip()
         return BasisSet.read_str(basis_set_str, style, basis_name, debug)
 
     @staticmethod
-    def read_str(basis_set_str, style='gaussian94', basis_name='', debug=False):
+    def read_str(basis_set_str, style="gaussian94", basis_name="", debug=False):
         """ Read a basis set"""
         bs = BasisSet(name=basis_name)
         # assume spherical
         num_skip = 0
 
-        if style == 'cfour':
+        if style == "cfour":
             lines = basis_set_str.splitlines()
-            block_starts = [i for i, line in enumerate(lines) if ':' in line]
+            block_starts = [i for i, line in enumerate(lines) if ":" in line]
             for start in block_starts:
                 # Ignore comments
-                if lines[start][0] == '!':
+                if lines[start][0] == "!":
                     continue
                 """ Read Numbering section, i.e.
                 nsections
@@ -384,7 +389,7 @@ class BasisSet:
                     nexp        nexp            nexp        nexp
                 """
                 try:
-                    atom, basis_name = lines[start].strip().split(':')
+                    atom, basis_name = lines[start].strip().split(":")
                     num_parts = lines[start + 3].strip()
                     ams = lines[start + 4].split()
                     con_lengths = lines[start + 5].split()
@@ -394,10 +399,10 @@ class BasisSet:
                     for am, con_length, exp_length in zip(ams, con_lengths, exp_lengths):
                         am, con_length, exp_length = int(am), int(con_length), int(exp_length)
                         # Read exponents, 5 per line in official format
-                        exp_end = j + (exp_length - 1)//5
+                        exp_end = j + (exp_length - 1) // 5
                         exps = []
                         good_exp_num = True
-                        for k, line in enumerate(lines[j:exp_end + 1], start=j):
+                        for k, line in enumerate(lines[j : exp_end + 1], start=j):
                             if not line.strip():
                                 good_exp_num = False
                                 exp_end = k - 1
@@ -409,53 +414,64 @@ class BasisSet:
                                 good_exp_num = False
 
                         if not good_exp_num:
-                            print(f'Incorrectly formatted GENBAS exponent section, proceed with caution, line: {start}')
+                            print(
+                                f"Incorrectly formatted GENBAS exponent section, proceed with caution, line: {start}"
+                            )
 
                         if len(exps) != exp_length:
-                            raise SyntaxError('The number of exponents in the header ({exp_length}) '
-                                              f'does not match the number of exponents read ({len(exps)}).')
+                            raise SyntaxError(
+                                "The number of exponents in the header ({exp_length}) "
+                                f"does not match the number of exponents read ({len(exps)})."
+                            )
 
                         con_start = exp_end + 2
                         con_end = con_start + exp_length
-                        coeffs = []
                         if con_length > 6:
-                            print('Invalid CFour format: more than 6 contracted coefficients; proceed with caution.')
+                            print(
+                                "Invalid CFour format: more than 6 contracted coefficients; proceed with caution."
+                            )
 
-                        for line in lines[con_start:con_end]:
-                            coeffs.append([float(c) for c in line.split()])
-                        coeffs = np.array(coeffs).T
+                        coeffs = np.from_iter((list(map(float, line.split())) for line in lines[con_start:con_end]), dtype=float).T
                         if len(coeffs) != con_length:
                             if len(coeffs) > con_length and not coeffs[con_length:].any():
                                 coeffs = coeffs[:con_length]
                             else:
                                 if debug:
-                                    print(f'Line {start} -- {atom}:{basis_name} '
-                                          f'section -- {am}, {con_length}, {exp_length}')
-                                raise SyntaxError(f'The number of contractions in the header ({con_length}) '
-                                                  f'does not match the number of contractions read ({len(coeffs)}).')
+                                    print(
+                                        f"Line {start} -- {atom}:{basis_name} "
+                                        f"section -- {am}, {con_length}, {exp_length}"
+                                    )
+                                raise SyntaxError(
+                                    f"The number of contractions in the header ({con_length}) "
+                                    f"does not match the number of contractions read ({len(coeffs)})."
+                                )
                         if len(coeffs.T) != exp_length:
                             if debug:
-                                print(f'Line {start} -- {atom}:{basis_name} '
-                                      f'section -- {am}, {con_length}, {exp_length}')
-                            raise SyntaxError(f'The number of coefficients in the header ({exp_length}) '
-                                              'does not match the number of exponents read ({len(coeffs.T)}).')
+                                print(
+                                    f"Line {start} -- {atom}:{basis_name} "
+                                    f"section -- {am}, {con_length}, {exp_length}"
+                                )
+                            raise SyntaxError(
+                                f"The number of coefficients in the header ({exp_length}) "
+                                "does not match the number of exponents read ({len(coeffs.T)})."
+                            )
                         if con_length > 1:
                             bfs += [BasisFunction(AM[am], exps, c) for c in coeffs]
                         else:
-                            bfs.append(BasisFunction(AM[am], exps, coeffs[0]))
+                            bfs += [BasisFunction(AM[am], exps, coeffs[0])]
                         j = con_end + 1
                 except Exception as e:
                     if debug:
-                        print(f'Failed to parse section starting on line {start}.')
+                        print(f"Failed to parse section starting on line {start}.")
                     raise
                 bs.atoms[atom] = Basis(atom, bfs, basis_name)
 
-        elif style == 'bagel':
+        elif style == "bagel":
             in_file_dict = json.loads(basis_set_str)
             for atom, basis_list in in_file_dict.items():
                 bfs = []
                 for c in basis_list:
-                    am, coeffs, exps = c['angular'], c['cont'], c['prim']
+                    am, coeffs, exps = c["angular"], c["cont"], c["prim"]
                     coeffs = np.squeeze(np.array(coeffs))
                     if len(coeffs.shape) == 1:
                         bfs.append(BasisFunction(am, exps, coeffs))
@@ -463,52 +479,52 @@ class BasisSet:
                         bfs += [BasisFunction(am, exps, cs) for cs in coeffs]
                 bs.atoms[atom] = Basis(atom, bfs, basis_name)
 
-        elif style == 'molpro':
+        elif style == "molpro":
             lines = [line.strip() for line in basis_set_str.splitlines() if len(line.strip())]
-            atom_old = ''
+            atom_old = ""
             for line in lines:
                 # Ignore start and end
-                if line[:7] == 'basis={' or line[0] == '}':
+                if line[:7] == "basis={" or line[0] == "}":
                     continue
                 # Comments start with an '!'
-                if line[0] == '!':
+                if line[0] == "!":
                     continue
                 # ECP line
-                if line[:3] == 'ecp':
+                if line[:3] == "ecp":
                     # TODO: Store the ECP in a comment
                     continue
                 # Exponent line
                 if line[0].upper() in AM:
-                    am, atom, *exps = line.split(',')
+                    am, atom, *exps = line.split(",")
                     am, atom = am.strip(), atom.strip()
                     if atom != atom_old:
-                        if atom_old != '':
+                        if atom_old != "":
                             bs[atom_old] = Basis(atom_old, bfs)
                         atom_old = atom
                         bfs = []
                     exps = [*map(float, exps)]
                 # Coefficient line
-                elif line[0] == 'c':
-                    c, c_range, *coeffs = line.split(',')
+                elif line[0] == "c":
+                    c, c_range, *coeffs = line.split(",")
                     coeffs = [*map(float, coeffs)]
-                    c_start, c_end = map(int, c_range.split('.'))
-                    c_exps = exps[c_start - 1:c_end]
+                    c_start, c_end = map(int, c_range.split("."))
+                    c_exps = exps[c_start - 1 : c_end]
                     bfs.append(BasisFunction(am, c_exps, coeffs))
                 else:
-                    raise SyntaxError(f'Not sure what to with line:\n{line}')
+                    raise SyntaxError(f"Not sure what to with line:\n{line}")
                 bs[atom] = Basis(atom, bfs)
-        elif style in ['gaussian94', 'gamess']:
-            if style == 'gaussian94':
-                atom_separator = '****'
-            elif style == 'gamess':
+        elif style in ["gaussian94", "gamess"]:
+            if style == "gaussian94":
+                atom_separator = "****"
+            elif style == "gamess":
                 num_skip = 1
-                atom_separator = '\n\n'
+                atom_separator = "\n\n"
             # Split into atoms
             for chunk in basis_set_str.split(atom_separator):
-                if len(chunk) == 0:
+                if not chunk:
                     continue
                 try:
-                    atom, *basis_chunk = chunk.strip().split('\n')
+                    atom, *basis_chunk = chunk.strip().split("\n")
                     atom = atom.split()[0]
                     i = 0
                     con_list = []
@@ -517,15 +533,18 @@ class BasisSet:
                         am, num = basis_chunk[i].split()[:2]
                         num = int(num)
                         con = []
-                        for line in basis_chunk[i + 1:i + num + 1]:
+                        for line in basis_chunk[i + 1 : i + num + 1]:
                             con.append(list(map(float, line.split()[num_skip:])))
                         exps, *coeffs = zip(*con)
                         con_list.append(BasisFunction(am, exps, np.array(coeffs[0])))
                         i += num + 1
                     bs.atoms[atom] = Basis(atom, con_list, name=basis_name)
-                except Exception as e:
+                except Exception:
                     if debug:
-                        print('Failed to parse section starting with\n' + '\n'.join(chunk.splitlines()[:5]))
+                        print(
+                            "Failed to parse section starting with\n"
+                            + "\n".join(chunk.splitlines()[:5])
+                        )
                     raise
         else:
             raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported, got:{style}.')
@@ -543,28 +562,27 @@ class BasisSet:
 
         return BasisSet(atoms, self.name)
 
-    def print(self, style='gaussian94'):
+    def print(self, style="gaussian94"):
         """Print the Basis to a string"""
-        out = ''
-        if style == 'bagel':
-            out += ',\n\n'.join([basis.print('bagel').replace('\n', '\n    ') for basis in self])
-            return '{\n' + out + '\n}'
+        out = ""
+        if style == "bagel":
+            out += ",\n\n".join([basis.print("bagel").replace("\n", "\n    ") for basis in self])
+            return "{\n" + out + "\n}"
 
-        elif style == 'molpro':
-            out += 'basis={\n!\n'
+        elif style == "molpro":
+            out += "basis={\n!\n"
             for basis in self:
-                out += basis.print('molpro')
-            out += '}'
+                out += basis.print("molpro")
+            out += "}"
             return out
-        elif style in ['gaussian94', 'gamess', 'cfour']:
-            if style == 'gaussian94':
-                separator = '****\n'
+        elif style in ["gaussian94", "gamess", "cfour"]:
+            if style == "gaussian94":
+                separator = "****\n"
                 out = separator
-            elif style in ['gamess', 'cfour']:
-                separator = '\n'
+            elif style in ["gamess", "cfour"]:
+                separator = "\n"
             # TODO: sort according to periodic table
-            out += separator.join(
-                [basis.print(style) for basis in self])
+            out += separator.join([basis.print(style) for basis in self])
             return out + separator
         else:
             raise ValueError(f'Only [{", ".join(SUPPORTED)}] currently supported, got:{style}.')
@@ -598,38 +616,42 @@ class ECPFunction:
         yield from zip(self.tmp1, self.tmp2, self.tmp3)
 
     def __str__(self):
-        return self.print(style='gaussian94')
+        return self.print(style="gaussian94")
 
     def __eq__(self, other):
-        return isinstance(other, ECPFunction)\
-            and self.tmp1 == other.tmp1\
-            and self.tmp2 == other.tmp2\
-            and self.tmp3 == other.tmp3\
+        return (
+            isinstance(other, ECPFunction)
+            and self.tmp1 == other.tmp1
+            and self.tmp2 == other.tmp2
+            and self.tmp3 == other.tmp3
             and self.lmax == other.lmax
+        )
 
     def copy(self):
-        return ECPFunction(self.shell, np.array(tmp1), np.array(tmp2), np.array(tmp3), self.lmax)
+        return ECPFunction(
+            self.shell, np.array(self.tmp1), np.array(self.tmp2), np.array(self.tmp3), self.lmax
+        )
 
     def print(self, style):
-        out = ''
+        out = ""
         """
 f-ul potential
   1
   2      3.03407192            21.53103107
 """
-        if style == 'gaussian94':
-            out = f'{self.shell}-ul potential\n'
-            out += f'{len(self):>4}\n'
-            out += '\n'.join(f'{t1} {t2:>15.8f} {t3:20.8f}' for t1, t2, t3 in self)
-        elif style == 'gamess':
-            out = f'{len(self):<3} -------  {self.shell}-ul potential  ----------\n'
-            out += '\n'.join(f'{t2:17.8f} {t1:>2} {t3:18.8f}' for t1, t2, t3 in self)
-        elif style == 'cfour':
+        if style == "gaussian94":
+            out = f"{self.shell}-ul potential\n"
+            out += f"{len(self):>4}\n"
+            out += "\n".join(f"{t1} {t2:>15.8f} {t3:20.8f}" for t1, t2, t3 in self)
+        elif style == "gamess":
+            out = f"{len(self):<3} -------  {self.shell}-ul potential  ----------\n"
+            out += "\n".join(f"{t2:17.8f} {t1:>2} {t3:18.8f}" for t1, t2, t3 in self)
+        elif style == "cfour":
             lmax_symbol = AM[self.lmax].lower()
-            out = f'{self.shell}-{lmax_symbol}\n'
-            out += '\n'.join(f'{t3:14.8f} {t1:>4} {t2:13.8f}' for t1, t2, t3 in self)
+            out = f"{self.shell}-{lmax_symbol}\n"
+            out += "\n".join(f"{t3:14.8f} {t1:>4} {t2:13.8f}" for t1, t2, t3 in self)
         else:
-            raise NotImplementedError(f'Style, {style}, is not yet implemented for ECPs')
+            raise NotImplementedError(f"{style=}, is not yet implemented for ECPs")
         return out
 
 
@@ -649,18 +671,20 @@ class ECP:
         self.name = name
 
     def __eq__(self, other):
-        return isinstance(other, ECP)\
-            and self.atom == other.atom\
-            and self.lmax == other.lmax\
-            and self.n_core == other.n_core\
-            and self.functions == other.functions\
+        return (
+            isinstance(other, ECP)
+            and self.atom == other.atom
+            and self.lmax == other.lmax
+            and self.n_core == other.n_core
+            and self.functions == other.functions
             and self.name == other.name
+        )
 
     def __repr__(self):
         return f"<ECP {self.atom} {len(self)}>"
 
     def __str__(self):
-        return self.print(style='gaussian94')
+        return self.print(style="gaussian94")
 
     def __len__(self):
         return len(self.functions)
@@ -672,149 +696,140 @@ class ECP:
     def copy(self):
         return ECP(self.atom, self.lmx, self.n_core, [f.copy() for f in self], self.name)
 
-    def print(self, style='gaussian94'):
-        if style == 'gaussian94':
+    def print(self, style="gaussian94"):
+        if style == "gaussian94":
             """
-IR     0
-IR-ECP     3     60
-f-ul potential
-  1
-  2      3.03407192            21.53103107
-s-ul potential
-  3
-  2     13.65220260           732.26919978
-  2      6.82610130            26.48472087
-  2      3.03407192           -21.53103107
-"""
-            out = f'{self.atom}      0\n'
-            out += f'{self.atom}-ECP     {self.lmax} {self.n_core:>6}\n'
-            out += '\n'.join(potential.print(style) for potential in self)
-        elif style == 'gamess':
+            IR     0
+            IR-ECP     3     60
+            f-ul potential
+              1
+              2      3.03407192            21.53103107
+            s-ul potential
+              3
+              2     13.65220260           732.26919978
+              2      6.82610130            26.48472087
+              2      3.03407192           -21.53103107"""
+            out = f"{self.atom}      0\n"
+            out += f"{self.atom}-ECP     {self.lmax} {self.n_core:>6}\n"
+            out += "\n".join(potential.print(style) for potential in self)
+        elif style == "gamess":
             """
-RN-ECP GEN     60     3
-7   -------  s-ul potential  ----------
-      49.96555100  2        30.15124200
-     283.07000000  2        14.52124100
-      62.00287000  2         8.05203800
-     -21.79729000  2         6.34857100
-     -28.94680500  2         6.29594900
-      -1.44736500  2         2.88211800
-      -2.17796400  2         2.90804800
-8   -------  p-ul potential  ----------
-      71.96911900  2        11.00994200
-     143.86055900  2         9.61762500
-       4.71476100  2         7.33600800
-       9.01306500  2         6.40625300
-"""
-            out = f'{self.atom}-ECP GEN {self.n_core:>6} {self.lmax:>5}\n'
-            out += '\n'.join(potential.print(style) for potential in self)
-        elif style == 'cfour':
+            RN-ECP GEN     60     3
+            7   -------  s-ul potential  ----------
+                  49.96555100  2        30.15124200
+                 283.07000000  2        14.52124100
+                  62.00287000  2         8.05203800
+                 -21.79729000  2         6.34857100
+                 -28.94680500  2         6.29594900
+                  -1.44736500  2         2.88211800
+                  -2.17796400  2         2.90804800
+            8   -------  p-ul potential  ----------
+                  71.96911900  2        11.00994200
+                 143.86055900  2         9.61762500
+                   4.71476100  2         7.33600800
+                   9.01306500  2         6.40625300"""
+            out = f"{self.atom}-ECP GEN {self.n_core:>6} {self.lmax:>5}\n"
+            out += "\n".join(potential.print(style) for potential in self)
+        elif style == "cfour":
             """*
-PT:ECP-60-T
-*
-    NCORE = 60     LMAX =3
-f
-   24.31437573    2    3.30956857
-s-f
-  579.22386092    2   13.42865130
-   29.66949062    2    6.71432560
-  -24.31437573    2    3.30956857
-p-f
-  280.86077422    2   10.36594420
-   26.74538204    2    5.18297210
-  -24.31437573    2    3.30956857
-"""
-            out = f'*\n{self.atom}:ECP-{self.n_core}\n*\n'
-            out += f'    NCORE = {self.n_core}     LMAX ={self.lmax}\n'
-            out += '\n'.join(potential.print(style) for potential in self)
-            out += '\n*'
+            PT:ECP-60-T
+            *
+                NCORE = 60     LMAX =3
+            f
+               24.31437573    2    3.30956857
+            s-f
+              579.22386092    2   13.42865130
+               29.66949062    2    6.71432560
+              -24.31437573    2    3.30956857
+            p-f
+              280.86077422    2   10.36594420
+               26.74538204    2    5.18297210
+              -24.31437573    2    3.30956857"""
+            out = f"*\n{self.atom}:ECP-{self.n_core}\n*\n"
+            out += f"    NCORE = {self.n_core}     LMAX ={self.lmax}\n"
+            out += "\n".join(potential.print(style) for potential in self)
+            out += "\n*"
         else:
-            raise NotImplementedError(f'Style, {style}, is not yet implemented for ECPs')
+            raise NotImplementedError(f"Style, {style}, is not yet implemented for ECPs")
         return out
 
 
 class ECPSet:
-    def __init__(self, ecps=None, name=''):
+    def __init__(self, ecps=None, name=""):
         """
         :param ecps: a dictionary of atom:ecps
         """
         self.name = name
         if ecps is None:
-            self.ecps = OrderedDict()
-        elif isinstance(ecps, OrderedDict):
+            self.ecps = {}
+        elif isinstance(ecps, dict):
             # ECPSet.check_ecp_set(atoms)
             self.ecps = ecps
         else:
-            raise SyntaxError('Invalid input basis set, must use an OrderedDict.')
+            raise SyntaxError("Invalid input basis set, must use a dictionary.")
 
     def __eq__(self, other):
         return isinstance(other, ECPSet) and self.ecps == other.ecps
 
     def __repr__(self):
-        return f'<ECPSet {self.name:s}>'
+        return f"<ECPSet {self.name:s}>"
 
     def __str__(self):
-        return self.print(style='gaussian94')
+        return self.print(style="gaussian94")
 
     def __iter__(self):
         yield from self.ecps.items()
 
     def copy(self):
-        return ECPSet(OrderedDict([(a, ecp.copy) for a, ecp in self]))
+        return ECPSet({a: ecp.copy for a, ecp in self})
 
-    def print(self, style='gaussian94'):
-        if style == 'gaussian94':
-            out = '\n\n'.join(f'{ecp.print(style)}' for _, ecp in self)
-        elif style == 'gamess':
-            out = '\n\n'.join(f'$ECP\n{ecp.print(style)}\n$END' for _, ecp in self)
-        elif style == 'cfour':
-            out = '\n'.join(ecp.print(style) for _, ecp in self)
+    def print(self, style="gaussian94"):
+        if style == "gaussian94":
+            out = "\n\n".join(f"{ecp.print(style)}" for _, ecp in self)
+        elif style == "gamess":
+            out = "\n\n".join(f"$ECP\n{ecp.print(style)}\n$END" for _, ecp in self)
+        elif style == "cfour":
+            out = "\n".join(ecp.print(style) for _, ecp in self)
         else:
-            raise NotImplementedError(f'Style, {style}, is not yet implemented for ECPs')
+            raise NotImplementedError(f"Style, {style}, is not yet implemented for ECPs")
 
         return out
 
     @staticmethod
-    def read_file(in_file="ecp.gbs", style='gaussian94', name=None, debug=False):
+    def read_file(in_file="ecp.gbs", style="gaussian94", name=None, debug=False):
         if name is None:
-            name = '.'.join(in_file.split('.')[:-1])
+            name = ".".join(in_file.split(".")[:-1])
         with open(in_file) as f:
             ecp_str = f.read()
         return ECPSet.read_str(ecp_str, style, name, debug)
 
     @staticmethod
-    def read_str(ecp_str, style='gaussian94', name=None, debug=False):
+    def read_str(ecp_str, style="gaussian94", name=None, debug=False):
         ecps = ECPSet(name=name)
 
-        if style == 'gamess':
-            for chunk in ecp_str.split('$END'):
+        if style == "gamess":
+            for chunk in ecp_str.split("$END"):
                 if not chunk.strip():
                     continue
                 it = iter(chunk.splitlines())
                 for line in it:
-                    if not line.strip() or line.strip() == '$ECP':
+                    if not line.strip() or line.strip() == "$ECP":
                         continue
                     atom, *ecp, gen, n_core, lmax = line.split()
-                    atom = atom.split('-')[0]
+                    atom = atom.split("-")[0]
                     n_core, lmax = int(n_core), int(lmax)
                     break
 
                 pots = []
                 for line in it:
-                    if line.strip()[0] == '#':
+                    if line.strip()[0] == "#":
                         continue
 
                     num, dashes, shell, *_ = line.split()
-                    num, shell = int(num), shell[0]
-                    t1s, t2s, t3s = [], [], []
-                    for i, line in zip(range(num), it):
-                        t2, t1, t3 = line.split()
-                        t1s.append(int(t1))
-                        t2s.append(float(t2))
-                        t3s.append(float(t3))
-                    pots.append(ECPFunction(shell, t1s, t2s, t3s, lmax))
+                    ts = map(lambda x: x.split, take(int(num), it))
+                    pots.append(ECPFunction(shell[0], *ts, lmax))
                 ecps.ecps[atom] = ECP(atom, lmax, n_core, pots)
         else:
-            raise NotImplementedError(f'Style, {style}, is not yet implemented for ECPs')
+            raise NotImplementedError(f"{style=}, is not yet implemented for ECPs")
 
         return ecps

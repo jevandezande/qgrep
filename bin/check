@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
 # Script that takes an output file and prints its geometry convergence results
+import argparse
 import os
 import sys
-import glob
-import argparse
-
 from collections import OrderedDict
-from cclib.io import ccread
+from glob import glob
 
+from cclib.io import ccread
 from natsort import natsorted
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -37,13 +36,11 @@ def check(inp, args):
 
     try:
         data = ccread(inp)
-    except:
+    except Exception:
         print(f'Failed to read {inp}')
         return False
 
-    if 'package' in data.metadata:
-        package = data.metadata['package']
-    else:
+    if 'package' not in data.metadata:
         print(f'Failed to read {inp}')
         return False
 
@@ -53,7 +50,7 @@ def check(inp, args):
         if hasattr(data, 'scfvalues'):
             scfvalues = data.scfvalues
         else:
-            scfvalues = [[]]*len(data.geovalues)
+            scfvalues = [[]] * len(data.geovalues)
         for (delta_e, rms_grad, max_grad, rms_step, max_step), scfvalues in zip(data.geovalues, scfvalues):
             params = OrderedDict((
                 ('delta_e', delta_e),
@@ -71,11 +68,10 @@ def check(inp, args):
         success = False
 
     if hasattr(data, 'vibfreqs'):
-        im_freqs = data.vibfreqs[data.vibfreqs < 0]
-        for freq in im_freqs:
+        for freq in data.vibfreqs[data.vibfreqs < 0]:
             print(f'***Imaginary frequency: {freq: >7.2f}i')
             success = False
-        if len(im_freqs) == 0:
+        else:
             print('No imaginary frequencies')
 
     if args.plot and conv:
@@ -97,17 +93,15 @@ def check(inp, args):
 
 
 if args.all:
-    inputs = []
-    for inp in args.input:
-        inputs += glob.glob(f'**/{inp}', recursive=True)
+    inputs = [glob(f'**/{inp}', recursive=True) for inp in args.input]
 else:
     # Find all matches, delete duplicates
-    inputs = set()
-    for inp_arg in args.input:
-        inputs |= set(inp for inp in glob.glob(inp_arg) if os.path.isfile(inp))
-        inputs |= set(inp for inp in glob.glob(inp_arg + '/output.dat') if os.path.isfile(inp))
+    inputs = set(
+        set(inp for inp in glob(inp_arg) + glob(f"{inp_arg}/output.dat"))
+        for inp_arg in args.input
+    )
 
-if len(inputs) == 0:
+if not inputs:
     print(f'Could not find input file(s) matching: {",".join(args.input)}')
 else:
     inputs = natsorted(inputs)
@@ -116,7 +110,7 @@ else:
     if len(inputs) > 2:
         length = len(max(inputs, key=len))
         form = "{:" + f"{length}" + "} :{:>3d} {}"
-        print("\nSummary\n" + "="*(length + 7))
+        print("\nSummary\n" + "=" * (length + 7))
         print("\n".join(
             form.format(inp, len(steps), ("✓" if success else "x"))
             for inp, (success, steps) in zip(inputs, results)

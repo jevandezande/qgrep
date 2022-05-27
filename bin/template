@@ -5,50 +5,43 @@ import sys
 import argparse
 import importlib
 
-sys.path.insert(0, '../')
+sys.path.insert(0, "../")
 
-parser = argparse.ArgumentParser(description='Make an input file with the specified parameters.')
-parser.add_argument('-p', '--program', help='The program',
-                    type=str, default='psi4')
-parser.add_argument('-g', '--geom', help='The geometry file',
-                    type=str, default='geom.xyz')
-parser.add_argument('-j', '--jobtype', help='The jobtype to run',
-                    type=str, default='opt')
-parser.add_argument('-t', '--theory', help='The theory to use',
-                    type=str, default='B3LYP-D3')
-parser.add_argument('-b', '--basis', help='The basis set to use',
-                    type=str, default='def2-svp')
-parser.add_argument('-f', '--freq', help='Run frequencies',
-                    action='store_true', default=False)
-parser.add_argument('-x', '--extra', help='Extra parameters to pass',
-                    type=str, default='')
-parser.add_argument('-i', '--input_file', help='Input filename to use.',
-                    type=str, default=None)
+parser = argparse.ArgumentParser(description="Make an input file with the specified parameters.")
+parser.add_argument("-p", "--program", help="The program", type=str, default="psi4")
+parser.add_argument("-g", "--geom", help="The geometry file", type=str, default="geom.xyz")
+parser.add_argument("-j", "--jobtype", help="The jobtype to run", type=str, default="opt")
+parser.add_argument("-t", "--theory", help="The theory to use", type=str, default="B3LYP-D3")
+parser.add_argument("-b", "--basis", help="The basis set to use", type=str, default="def2-svp")
+parser.add_argument("-f", "--freq", help="Run frequencies", action="store_true", default=False)
+parser.add_argument("-x", "--extra", help="Extra parameters to pass", type=str, default="")
+parser.add_argument("-i", "--input_file", help="Input filename to use.", type=str, default=None)
 
 args = parser.parse_args()
 
-geom = ''
+geom = ""
 try:
-    with open(args.geom, 'r') as f:
-        geom = ''.join(map(lambda l: f'    {l}', f.readlines()[2:])).rstrip()
+    with open(args.geom) as f:
+        next(f), next(f)
+        geom = "".join(map(lambda l: f"    {l}", f)).rstrip()
 except IOError:
-    print('No geometry specified')
+    print("No geometry specified")
 
 program = args.program
 if program:
     try:
-        mod = importlib.import_module(f'qgrep.{program}')
-        if hasattr(mod, 'template'):
+        mod = importlib.import_module(f"qgrep.{program}")
+        if hasattr(mod, "template"):
             temp = mod.template(geom, args.jobtype, args.theory, args.basis, args.freq, args.extra)
             if args.input_file is None:
-                args.input_file = 'input.dat'
-                if args.program == 'bagel':
-                    args.input_file = 'input.json'
-            with open(args.input_file, 'w') as f:
+                args.input_file = "input.dat"
+                if args.program == "bagel":
+                    args.input_file = "input.json"
+            with open(args.input_file, "w") as f:
                 f.write(temp)
         else:
-            print(f'{program} does not yet have template implemented.')
+            print(f"{program} does not yet have template implemented.")
     except ImportError:
-        print(f'{program} is not yet supported.')
+        print(f"{program} is not yet supported.")
 else:
-    print('Cannot determine what program made this output file.')
+    print("Cannot determine what program made this output file.")
