@@ -4,7 +4,6 @@
 import argparse
 import os
 import sys
-from collections import OrderedDict
 from glob import glob
 
 from cclib.io import ccread
@@ -14,19 +13,37 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from qgrep.convergence import Convergence, Step
 
-parser = argparse.ArgumentParser(description='Check the optimization convergence of an output file.')
-parser.add_argument('-i', '--input', help='The file(s) to be read.',
-                    type=str, nargs='+', default=['output.dat'])
-parser.add_argument('-p', '--plot', help='Plot the convergence.',
-                    action='store_true', default=False)
-parser.add_argument('-a', '--all', help='Find all files corresponding to {input} (can be a glob).',
-                    action='store_true', default=False)
+parser = argparse.ArgumentParser(
+    description="Check the optimization convergence of an output file."
+)
+parser.add_argument(
+    "-i",
+    "--input",
+    help="The file(s) to be read.",
+    type=str,
+    nargs="+",
+    default=["output.dat"],
+)
+parser.add_argument(
+    "-p",
+    "--plot",
+    help="Plot the convergence.",
+    action="store_true",
+    default=False,
+)
+parser.add_argument(
+    "-a",
+    "--all",
+    help="Find all files corresponding to {input} (can be a glob).",
+    action="store_true",
+    default=False,
+)
 
 args = parser.parse_args()
 
 success_dict = {
-    'ORCA': 'TOTAL RUN TIME:',
-    'Psi4': '*** Psi4 exitin',
+    "ORCA": "TOTAL RUN TIME:",
+    "Psi4": "*** Psi4 exitin",
 }
 
 
@@ -37,69 +54,75 @@ def check(inp, args):
     try:
         data = ccread(inp)
     except Exception:
-        print(f'Failed to read {inp}')
+        print(f"Failed to read {inp}")
         return False
 
-    if 'package' not in data.metadata:
-        print(f'Failed to read {inp}')
+    if "package" not in data.metadata:
+        print(f"Failed to read {inp}")
         return False
 
     conv = None
     steps = []
-    if hasattr(data, 'geovalues'):
-        if hasattr(data, 'scfvalues'):
-            scfvalues = data.scfvalues
-        else:
-            scfvalues = [[]] * len(data.geovalues)
-        for (delta_e, rms_grad, max_grad, rms_step, max_step), scfvalues in zip(data.geovalues, scfvalues):
-            params = OrderedDict((
-                ('delta_e', delta_e),
-                ('rms_grad', rms_grad),
-                ('max_grad', max_grad),
-                ('rms_step', rms_step),
-                ('max_step', max_step),
-                ('scf_steps', len(scfvalues)),
-            ))
-            steps.append(Step(params, list(data.geotargets) + [0]))
+    if hasattr(data, "geovalues"):
+        scfvalues = data.scfvalues if hasattr(data, "scfvalues") else [[]] * len(data.geovalues)
+        steps = [
+            Step(
+                {
+                    "delta_e": delta_e,
+                    "rms_grad": rms_grad,
+                    "max_grad": max_grad,
+                    "rms_step": rms_step,
+                    "max_step": max_step,
+                    "scf_steps": len(scf_steps),
+                },
+                list(data.geotargets) + [0]
+            )
+            for (delta_e, rms_grad, max_grad, rms_step, max_step), scf_steps in zip(
+                data.geovalues, scfvalues
+            )
+        ]
         conv = Convergence(steps, data.geotargets)
         print(conv)
     else:
-        print('No optimization found.')
+        print("No optimization found.")
         success = False
 
-    if hasattr(data, 'vibfreqs'):
+    if hasattr(data, "vibfreqs"):
         for freq in data.vibfreqs[data.vibfreqs < 0]:
-            print(f'***Imaginary frequency: {freq: >7.2f}i')
+            print(f"***Imaginary frequency: {freq: >7.2f}i")
             success = False
         else:
-            print('No imaginary frequencies')
+            print("No imaginary frequencies")
 
     if args.plot and conv:
         conv.plot()
 
-    success_value = success_dict[data.metadata['package']]
+    success_value = success_dict[data.metadata["package"]]
     with open(inp) as f:
         finished = False
         for line in f:
             if line[:15] == success_value:
-                print('Successfully completed')
+                print("Successfully completed")
                 finished = True
                 break
         if not finished:
             success = False
-            print('Job failed/not finished')
+            print("Job failed/not finished")
 
     return success, steps
 
 
 if args.all:
-    inputs = [glob(f'**/{inp}', recursive=True) for inp in args.input]
+    inputs = [glob(f"**/{inp}", recursive=True) for inp in args.input]
 else:
     # Find all matches, delete duplicates
-    inputs = set(
-        set(inp for inp in glob(inp_arg) + glob(f"{inp_arg}/output.dat"))
-        for inp_arg in args.input
-    )
+    inps = set()
+    for inp_arg in args.input:
+        inps |= set(
+            inp
+            for inp in glob(inp_arg) + glob(f"{inp_arg}/output.dat")
+        )
+    inputs = list(inps)
 
 if not inputs:
     print(f'Could not find input file(s) matching: {",".join(args.input)}')
@@ -111,7 +134,9 @@ else:
         length = len(max(inputs, key=len))
         form = "{:" + f"{length}" + "} :{:>3d} {}"
         print("\nSummary\n" + "=" * (length + 7))
-        print("\n".join(
-            form.format(inp, len(steps), ("✓" if success else "x"))
-            for inp, (success, steps) in zip(inputs, results)
-        ))
+        print(
+            "\n".join(
+                form.format(inp, len(steps), ("✓" if success else "x"))
+                for inp, (success, steps) in zip(inputs, results)
+            )
+        )
